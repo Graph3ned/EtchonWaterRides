@@ -252,7 +252,7 @@
     <!-- ----------------table-------------------- -->
      
     <div class="w-full p-4 mb-4">
-      <div class="flex justify-between items-center mb-4">
+      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
         <div class="flex items-center space-x-2">
           <label class="flex items-center text-gray-700 font-medium text-sm">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -273,12 +273,17 @@
           </select>
           <span class="text-sm text-gray-600">entries</span>
         </div>
-        <a href="{{ route('admin.generate-report') }}" 
-           class="bg-[#00A3E0] text-white py-2.5 px-6 rounded-lg font-medium 
-                  transform transition-all duration-200 hover:-translate-y-1 
-                  hover:shadow-lg hover:bg-[#0093CC]">
-            <span class="flex items-center">Generate Report</span>
-        </a>
+        <div class="flex justify-center sm:justify-end">
+          <a href="{{ route('admin.generate-report') }}" 
+             class="inline-flex items-center justify-center bg-[#00A3E0] text-white py-2.5 px-6 rounded-lg font-medium 
+                    transform transition-all duration-200 hover:-translate-y-1 
+                    hover:shadow-lg hover:bg-[#0093CC] max-w-[200px] sm:max-w-none">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Generate Report
+          </a>
+        </div>
       </div>
 
       <div class="overflow-x-auto rounded-lg shadow-lg border border-blue-100">
@@ -400,7 +405,8 @@
   </div>
 </div>
 <script>
-let chartInstance = null;
+// Use window object to avoid redeclaration issues
+window.salesChartInstance = window.salesChartInstance || null;
 
 document.addEventListener('livewire:initialized', function () {
     initChart();
@@ -419,8 +425,8 @@ Livewire.on('updateChart', () => {
 });
 
 function initChart() {
-    if (chartInstance) {
-        chartInstance.destroy();
+    if (window.salesChartInstance) {
+        window.salesChartInstance.destroy();
     }
 
     const ctx = document.getElementById('salesChart');
@@ -430,7 +436,7 @@ function initChart() {
     const chartLabels = JSON.parse(ctx.dataset.labels || '[]');
     const chartData = JSON.parse(ctx.dataset.values || '[]');
 
-    chartInstance = new Chart(ctx, {
+    window.salesChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
             labels: chartLabels,

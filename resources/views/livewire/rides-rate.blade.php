@@ -31,7 +31,7 @@
                         transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group">
               <div class="p-6">
 
-                <div class="flex justify-between items-center gap-4">
+                <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                   <h3 class="text-lg font-semibold text-gray-800">
                     {{ str_replace('_', ' ', $price->ride_type) }}
                   </h3>
@@ -39,7 +39,7 @@
                   <button wire:navigate href="/admin/view-details/{{$price->ride_type}}" 
                           class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 
                                  hover:from-cyan-600 hover:to-blue-700 rounded-lg transition-all duration-200 
-                                 text-white text-sm font-medium shadow-md hover:shadow-lg">
+                                 text-white text-sm font-medium shadow-md hover:shadow-lg max-w-[150px] md:max-w-none">
                     <span>View Details</span>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" 
                          fill="none" viewBox="0 0 24 24" stroke="currentColor">
