@@ -408,15 +408,14 @@
 // Use window object to avoid redeclaration issues
 window.salesChartInstance = window.salesChartInstance || null;
 
-document.addEventListener('livewire:initialized', function () {
+
+// Listen for pagination events
+document.addEventListener('livewire:pagination', function () {
     initChart();
 });
 
-document.addEventListener('livewire:navigated', function () {
-    initChart();
-});
-
-document.addEventListener('livewire:update', function () {
+// Listen for any Livewire updates
+document.addEventListener('livewire:updated', function () {
     initChart();
 });
 
@@ -425,16 +424,18 @@ Livewire.on('updateChart', () => {
 });
 
 function initChart() {
-    if (window.salesChartInstance) {
-        window.salesChartInstance.destroy();
-    }
+    // Add a small delay to ensure DOM is ready
+    setTimeout(() => {
+        if (window.salesChartInstance) {
+            window.salesChartInstance.destroy();
+        }
 
-    const ctx = document.getElementById('salesChart');
-    if (!ctx) return;
+        const ctx = document.getElementById('salesChart');
+        if (!ctx) return;
 
-    // Get chart data from data attributes
-    const chartLabels = JSON.parse(ctx.dataset.labels || '[]');
-    const chartData = JSON.parse(ctx.dataset.values || '[]');
+        // Get chart data from data attributes
+        const chartLabels = JSON.parse(ctx.dataset.labels || '[]');
+        const chartData = JSON.parse(ctx.dataset.values || '[]');
 
     window.salesChartInstance = new Chart(ctx, {
         type: 'line',
@@ -577,11 +578,22 @@ function initChart() {
             }
         }]
     });
+    }, 100); // 100ms delay to ensure DOM is ready
 }
 
 window.addEventListener('resize', function() {
     initChart();
 });
+
+// Listen for pagination clicks specifically
+document.addEventListener('click', function(e) {
+    if (e.target.closest('[wire\\:click]') && e.target.closest('[wire\\:click]').getAttribute('wire:click').includes('gotoPage')) {
+        setTimeout(() => {
+            initChart();
+        }, 200);
+    }
+});
+
 document.addEventListener('livewire:initialized', () => {
     Livewire.on('refreshPage', () => {
         location.reload();

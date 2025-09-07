@@ -239,6 +239,9 @@ class Sales extends Component
             ->when($this->selectedRideType !== '', fn($query) => $query->where('rideType', $this->selectedRideType))
             ->distinct()->pluck('classification');
 
+        // Dispatch chart update after render
+        $this->dispatch('updateChart');
+
         return view('livewire.sales', [
             'rides' => $rides,
             'users' => $users,
