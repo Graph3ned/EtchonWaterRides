@@ -44,7 +44,7 @@ class AddRideClassification extends Component
 
         // Redirect with a success message
         session()->flash('success', 'Price classification added successfully!');
-        return redirect()->route('priceClassification', ['ride_type' => $this->ride_type]);
+        return redirect()->route('ViewDetails', ['ride_type' => $this->ride_type]);
 
     }
 

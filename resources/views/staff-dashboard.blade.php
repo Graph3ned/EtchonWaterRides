@@ -1,8 +1,8 @@
 <x-app-layout>
     <x-slot name="header">
     <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-7xl text-blue-800 dark:text-blue-300 leading-tight">
-                {{ __('Staff Dashboard') }}
+            <h2 class="font-semibold text-2xl text-blue-800 dark:text-blue-300 leading-tight">
+                {{ __('Dashboard') }}
             </h2>
         </div>
     </x-slot>

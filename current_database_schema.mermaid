@@ -1,0 +1,53 @@
+erDiagram
+    USERS {
+        bigint id PK
+        varchar name
+        varchar email UK
+        varchar userType "0=Staff, 1=Admin"
+        varchar password
+        varchar remember_token
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    RIDES_RENTAL_DBS {
+        bigint id PK
+        varchar user "Staff member name"
+        varchar rideType "Type of ride"
+        varchar classification "Classification within type"
+        varchar note "Additional notes"
+        int duration "Duration in minutes"
+        int life_jacket_usage "Number of life jackets"
+        decimal pricePerHour "Price per hour (8,2)"
+        decimal totalPrice "Total calculated price (8,2)"
+        int status "Ride status"
+        time timeStart "Start time"
+        time timeEnd "End time"
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    PRICES {
+        bigint id PK
+        varchar ride_type "Type of ride"
+        varchar classification "Classification within type"
+        int price_per_hour "Price per hour in PHP"
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    SESSIONS {
+        varchar id PK "Session ID"
+        bigint user_id FK "Foreign key to users"
+        varchar ip_address "User IP address"
+        text user_agent "Browser information"
+        longtext payload "Session data"
+        int last_activity "Last activity timestamp"
+    }
+
+    %% Relationships
+    USERS ||--o{ SESSIONS : "has (FK)"
+    
+    %% Loose Coupling Relationships (No FKs)
+    USERS }o--o{ RIDES_RENTAL_DBS : "user field (string)"
+    PRICES }o--o{ RIDES_RENTAL_DBS : "rideType + classification"

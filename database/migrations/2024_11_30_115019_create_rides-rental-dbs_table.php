@@ -21,6 +21,7 @@ return new class extends Migration
             $table->integer('life_jacket_usage');
             $table->decimal('pricePerHour', 8, 2);
             $table->decimal('totalPrice', 8, 2);
+            $table->integer('status');
             $table->time('timeStart');
             $table->time('timeEnd');
             $table->timestamps();

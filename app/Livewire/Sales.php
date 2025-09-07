@@ -19,8 +19,8 @@ class Sales extends Component
     public $selectedUser = '';
     public $selectedRideType = '';
     public $classification = '';
-    public $start_date = ''; // Added property for start date
-    public $end_date = ''; // Added property for end date
+    public $start_date = ''; 
+    public $end_date = ''; 
     public $load = [];
     public $dateRange = '';
     public $percentageChange;
@@ -77,10 +77,6 @@ class Sales extends Component
         $url = preg_replace('/\?page=\d+/', '', request()->header('Referer'));
         $url = preg_replace('/&page=\d+/', '', $url);
         return redirect($url);
-    }
-    public function refreshChart()
-    {
-        $this->dispatch('refreshPage');
     }
 
     public function updatedSelectedUser()
@@ -312,9 +308,7 @@ class Sales extends Component
         if ($this->dateRange) {
             switch ($this->dateRange) {
                 case 'select_day':
-                    if ($this->selected_day) {
-                        $query->whereDate('created_at', $this->selected_day);
-                    }
+                    $query->whereDate('created_at', $this->selected_day);
                     break;
                 case 'today':
                     $query->whereDate('created_at', Carbon::today());
@@ -341,20 +335,12 @@ class Sales extends Component
                     $query->whereYear('created_at', Carbon::now()->subYear()->year);
                     break;
                 case 'custom':
-                    if ($this->start_date && $this->end_date) {
-                        $query->whereBetween('created_at', [$this->start_date, $this->end_date]);
-                    }
+                    $query->whereBetween('created_at', [$this->start_date, $this->end_date]);
                     break;
                 case 'select_month':
-                    if ($this->selected_month) {
-                        try {
-                            $date = Carbon::parse($this->selected_month . '-01');
-                            $query->whereYear('created_at', $date->year)
-                                  ->whereMonth('created_at', $date->month);
-                        } catch (\Exception $e) {
-                            // Handle invalid date silently
-                        }
-                    }
+                    $date = Carbon::parse($this->selected_month . '-01');
+                    $query->whereYear('created_at', $date->year)
+                            ->whereMonth('created_at', $date->month);
                     break;
             }
         }
@@ -362,14 +348,14 @@ class Sales extends Component
         return $query->get();
     }
 
-    public function applyFilter()
-    {
-        // This will trigger a re-render with the current filter values
-        $this->dispatch('updateChart');
+    // public function applyFilter()
+    // {
+    //     // This will trigger a re-render with the current filter values
+    //     $this->dispatch('updateChart');
         
-        // Force a refresh of the data
-        $this->render();
-    }
+    //     // Force a refresh of the data
+    //     $this->render();
+    // }
 
     public function refreshPage()
     {

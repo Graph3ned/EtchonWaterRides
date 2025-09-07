@@ -47,7 +47,7 @@ new class extends Component
                 @if(auth()->check() && auth()->user()->userType == 0)
                     <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                         <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
-                            {{ __('Staff Dashboard') }}
+                            {{ __('Dashboard') }}
                         </x-nav-link>
                     </div>
                 @endif

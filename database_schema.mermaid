@@ -1,0 +1,100 @@
+erDiagram
+    USERS {
+        bigint id PK
+        varchar name
+        varchar email UK
+        varchar userType "0=Staff, 1=Admin"
+        timestamp email_verified_at
+        varchar password
+        varchar remember_token
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    RIDES_RENTAL_DBS {
+        bigint id PK
+        varchar user "Staff member name"
+        varchar rideType "Type of ride"
+        varchar classification "Classification within type"
+        text note "Additional notes"
+        int duration "Duration in minutes"
+        int life_jacket_usage "Number of life jackets"
+        decimal pricePerHour "Price per hour (8,2)"
+        decimal totalPrice "Total calculated price (8,2)"
+        time timeStart "Start time"
+        time timeEnd "End time"
+        varchar status "Ride status"
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    PRICES {
+        bigint id PK
+        varchar ride_type "Type of ride"
+        varchar classification "Classification within type"
+        int price_per_hour "Price per hour in PHP"
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    SESSIONS {
+        varchar id PK "Session ID"
+        bigint user_id FK "Foreign key to users"
+        varchar ip_address "User IP address"
+        text user_agent "Browser information"
+        longtext payload "Session data"
+        int last_activity "Last activity timestamp"
+    }
+    
+    CACHE {
+        varchar key PK "Cache key"
+        mediumtext value "Cache value"
+        int expiration "Expiration timestamp"
+    }
+    
+    CACHE_LOCKS {
+        varchar key PK "Lock key"
+        varchar owner "Lock owner"
+        int expiration "Lock expiration"
+    }
+    
+    JOBS {
+        bigint id PK
+        varchar queue "Queue name"
+        longtext payload "Job data"
+        tinyint attempts "Number of attempts"
+        int reserved_at "Reservation timestamp"
+        int available_at "Available timestamp"
+        int created_at "Creation timestamp"
+    }
+    
+    JOB_BATCHES {
+        varchar id PK "Batch ID"
+        varchar name "Batch name"
+        int total_jobs "Total jobs in batch"
+        int pending_jobs "Pending jobs count"
+        int failed_jobs "Failed jobs count"
+        longtext failed_job_ids "Failed job IDs"
+        mediumtext options "Batch options"
+        int cancelled_at "Cancellation timestamp"
+        int created_at "Creation timestamp"
+        int finished_at "Completion timestamp"
+    }
+    
+    FAILED_JOBS {
+        bigint id PK
+        varchar uuid UK "Job UUID"
+        text connection "Connection name"
+        text queue "Queue name"
+        longtext payload "Job payload"
+        longtext exception "Exception details"
+        timestamp failed_at "Failure timestamp"
+    }
+
+    %% Relationships
+    USERS ||--o{ RIDES_RENTAL_DBS : "creates"
+    USERS ||--o{ SESSIONS : "has"
+    PRICES ||--o{ RIDES_RENTAL_DBS : "prices"
+    
+    %% Business Logic Relationships
+    RIDES_RENTAL_DBS }o--|| PRICES : "rideType + classification"

@@ -12,6 +12,8 @@ class Staffs extends Component
     public $staffToDelete;
     public $modalDetails;
 
+    public $showRegister = false;
+
     public function mount()
     {
         $this->staffs = User::all();

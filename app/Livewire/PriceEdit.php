@@ -37,7 +37,7 @@ class PriceEdit extends Component
        $load->ride_type = $this->ride_type;
        $load->save();
 
-       return redirect()->route('priceClassification', ['ride_type' => $this->ride_type]);
+       return redirect()->route('ViewDetails', ['ride_type' => $this->ride_type]);
 
     }
 
