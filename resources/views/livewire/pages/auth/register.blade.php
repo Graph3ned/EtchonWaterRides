@@ -22,7 +22,18 @@ new #[Layout('layouts.guest')] class extends Component
     {
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'email' => [
+                'required', 'string', 'lowercase', 'email:rfc,dns', 'max:255', 'unique:'.User::class,
+                function ($attribute, $value, $fail) {
+                    $allowedDomains = [
+                        'gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'icloud.com', 'proton.me'
+                    ];
+                    $domain = substr(strrchr($value, '@') ?: '', 1);
+                    if (!$domain || !in_array($domain, $allowedDomains, true)) {
+                        $fail('Please use an email from an allowed provider (e.g., gmail.com).');
+                    }
+                },
+            ],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
         ]);
 
