@@ -6,9 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Traits\LogsActivity;
 
-class rides_rental_db extends Model
+class Rental extends Model
 {
     use HasFactory, LogsActivity;
+
+    protected $table = 'rentals';
 
     protected $fillable = [
         'user',

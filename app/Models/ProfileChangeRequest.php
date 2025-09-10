@@ -5,12 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class EmailChangeRequest extends Model
+class ProfileChangeRequest extends Model
 {
     protected $fillable = [
         'user_id',
         'new_email',
-        'otp_code',
+        'otp_code_hash',
         'payload',
         'expires_at',
         'consumed_at',

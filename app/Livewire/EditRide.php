@@ -2,7 +2,7 @@
 
 namespace App\Livewire;
 
-use App\Models\rides_rental_db;
+use App\Models\Rental;
 use Livewire\Component;
 use App\Models\prices;
 use Carbon\Carbon;
@@ -52,7 +52,7 @@ class EditRide extends Component
 
     private function loadRide()
     {
-        $ride = rides_rental_db::findOrFail($this->rideId);
+        $ride = Rental::findOrFail($this->rideId);
 
         $this->rideType = $ride->rideType;
         $this->classification = $ride->classification;
@@ -84,7 +84,7 @@ class EditRide extends Component
 
     public function updateRides()
     {
-        $ride = rides_rental_db::findOrFail($this->rideId);
+        $ride = Rental::findOrFail($this->rideId);
 
         $extensionMinutes = $this->showCustomDuration ? (int)$this->customDuration : (int)$this->extendDuration;
         $newDuration = $this->duration + $extensionMinutes;
@@ -104,7 +104,7 @@ class EditRide extends Component
 
     public function updateStatus()
     {
-        $ride = rides_rental_db::findOrFail($this->rideId);
+        $ride = Rental::findOrFail($this->rideId);
 
         $ride->status = $this->status;
         $ride->save();

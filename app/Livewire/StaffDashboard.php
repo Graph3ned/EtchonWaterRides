@@ -1,7 +1,7 @@
 <?php
 namespace App\Livewire;
 
-use App\Models\rides_rental_db;
+use App\Models\Rental;
 use Livewire\Component;
 use Carbon\Carbon;
 
@@ -45,8 +45,8 @@ class StaffDashboard extends Component
     private function refreshRides()
     {
 
-        $this->rides = rides_rental_db::whereDate('created_at', Carbon::today())->get();
-        $this->totalPrice = rides_rental_db::whereDate('created_at', Carbon::today())->sum('totalPrice');
+        $this->rides = Rental::whereDate('created_at', Carbon::today())->get();
+        $this->totalPrice = Rental::whereDate('created_at', Carbon::today())->sum('totalPrice');
     }
 
 //     private function refreshRides()
@@ -58,8 +58,8 @@ class StaffDashboard extends Component
 //     $targetDate = $user->userType == 0 || 2 ? Carbon::today() : Carbon::tomorrow();
 
 //     // Fetch rides for the target date
-//     $this->rides = rides_rental_db::whereDate('created_at', $targetDate)->get();
-//     $this->totalPrice = rides_rental_db::whereDate('created_at', $targetDate)->sum('totalPrice');
+//     $this->rides = Rental::whereDate('created_at', $targetDate)->get();
+//     $this->totalPrice = Rental::whereDate('created_at', $targetDate)->sum('totalPrice');
 // }
 
 
@@ -94,7 +94,7 @@ class StaffDashboard extends Component
 
     public function deleteRide()
     {
-        rides_rental_db::find($this->rideToDelete)->delete();
+        Rental::find($this->rideToDelete)->delete();
         $this->refreshRides();
         $this->closeModal();
 

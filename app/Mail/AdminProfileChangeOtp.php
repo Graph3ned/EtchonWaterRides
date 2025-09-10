@@ -6,7 +6,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
-class AdminEmailChangeOtp extends Mailable
+class AdminProfileChangeOtp extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -21,8 +21,8 @@ class AdminEmailChangeOtp extends Mailable
 
     public function build()
     {
-        return $this->subject('Confirm your email change')
-            ->view('emails.admin-email-change-otp');
+        return $this->subject('Confirm your profile changes')
+            ->view('emails.admin-profile-change-otp');
     }
 }
 

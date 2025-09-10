@@ -2,7 +2,7 @@
 
 namespace App\Livewire;
 
-use App\Models\rides_rental_db;
+use App\Models\Rental;
 use Carbon\Carbon;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -42,7 +42,7 @@ class Sales extends Component
         $this->start_date = session('start_date', '');
         $this->end_date = session('end_date', '');
         $this->paginate = session('paginate', 10);
-        $this->load = rides_rental_db::all();
+        $this->load = Rental::all();
         $this->selected_day = session('selected_day', '');
         $this->selected_month = session('selected_month', '');
     }
@@ -227,10 +227,10 @@ class Sales extends Component
         $rides = $filteredRidesQuery->paginate($this->paginate);
 
         // Fetch the distinct values for filtering
-        $users = rides_rental_db::distinct()->pluck('user');
-        $rideTypes = rides_rental_db::when($this->selectedUser, fn($query) => $query->where('user', $this->selectedUser))
+        $users = Rental::distinct()->pluck('user');
+        $rideTypes = Rental::when($this->selectedUser, fn($query) => $query->where('user', $this->selectedUser))
             ->distinct()->pluck('rideType');
-        $classifications = rides_rental_db::query()
+        $classifications = Rental::query()
             ->when($this->selectedUser !== '', fn($query) => $query->where('user', $this->selectedUser))
             ->when($this->selectedRideType !== '', fn($query) => $query->where('rideType', $this->selectedRideType))
             ->distinct()->pluck('classification');
@@ -279,7 +279,7 @@ class Sales extends Component
 
     protected function buildFilteredRidesQuery()
     {
-        $query = rides_rental_db::query()
+        $query = Rental::query()
             ->when($this->selectedUser, fn($query) => $query->where('user', $this->selectedUser))
             ->when($this->selectedRideType, fn($query) => $query->where('rideType', $this->selectedRideType))
             ->when($this->classification, fn($query) => $query->where('classification', $this->classification));
@@ -289,7 +289,7 @@ class Sales extends Component
 
     public function getAllRidesForChart()
     {
-        $query = rides_rental_db::query();  // Assuming your model is named Ride
+        $query = Rental::query();  // Assuming your model is named Ride
 
         // Apply the same filters as your paginated query
         if ($this->selectedUser) {

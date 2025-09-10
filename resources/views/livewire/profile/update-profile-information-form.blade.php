@@ -7,8 +7,8 @@ use Illuminate\Validation\Rule;
 use Livewire\Volt\Component;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
-use App\Models\EmailChangeRequest;
-use App\Mail\AdminEmailChangeOtp;
+use App\Models\ProfileChangeRequest;
+use App\Mail\AdminProfileChangeOtp;
 
 new class extends Component
 {
@@ -56,13 +56,13 @@ new class extends Component
                 $expiresAt = now()->addMinutes(10);
 
                 // Clear prior pending
-                EmailChangeRequest::where('user_id', $user->id)->whereNull('consumed_at')->delete();
+                ProfileChangeRequest::where('user_id', $user->id)->whereNull('consumed_at')->delete();
 
                 // Create request first, then attempt to send
-                $request = EmailChangeRequest::create([
+                $request = ProfileChangeRequest::create([
                     'user_id' => $user->id,
                     'new_email' => $validated['email'],
-                    'otp_code' => $otp,
+                    'otp_code_hash' => Hash::make($otp),
                     'expires_at' => $expiresAt,
                 ]);
 
@@ -71,7 +71,7 @@ new class extends Component
                         throw new \RuntimeException('Current email is empty; cannot verify.');
                     }
                     // Send OTP to the CURRENT (old) email for ownership verification
-                    Mail::to($user->email)->send(new AdminEmailChangeOtp($otp, $user->name));
+                    Mail::to($user->email)->send(new AdminProfileChangeOtp($otp, $user->name));
                     Session::flash('status', 'email-change-otp-sent');
                     // track pending new email and keep the input showing the target new email
                     $this->pendingNewEmail = (string) ($validated['email'] ?? '');
@@ -110,6 +110,15 @@ new class extends Component
                 'new_password_confirmation' => ['nullable', 'string', 'min:8'],
             ]);
 
+            // Check if email domain is valid (if email is being changed)
+            $targetEmail = $validated['email'] ?? null;
+            if ($targetEmail && $targetEmail !== ($user->email ?? null)) {
+                if (!$this->validateEmailDomain($targetEmail)) {
+                    $this->addError('email', 'This email domain is not valid or cannot receive emails.');
+                    return;
+                }
+            }
+
             // Build payload of intended updates
             $payload = ['updates' => []];
             $targetEmail = $validated['email'] ?? null;
@@ -141,13 +150,13 @@ new class extends Component
                 $otp = (string) random_int(100000, 999999);
                 $expiresAt = now()->addMinutes(10);
 
-                EmailChangeRequest::where('user_id', $user->id)->whereNull('consumed_at')->delete();
+                ProfileChangeRequest::where('user_id', $user->id)->whereNull('consumed_at')->delete();
 
-                $request = EmailChangeRequest::create([
+                $request = ProfileChangeRequest::create([
                     'user_id' => $user->id,
                     'new_email' => $targetEmail,
                     'payload' => $payload,
-                    'otp_code' => $otp,
+                    'otp_code_hash' => Hash::make($otp),
                     'expires_at' => $expiresAt,
                 ]);
 
@@ -155,7 +164,7 @@ new class extends Component
                     if (empty($user->email)) {
                         throw new \RuntimeException('Current email is empty; cannot verify.');
                     }
-                    Mail::to($user->email)->send(new AdminEmailChangeOtp($otp, $user->name));
+                    Mail::to($user->email)->send(new AdminProfileChangeOtp($otp, $user->name));
                     Session::flash('status', 'email-change-otp-sent');
                     // Keep showing target new email while waiting for OTP (if email is changing)
                     if ($targetEmail) {
@@ -226,13 +235,13 @@ new class extends Component
         $otp = (string) random_int(100000, 999999);
         $expiresAt = now()->addMinutes(10);
 
-        EmailChangeRequest::where('user_id', $user->id)->whereNull('consumed_at')->delete();
+        ProfileChangeRequest::where('user_id', $user->id)->whereNull('consumed_at')->delete();
 
-        $request = EmailChangeRequest::create([
+        $request = ProfileChangeRequest::create([
             'user_id' => $user->id,
             'new_email' => $targetEmail,
             'payload' => $payload,
-            'otp_code' => $otp,
+            'otp_code_hash' => Hash::make($otp),
             'expires_at' => $expiresAt,
         ]);
 
@@ -240,7 +249,7 @@ new class extends Component
             if (empty($user->email)) {
                 throw new \RuntimeException('Current email is empty; cannot verify.');
             }
-            Mail::to($user->email)->send(new AdminEmailChangeOtp($otp, $user->name));
+            Mail::to($user->email)->send(new AdminProfileChangeOtp($otp, $user->name));
             Session::flash('status', 'email-change-otp-sent');
             if ($targetEmail) {
                 $this->pendingNewEmail = (string) $targetEmail;
@@ -269,14 +278,13 @@ new class extends Component
             throw $e;
         }
 
-        $request = EmailChangeRequest::where('user_id', $user->id)
+        $request = ProfileChangeRequest::where('user_id', $user->id)
             ->whereNull('consumed_at')
             ->latest()
             ->first();
 
         $provided = trim($this->otp ?? '');
-        $expected = (string) ($request->otp_code ?? '');
-        if (! $request || $request->expires_at->isPast() || ! hash_equals($expected, $provided)) {
+        if (! $request || $request->expires_at->isPast() || ! Hash::check($provided, $request->otp_code_hash)) {
             $this->addError('otp', 'Invalid or expired code.');
             Session::flash('status', 'email-change-otp-invalid');
             // keep showing the target new email until success or cancel
@@ -296,6 +304,47 @@ new class extends Component
         $this->pendingNewEmail = '';
         Session::flash('status', 'email-change-confirmed');
         $this->dispatch('profile-updated', name: $user->name);
+    }
+
+    /**
+     * Validate email domain by checking MX records
+     */
+    private function validateEmailDomain(string $email): bool
+    {
+        try {
+            // First check if email format is valid
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                return false;
+            }
+
+            // Extract domain from email
+            $domain = substr(strrchr($email, "@"), 1);
+            
+            // Check if domain has valid MX records (can receive emails)
+            if (!checkdnsrr($domain, 'MX')) {
+                return false;
+            }
+
+            // Check for common disposable email domains
+            $disposableDomains = [
+                '10minutemail.com', 'tempmail.org', 'guerrillamail.com', 
+                'mailinator.com', 'temp-mail.org', 'throwaway.email',
+                'yopmail.com', 'maildrop.cc', 'sharklasers.com'
+            ];
+            
+            if (in_array(strtolower($domain), $disposableDomains)) {
+                return false;
+            }
+
+            // Additional validation: check if domain is not obviously fake
+            if (strlen($domain) < 3 || strpos($domain, '.') === false) {
+                return false;
+            }
+
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
     }
 
     /**

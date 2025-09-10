@@ -1,6 +1,6 @@
 <p>Hi {{ $name }},</p>
 
-<p>We received a request to change the email for your admin account. Please use the one-time code below to confirm this change. This code was sent to your current email to verify it's really you:</p>
+<p>We received a request to change your profile information. Please use the one-time code below to confirm these changes. This code was sent to your current email to verify it's really you:</p>
 
 <h2 style="font-size: 24px; font-weight: bold;">{{ $otp }}</h2>
 

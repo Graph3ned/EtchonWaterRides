@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 use Carbon\Carbon;
-use App\Models\rides_rental_db;
+use App\Models\Rental;
 
 // Route::view('/', 'welcome');
 Route::get('/', function () {
@@ -81,7 +81,7 @@ Route::get('/admin/generate-report', function (\Illuminate\Http\Request $request
 	$selectedDay = session('selected_day', '');
 	$selectedMonth = session('selected_month', '');
 
-	$query = rides_rental_db::query();
+	$query = Rental::query();
 
 	if ($selectedUser !== '') {
 		$query->where('user', $selectedUser);

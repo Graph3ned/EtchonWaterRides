@@ -2,7 +2,7 @@
 
 namespace App\Livewire;
 
-use App\Models\rides_rental_db;
+use App\Models\Rental;
 use Livewire\Component;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -126,7 +126,7 @@ class AddRide extends Component
         $this->validate($this->rules());
 
         // Save the rental record to the database
-        rides_rental_db::create([
+        Rental::create([
             'rideType' => $this->rideType,
             'classification' => $this->classification,
             'note' => $this->note,

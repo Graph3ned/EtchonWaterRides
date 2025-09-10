@@ -8,11 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('email_change_requests', function (Blueprint $table) {
+        Schema::create('profile_change_requests', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('new_email');
-            $table->string('otp_code', 10);
+            $table->string('new_email')->nullable();
+            $table->string('otp_code_hash', 255);
             $table->json('payload')->nullable();
             $table->timestamp('expires_at');
             $table->timestamp('consumed_at')->nullable();
@@ -22,7 +22,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('email_change_requests');
+        Schema::dropIfExists('profile_change_requests');
     }
 };
 
