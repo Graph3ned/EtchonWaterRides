@@ -67,6 +67,10 @@ Route::view('/admin/priceEdit/{id}', 'priceEdit')
     ->middleware(['auth', 'verified', 'admin'])
     ->name('priceEdit');
 
+Route::view('/admin/logs', 'logs')
+    ->middleware(['auth', 'verified', 'admin'])
+    ->name('logs');
+
 Route::get('/admin/generate-report', function (\Illuminate\Http\Request $request) {
 	$selectedUser = session('selected_staff', '');
 	$selectedRideType = session('selected_ride_type', '');
