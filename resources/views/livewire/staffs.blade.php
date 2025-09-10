@@ -37,8 +37,8 @@
                                     <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-white uppercase">
                                         Name
                                     </th>
-                                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-white uppercase hidden sm:table-cell">
-                                        Email
+                                    <th scope="col" class="px-6 py-4 text-center text-xs font-semibold text-white uppercase hidden sm:table-cell">
+                                        Username
                                     </th>
                                     <th scope="col" class="px-6 py-4 text-right text-xs font-semibold text-white uppercase">
                                         Actions
@@ -55,12 +55,12 @@
                                                 </div>
                                                 <!-- Show email on mobile -->
                                                 <div class="text-sm text-gray-500 sm:hidden">
-                                                    {{$staff->email}}
+                                                    {{$staff->username}}
                                                 </div>
                                             </td>
-                                            <td class="px-6 py-4 whitespace-nowrap hidden sm:table-cell">
+                                            <td class="px-6 py-4 whitespace-nowrap text-center hidden sm:table-cell">
                                                 <div class="text-sm text-gray-500">
-                                                    {{$staff->email}}
+                                                    {{$staff->username}}
                                                 </div>
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-right">

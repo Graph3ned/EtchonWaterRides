@@ -36,18 +36,18 @@ new #[Layout('layouts.guest')] class extends Component
         <x-auth-session-status class="mb-4" :status="session('status')" />
 
         <form wire:submit="login" class="space-y-4">
-            <!-- Email Address -->
+            <!-- Username -->
             <div>
-                <x-input-label for="email" :value="__('Email')" class="text-blue-800 font-medium text-sm" />
-                <x-text-input wire:model="form.email" 
-                    id="email" 
+                <x-input-label for="username" :value="__('Username')" class="text-blue-800 font-medium text-sm" />
+                <x-text-input wire:model="form.username" 
+                    id="username" 
                     class="block mt-1 w-full text-sm rounded-md border-blue-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm" 
-                    type="email" 
-                    name="email" 
+                    type="text" 
+                    name="username" 
                     required 
                     autofocus 
                     autocomplete="username" />
-                <x-input-error :messages="$errors->get('form.email')" class="mt-1" />
+                <x-input-error :messages="$errors->get('form.username')" class="mt-1" />
             </div>
 
             <!-- Password -->

@@ -11,7 +11,7 @@ use Livewire\Volt\Component;
 new #[Layout('layouts.guest')] class extends Component
 {
     public string $name = '';
-    public string $email = '';
+    public string $username = '';
     public string $password = '';
     public string $password_confirmation = '';
 
@@ -22,18 +22,7 @@ new #[Layout('layouts.guest')] class extends Component
     {
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => [
-                'required', 'string', 'lowercase', 'email:rfc,dns', 'max:255', 'unique:'.User::class,
-                function ($attribute, $value, $fail) {
-                    $allowedDomains = [
-                        'gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'icloud.com', 'proton.me'
-                    ];
-                    $domain = substr(strrchr($value, '@') ?: '', 1);
-                    if (!$domain || !in_array($domain, $allowedDomains, true)) {
-                        $fail('Please use an email from an allowed provider (e.g., gmail.com).');
-                    }
-                },
-            ],
+            'username' => ['required', 'string', 'max:255', 'alpha_dash', 'unique:'.User::class],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
         ]);
 
@@ -76,17 +65,17 @@ new #[Layout('layouts.guest')] class extends Component
                 <x-input-error :messages="$errors->get('name')" class="mt-1" />
             </div>
 
-            <!-- Email Address -->
+            <!-- Username -->
             <div>
-                <x-input-label for="email" :value="__('Email')" class="text-blue-800 font-medium text-sm" />
-                <x-text-input wire:model="email" 
-                    id="email" 
+                <x-input-label for="username" :value="__('Username')" class="text-blue-800 font-medium text-sm" />
+                <x-text-input wire:model="username" 
+                    id="username" 
                     class="block mt-1 w-full text-sm rounded-md border-blue-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm" 
-                    type="email" 
-                    name="email" 
+                    type="text" 
+                    name="username" 
                     required 
                     autocomplete="username" />
-                <x-input-error :messages="$errors->get('email')" class="mt-1" />
+                <x-input-error :messages="$errors->get('username')" class="mt-1" />
             </div>
 
             <!-- Password -->

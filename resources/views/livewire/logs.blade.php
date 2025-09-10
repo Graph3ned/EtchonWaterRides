@@ -1,7 +1,7 @@
 <div class="min-h-full">
     <div class="w-full p-4 relative">
         <!-- Clean title with logo blue -->
-        <h2 class="text-2xl font-bold text-center mb-6 text-[#00A3E0]">📝 Staff Logs</h2>
+        <h2 class="text-2xl font-bold text-center mb-6 text-[#00A3E0]">📝 Staff Activity Logs</h2>
 
         <div class="flex justify-between items-center mb-6 flex-col sm:flex-row space-y-4 sm:space-y-0">
             <div class="flex items-center space-x-4">
