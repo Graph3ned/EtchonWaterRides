@@ -11,6 +11,7 @@ class EmailChangeRequest extends Model
         'user_id',
         'new_email',
         'otp_code',
+        'payload',
         'expires_at',
         'consumed_at',
     ];
@@ -18,6 +19,7 @@ class EmailChangeRequest extends Model
     protected $casts = [
         'expires_at' => 'datetime',
         'consumed_at' => 'datetime',
+        'payload' => 'array',
     ];
 
     public function user(): BelongsTo
