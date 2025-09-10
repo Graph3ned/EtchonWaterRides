@@ -259,9 +259,15 @@ new class extends Component
             return;
         }
 
-        $this->validate([
-            'otp' => ['required', 'digits:6'],
-        ]);
+        try {
+            $this->validate([
+                'otp' => ['required', 'digits:6'],
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Keep the OTP input visible when validation fails
+            Session::flash('status', 'email-change-otp-invalid');
+            throw $e;
+        }
 
         $request = EmailChangeRequest::where('user_id', $user->id)
             ->whereNull('consumed_at')
@@ -387,7 +393,7 @@ new class extends Component
     @endif
 
         <div class="flex items-center gap-4">
-            @if (!session('status') || session('status') === 'email-change-otp-invalid' || session('status') === 'email-change-confirmed')
+            @if (!session('status') || session('status') === 'email-change-confirmed')
                 <x-primary-button wire:loading.attr="disabled" wire:target="validateProfileChanges">
                     <span wire:loading.remove wire:target="validateProfileChanges">{{ __('Save') }}</span>
                     <span wire:loading wire:target="validateProfileChanges" class="flex items-center">
