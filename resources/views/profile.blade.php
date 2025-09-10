@@ -21,7 +21,12 @@
                             <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                                 <div class="space-y-1">
                                     <h2 class="text-xl font-bold text-white">Profile Information</h2>
-                                    <p class="text-white/80 text-sm">Update your account's profile information and email address.</p>
+                                    @if(auth()->check() && auth()->user()->userType == 1)
+                                    <p class="text-white/80 text-sm">Modify your name, username, email, and password.</p>
+                                    @endif
+                                    @if(auth()->check() && auth()->user()->userType == 0)
+                                    <p class="text-white/80 text-sm">Update your account's profile information and username.</p>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -31,7 +36,7 @@
                             <livewire:profile.update-profile-information-form />
                         </div>
                     </div>
-
+                    @if(auth()->check() && auth()->user()->userType == 0)
                     <!-- Update Password Form -->
                     <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 transition-all duration-300 hover:shadow-xl">
                         <!-- Card Header with gradient background -->
@@ -49,6 +54,7 @@
                             <livewire:profile.update-password-form />
                         </div>
                     </div>
+                    @endif
                 </div>
             </div>
         </div>
