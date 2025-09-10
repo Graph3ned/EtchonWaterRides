@@ -64,9 +64,13 @@ new #[Layout('layouts.guest')] class extends Component
             </div>
 
             <div class="flex items-center justify-between">
-                <p class="text-xs text-blue-600 text-center">
-                    Let's get you in!
-                </p>
+                
+                    
+                    <a href="{{ route('password.request') }}" 
+                       class="text-xs text-blue-500 hover:text-blue-700 transition-colors duration-200 mt-1">
+                        Forgot Password?
+                    </a>
+                
 
                 <x-primary-button class="bg-blue-600 hover:bg-blue-700 transition-colors duration-200 rounded-md px-4 py-2 text-sm">
                     {{ __('Dive In') }}

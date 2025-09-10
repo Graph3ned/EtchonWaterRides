@@ -10,6 +10,15 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+// Password reset routes
+Route::get('/forgot-password', \App\Livewire\ForgotPassword::class)
+    ->middleware('guest')
+    ->name('password.request');
+
+Route::get('/reset-password/{token}/{username}', \App\Livewire\ResetPassword::class)
+    ->middleware('guest')
+    ->name('password.reset');
+
 Route::view('/staff/dashboard', 'staff-dashboard')
     ->middleware(['auth', 'verified', 'staff'])
     ->name('dashboard');
