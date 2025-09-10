@@ -37,10 +37,13 @@
                                     <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-white uppercase">
                                         Name
                                     </th>
-                                    <th scope="col" class="px-6 py-4 text-center text-xs font-semibold text-white uppercase hidden sm:table-cell">
+                                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-white uppercase hidden sm:table-cell">
                                         Username
                                     </th>
-                                    <th scope="col" class="px-6 py-4 text-right text-xs font-semibold text-white uppercase">
+                                    <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-white uppercase hidden sm:table-cell">
+                                        Email
+                                    </th>
+                                    <th scope="col" class="px-6 py-4 text-center text-xs font-semibold text-white uppercase">
                                         Actions
                                     </th>
                                 </tr>
@@ -57,14 +60,22 @@
                                                 <div class="text-sm text-gray-500 sm:hidden">
                                                     {{$staff->username}}
                                                 </div>
+                                                <div class="text-sm text-gray-500 sm:hidden">
+                                                    {{$staff->email}}
+                                                </div>
                                             </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-center hidden sm:table-cell">
+                                            <td class="px-6 py-4 whitespace-nowrap text-left hidden sm:table-cell">
                                                 <div class="text-sm text-gray-500">
                                                     {{$staff->username}}
                                                 </div>
                                             </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-right">
-                                                <div class="flex justify-end space-x-2">
+                                            <td class="px-6 py-4 whitespace-nowrap text-left hidden sm:table-cell">
+                                                <div class="text-sm text-gray-500">
+                                                    {{$staff->email}}
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                                <div class="flex justify-center space-x-2">
                                                     <button wire:navigate 
                                                             href="/admin/staff-edit/{{$staff->id}}"
                                                             class="inline-flex items-center px-3 py-1.5

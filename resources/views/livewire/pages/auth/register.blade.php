@@ -12,6 +12,7 @@ new #[Layout('layouts.guest')] class extends Component
 {
     public string $name = '';
     public string $username = '';
+    public string $email = '';
     public string $password = '';
     public string $password_confirmation = '';
 
@@ -23,8 +24,15 @@ new #[Layout('layouts.guest')] class extends Component
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:255', 'alpha_dash', 'unique:'.User::class],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
         ]);
+
+        // Check if email domain is valid
+        if (!$this->validateEmailDomain($validated['email'])) {
+            $this->addError('email', 'This email domain is not valid or cannot receive emails.');
+            return;
+        }
 
         $validated['password'] = Hash::make($validated['password']);
 
@@ -39,6 +47,47 @@ new #[Layout('layouts.guest')] class extends Component
         // Auth::login($user);
 
         // $this->redirect(route('dashboard', absolute: false), navigate: true);
+    }
+
+    /**
+     * Validate email domain by checking MX records
+     */
+    private function validateEmailDomain(string $email): bool
+    {
+        try {
+            // First check if email format is valid
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                return false;
+            }
+
+            // Extract domain from email
+            $domain = substr(strrchr($email, "@"), 1);
+            
+            // Check if domain has valid MX records (can receive emails)
+            if (!checkdnsrr($domain, 'MX')) {
+                return false;
+            }
+
+            // Check for common disposable email domains
+            $disposableDomains = [
+                '10minutemail.com', 'tempmail.org', 'guerrillamail.com', 
+                'mailinator.com', 'temp-mail.org', 'throwaway.email',
+                'yopmail.com', 'maildrop.cc', 'sharklasers.com'
+            ];
+            
+            if (in_array(strtolower($domain), $disposableDomains)) {
+                return false;
+            }
+
+            // Additional validation: check if domain is not obviously fake
+            if (strlen($domain) < 3 || strpos($domain, '.') === false) {
+                return false;
+            }
+
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
     }
 }; ?>
 
@@ -76,6 +125,19 @@ new #[Layout('layouts.guest')] class extends Component
                     required 
                     autocomplete="username" />
                 <x-input-error :messages="$errors->get('username')" class="mt-1" />
+            </div>
+
+            <!-- Email -->
+            <div>
+                <x-input-label for="email" :value="__('Email')" class="text-blue-800 font-medium text-sm" />
+                <x-text-input wire:model="email" 
+                    id="email" 
+                    class="block mt-1 w-full text-sm rounded-md border-blue-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm" 
+                    type="email" 
+                    name="email" 
+                    required 
+                    autocomplete="email" />
+                <x-input-error :messages="$errors->get('email')" class="mt-1" />
             </div>
 
             <!-- Password -->
