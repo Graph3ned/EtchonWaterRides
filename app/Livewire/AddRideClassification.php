@@ -13,9 +13,22 @@ class AddRideClassification extends Component
     public $rideTypes = []; // To store the list of ride types
 
     protected $rules = [
-        'ride_type' => 'required|string',
-        'classification' => 'required|string',
-        'price_per_hour' => 'required|integer|min:1',
+        'ride_type' => 'required|string|max:255',
+        'classification' => 'required|string|max:255',
+        'price_per_hour' => 'required|numeric|min:0.01|max:999999.99',
+    ];
+
+    protected $messages = [
+        'ride_type.required' => 'Ride type is required.',
+        'ride_type.string' => 'Ride type must be text.',
+        'ride_type.max' => 'Ride type cannot exceed 255 characters.',
+        'classification.required' => 'Classification is required.',
+        'classification.string' => 'Classification must be text.',
+        'classification.max' => 'Classification cannot exceed 255 characters.',
+        'price_per_hour.required' => 'Price per hour is required.',
+        'price_per_hour.numeric' => 'Price per hour must be a number.',
+        'price_per_hour.min' => 'Price per hour must be greater than 0.',
+        'price_per_hour.max' => 'Price per hour cannot exceed 999,999.99.',
     ];
 
     public function mount($ride_type)

@@ -11,6 +11,7 @@ class StaffEdit extends Component
     public $staffId;
     public $name;
     public $email;
+    public $username;
     public $password;
     public $password_confirmation;
 
@@ -20,6 +21,7 @@ class StaffEdit extends Component
         $this->staffId = $staff->id;
         $this->name = $staff->name;
         $this->email = $staff->email;
+        $this->username = $staff->username;
     }
 
     public function updateStaff()
@@ -27,6 +29,7 @@ class StaffEdit extends Component
         $validationRules = [
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $this->staffId,
+            'username' => 'required|string|max:255|unique:users,username,' . $this->staffId,
         ];
 
         // Only validate password if it's being changed
@@ -40,6 +43,7 @@ class StaffEdit extends Component
         $updateData = [
             'name' => $this->name,
             'email' => $this->email,
+            'username' => $this->username,
         ];
 
         // Only update password if a new one is provided

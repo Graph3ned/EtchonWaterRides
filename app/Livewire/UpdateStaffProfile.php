@@ -12,6 +12,7 @@ class UpdateStaffProfile extends Component
     public $userId;
     public $name = '';
     public $email = '';
+    public $username = '';
     public $userType;
 
     private $originalAdminId;
@@ -57,6 +58,7 @@ class UpdateStaffProfile extends Component
         $this->userId = $user->id;
         $this->name = $user->name;
         $this->email = $user->email;
+        $this->username = $user->username;
         $this->userType = $user->userType;
     }
 
@@ -69,6 +71,7 @@ class UpdateStaffProfile extends Component
         $validatedData = $this->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $this->userId,
+            'username' => 'required|string|max:255|unique:users,username,' . $this->userId,
             'userType' => 'required|integer',
         ]);
 

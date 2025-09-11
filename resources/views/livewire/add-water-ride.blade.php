@@ -69,6 +69,8 @@
                             <input wire:model="price_per_hour" 
                                 id="price_per_hour" 
                                 type="number" 
+                                min="0.01"
+                                step="0.01"
                                 placeholder="100"
                                 class="w-full text-sm rounded-lg border-gray-200 bg-gray-50 focus:bg-white hover:bg-gray-50/80
                                        focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200">

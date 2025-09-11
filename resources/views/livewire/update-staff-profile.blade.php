@@ -22,6 +22,12 @@
             <x-input-error class="mt-2" :messages="$errors->get('email')" />
         </div>
 
+        <div>
+            <x-input-label for="username" :value="__('Username')" />
+            <x-text-input wire:model="username" id="username" type="text" class="mt-1 block w-full" required />
+            <x-input-error class="mt-2" :messages="$errors->get('username')" />
+        </div>
+
         
 
         <div class="flex items-center gap-4">

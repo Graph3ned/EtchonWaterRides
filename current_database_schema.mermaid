@@ -10,7 +10,7 @@ erDiagram
         timestamp updated_at
     }
     
-    RIDES_RENTAL_DBS {
+    RENTALS {
         bigint id PK
         varchar user "Staff member name"
         varchar rideType "Type of ride"
@@ -44,10 +44,43 @@ erDiagram
         longtext payload "Session data"
         int last_activity "Last activity timestamp"
     }
+    
+    STAFF_LOGS {
+        bigint id PK
+        bigint user_id FK "Foreign key to users"
+        varchar action "Action performed"
+        varchar model_type "Type of model affected"
+        bigint model_id "ID of affected model"
+        json old_values "Previous values"
+        json new_values "New values"
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    PROFILE_CHANGE_REQUESTS {
+        bigint id PK
+        bigint user_id FK "Foreign key to users"
+        varchar new_email "New email address"
+        varchar otp_code_hash "OTP verification hash"
+        json payload "Additional data"
+        timestamp expires_at "Expiration time"
+        timestamp consumed_at "When OTP was used"
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    PASSWORD_RESET_TOKENS {
+        varchar email PK "Email address"
+        varchar token "Reset token"
+        timestamp created_at "Token creation time"
+    }
 
-    %% Relationships
-    USERS ||--o{ SESSIONS : "has (FK)"
+    %% Foreign Key Relationships
+    USERS ||--o{ SESSIONS : "has sessions"
+    USERS ||--o{ STAFF_LOGS : "performs actions"
+    USERS ||--o{ PROFILE_CHANGE_REQUESTS : "requests changes"
+    USERS ||--o{ PASSWORD_RESET_TOKENS : "requests reset"
     
     %% Loose Coupling Relationships (No FKs)
-    USERS }o--o{ RIDES_RENTAL_DBS : "user field (string)"
-    PRICES }o--o{ RIDES_RENTAL_DBS : "rideType + classification"
+    USERS }o--o{ RENTALS : "user field (string)"
+    PRICES }o--o{ RENTALS : "rideType + classification"

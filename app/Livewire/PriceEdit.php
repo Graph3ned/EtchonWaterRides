@@ -13,8 +13,18 @@ class PriceEdit extends Component
     // public $rideTypes = []; 
 
     protected $rules = [
-        'classification' => 'required|string',
-        'price_per_hour' => 'required|integer|min:1',
+        'classification' => 'required|string|max:255',
+        'price_per_hour' => 'required|numeric|min:0.01|max:999999.99',
+    ];
+
+    protected $messages = [
+        'classification.required' => 'Classification is required.',
+        'classification.string' => 'Classification must be text.',
+        'classification.max' => 'Classification cannot exceed 255 characters.',
+        'price_per_hour.required' => 'Price per hour is required.',
+        'price_per_hour.numeric' => 'Price per hour must be a number.',
+        'price_per_hour.min' => 'Price per hour must be greater than 0.',
+        'price_per_hour.max' => 'Price per hour cannot exceed 999,999.99.',
     ];
 
     public function mount()
@@ -29,16 +39,18 @@ class PriceEdit extends Component
 
     public function update()
     {
+        // Validate the input data
+        $this->validate();
 
         $load = prices::find($this->id);
 
-       $load->classification = $this->classification;
-       $load->price_per_hour = $this->price_per_hour;
-       $load->ride_type = $this->ride_type;
-       $load->save();
+        $load->classification = $this->classification;
+        $load->price_per_hour = $this->price_per_hour;
+        $load->ride_type = $this->ride_type;
+        $load->save();
 
-       return redirect()->route('ViewDetails', ['ride_type' => $this->ride_type]);
-
+        session()->flash('message', 'Price updated successfully!');
+        return redirect()->route('ViewDetails', ['ride_type' => $this->ride_type]);
     }
 
     public function render()
