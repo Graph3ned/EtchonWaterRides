@@ -156,19 +156,49 @@ Route::get('/admin/generate-report', function (\Illuminate\Http\Request $request
 			break;
 	}
 
-	$rides = $query->orderBy('created_at', 'desc')->get(['totalPrice', 'created_at']);
+	// Get all columns from the rentals table
+	$rides = $query->orderBy('created_at', 'desc')->get();
 
-	$filename = 'sales_report_' . Carbon::now()->format('Ymd_His') . '.csv';
+	$filename = 'complete_rentals_report_' . Carbon::now()->format('Ymd_His') . '.csv';
 
 	return response()->streamDownload(function () use ($rides) {
 		$handle = fopen('php://output', 'w');
 		// UTF-8 BOM for Excel
 		fprintf($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
-		fputcsv($handle, ['Income', 'Date']);
+		
+		// CSV Headers - all columns from the table
+		fputcsv($handle, [
+			'No.',
+			'Staff',
+			'Ride Type',
+			'Classification',
+			'Duration (minutes)',
+			'Life Jackets',
+			'Total Price',
+			'Start Time',
+			'End Time',
+			'Date',
+			'Note',
+			
+		]);
+
+		// CSV Data
+		$counter = 1;
 		foreach ($rides as $ride) {
 			fputcsv($handle, [
+				$counter++,
+				$ride->user,
+				str_replace('_', ' ', $ride->rideType),
+				str_replace('_', ' ', $ride->classification),
+				$ride->duration >= 60 
+					? (intdiv($ride->duration, 60) . 'hr' . ($ride->duration % 60 > 0 ? ' ' . ($ride->duration % 60) . 'min' : ''))
+					: $ride->duration . 'min',
+				$ride->life_jacket_usage,
 				number_format((float) $ride->totalPrice, 2, '.', ''),
-				Carbon::parse($ride->created_at)->format('Y-m-d'),
+				Carbon::parse($ride->timeStart)->format('h:i A'),
+				Carbon::parse($ride->timeEnd)->format('h:i A'),
+				Carbon::parse($ride->created_at)->format('M/d/Y'),
+				$ride->note ?? '-',
 			]);
 		}
 		fclose($handle);
