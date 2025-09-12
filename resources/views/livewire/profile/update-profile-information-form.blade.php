@@ -34,66 +34,6 @@ new class extends Component
     /**
      * Update the profile information for the currently authenticated user.
      */
-    public function updateProfileInformation(): void
-    {
-        $user = Auth::user();
-
-        if ($user->userType == 1) {
-            $validated = $this->validate([
-                'name' => ['required', 'string', 'max:255'],
-                'username' => ['required', 'string', 'max:255', Rule::unique(User::class)->ignore($user->id)],
-                'email' => ['nullable', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class, 'email')->ignore($user->id)],
-            ]);
-
-            \App\Models\User::query()->where('id', $user->id)->update([
-                'name' => $validated['name'],
-                'username' => $validated['username'],
-            ]);
-
-            // If email is changing, send OTP to CURRENT email and store pending request instead of immediate update
-            if (($validated['email'] ?? null) !== ($user->email ?? null)) {
-                $otp = (string) random_int(100000, 999999);
-                $expiresAt = now()->addMinutes(10);
-
-                // Clear prior pending
-                ProfileChangeRequest::where('user_id', $user->id)->whereNull('consumed_at')->delete();
-
-                // Create request first, then attempt to send
-                $request = ProfileChangeRequest::create([
-                    'user_id' => $user->id,
-                    'new_email' => $validated['email'],
-                    'otp_code_hash' => Hash::make($otp),
-                    'expires_at' => $expiresAt,
-                ]);
-
-                try {
-                    if (empty($user->email)) {
-                        throw new \RuntimeException('Current email is empty; cannot verify.');
-                    }
-                    // Send OTP to the CURRENT (old) email for ownership verification
-                    Mail::to($user->email)->send(new AdminProfileChangeOtp($otp, $user->name));
-                    Session::flash('status', 'email-change-otp-sent');
-                    // track pending new email and keep the input showing the target new email
-                    $this->pendingNewEmail = (string) ($validated['email'] ?? '');
-                    $this->email = $this->pendingNewEmail;
-                } catch (\Throwable $e) {
-                    // Cleanup if email send fails
-                    optional($request)->delete();
-                    $this->addError('email', 'Unable to send OTP to current email. Please check mail settings and try again.');
-                }
-            }
-        } else {
-            $validated = $this->validate([
-                'username' => ['required', 'string', 'max:255', Rule::unique(User::class)->ignore($user->id)],
-            ]);
-
-            \App\Models\User::query()->where('id', $user->id)->update([
-                'username' => $validated['username'],
-            ]);
-        }
-
-        $this->dispatch('profile-updated', name: $user->name);
-    }
 
     public function validateProfileChanges(): void
     {
@@ -181,92 +121,151 @@ new class extends Component
         } else {
             $validated = $this->validate([
                 'username' => ['required', 'string', 'max:255', Rule::unique(User::class)->ignore($user->id)],
+                'email' => ['nullable', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class, 'email')->ignore($user->id)],
             ]);
 
-            \App\Models\User::query()->where('id', $user->id)->update([
-                'username' => $validated['username'],
-            ]);
+            
+            if ($validated['username'] !== $user->username) {
+                $payload['updates']['username'] = $validated['username'];
+                \App\Models\User::query()->where('id', $user->id)->update([
+                    'username' => $validated['username'],
+                ]);
+                $this->dispatch('profile-updated', name: $user->name);
+            }
 
-            $this->dispatch('profile-updated', name: $user->name);
-        }
-    }
+            
 
-    public function sendOtpForAdminChanges(): void
-    {
-        $user = Auth::user();
-        if ($user->userType != 1) {
-            return;
-        }
+            // Check if email domain is valid (if email is being changed)
+            $targetEmail = $validated['email'] ?? null;
+            if ($targetEmail && $targetEmail !== ($user->email ?? null)) {
+                if (!$this->validateEmailDomain($targetEmail)) {
+                    $this->addError('email', 'This email domain is not valid or cannot receive emails.');
+                    return;
+                }
+            }
 
-        $validated = $this->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'username' => ['required', 'string', 'max:255', Rule::unique(User::class)->ignore($user->id)],
-            'email' => ['nullable', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class, 'email')->ignore($user->id)],
-            'current_password' => ['nullable', 'string', 'min:8'],
-            'new_password' => ['nullable', 'string', 'min:8', 'same:new_password_confirmation'],
-            'new_password_confirmation' => ['nullable', 'string', 'min:8'],
-        ]);
+            // Build payload of intended updates
+            $payload = ['updates' => []];
+            $targetEmail = $validated['email'] ?? null;
+            if ($targetEmail !== ($user->email ?? null)) {
+                $payload['updates']['email'] = $targetEmail;
+            }
 
-        $payload = ['updates' => []];
-        if ($validated['name'] !== $user->name) {
-            $payload['updates']['name'] = $validated['name'];
-        }
-        if ($validated['username'] !== $user->username) {
-            $payload['updates']['username'] = $validated['username'];
-        }
-        $targetEmail = $validated['email'] ?? null;
-        if ($targetEmail !== ($user->email ?? null)) {
-            $payload['updates']['email'] = $targetEmail;
-        }
-        if (!empty($validated['new_password'])) {
-            if (empty($validated['current_password']) || ! Hash::check($validated['current_password'], $user->password)) {
-                $this->addError('current_password', 'Current password is incorrect.');
+            // Nothing to change → done
+            if (empty($payload['updates'])) {
+                $this->dispatch('profile-updated', name: $user->name);
                 return;
             }
-            $payload['updates']['password'] = Hash::make($validated['new_password']);
-        }
 
-        if (empty($payload['updates'])) {
-            $this->dispatch('profile-updated', name: $user->name);
-            $this->readyForOtp = false;
-            return;
-        }
+            // For any changes, send OTP immediately to CURRENT email (like the working email logic)
+            if (!empty($payload['updates'])) {
+                $otp = (string) random_int(100000, 999999);
+                $expiresAt = now()->addMinutes(10);
 
-        $otp = (string) random_int(100000, 999999);
-        $expiresAt = now()->addMinutes(10);
+                ProfileChangeRequest::where('user_id', $user->id)->whereNull('consumed_at')->delete();
 
-        ProfileChangeRequest::where('user_id', $user->id)->whereNull('consumed_at')->delete();
+                $request = ProfileChangeRequest::create([
+                    'user_id' => $user->id,
+                    'new_email' => $targetEmail,
+                    'payload' => $payload,
+                    'otp_code_hash' => Hash::make($otp),
+                    'expires_at' => $expiresAt,
+                ]);
 
-        $request = ProfileChangeRequest::create([
-            'user_id' => $user->id,
-            'new_email' => $targetEmail,
-            'payload' => $payload,
-            'otp_code_hash' => Hash::make($otp),
-            'expires_at' => $expiresAt,
-        ]);
-
-        try {
-            if (empty($user->email)) {
-                throw new \RuntimeException('Current email is empty; cannot verify.');
+                try {
+                    if (empty($user->email)) {
+                        throw new \RuntimeException('Current email is empty; cannot verify.');
+                    }
+                    Mail::to($user->email)->send(new AdminProfileChangeOtp($otp, $user->name));
+                    Session::flash('status', 'email-change-otp-sent');
+                    // Keep showing target new email while waiting for OTP (if email is changing)
+                    if ($targetEmail) {
+                        $this->pendingNewEmail = (string) $targetEmail;
+                        $this->email = $this->pendingNewEmail;
+                    }
+                    return;
+                } catch (\Throwable $e) {
+                    optional($request)->delete();
+                    $this->addError('email', 'Unable to send OTP to current email. Please check mail settings and try again.');
+                    return;
+                }
             }
-            Mail::to($user->email)->send(new AdminProfileChangeOtp($otp, $user->name));
-            Session::flash('status', 'email-change-otp-sent');
-            if ($targetEmail) {
-                $this->pendingNewEmail = (string) $targetEmail;
-                $this->email = $this->pendingNewEmail;
-            }
-        } catch (\Throwable $e) {
-            optional($request)->delete();
-            $this->addError('email', 'Unable to send OTP to current email. Please check mail settings and try again.');
         }
     }
+
+    // public function sendOtpForAdminChanges(): void
+    // {
+    //     $user = Auth::user();
+    //     if ($user->userType != 1) {
+    //         return;
+    //     }
+
+    //     $validated = $this->validate([
+    //         'name' => ['required', 'string', 'max:255'],
+    //         'username' => ['required', 'string', 'max:255', Rule::unique(User::class)->ignore($user->id)],
+    //         'email' => ['nullable', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class, 'email')->ignore($user->id)],
+    //         'current_password' => ['nullable', 'string', 'min:8'],
+    //         'new_password' => ['nullable', 'string', 'min:8', 'same:new_password_confirmation'],
+    //         'new_password_confirmation' => ['nullable', 'string', 'min:8'],
+    //     ]);
+
+    //     $payload = ['updates' => []];
+    //     if ($validated['name'] !== $user->name) {
+    //         $payload['updates']['name'] = $validated['name'];
+    //     }
+    //     if ($validated['username'] !== $user->username) {
+    //         $payload['updates']['username'] = $validated['username'];
+    //     }
+    //     $targetEmail = $validated['email'] ?? null;
+    //     if ($targetEmail !== ($user->email ?? null)) {
+    //         $payload['updates']['email'] = $targetEmail;
+    //     }
+    //     if (!empty($validated['new_password'])) {
+    //         if (empty($validated['current_password']) || ! Hash::check($validated['current_password'], $user->password)) {
+    //             $this->addError('current_password', 'Current password is incorrect.');
+    //             return;
+    //         }
+    //         $payload['updates']['password'] = Hash::make($validated['new_password']);
+    //     }
+
+    //     if (empty($payload['updates'])) {
+    //         $this->dispatch('profile-updated', name: $user->name);
+    //         $this->readyForOtp = false;
+    //         return;
+    //     }
+
+    //     $otp = (string) random_int(100000, 999999);
+    //     $expiresAt = now()->addMinutes(10);
+
+    //     ProfileChangeRequest::where('user_id', $user->id)->whereNull('consumed_at')->delete();
+
+    //     $request = ProfileChangeRequest::create([
+    //         'user_id' => $user->id,
+    //         'new_email' => $targetEmail,
+    //         'payload' => $payload,
+    //         'otp_code_hash' => Hash::make($otp),
+    //         'expires_at' => $expiresAt,
+    //     ]);
+
+    //     try {
+    //         if (empty($user->email)) {
+    //             throw new \RuntimeException('Current email is empty; cannot verify.');
+    //         }
+    //         Mail::to($user->email)->send(new AdminProfileChangeOtp($otp, $user->name));
+    //         Session::flash('status', 'email-change-otp-sent');
+    //         if ($targetEmail) {
+    //             $this->pendingNewEmail = (string) $targetEmail;
+    //             $this->email = $this->pendingNewEmail;
+    //         }
+    //     } catch (\Throwable $e) {
+    //         optional($request)->delete();
+    //         $this->addError('email', 'Unable to send OTP to current email. Please check mail settings and try again.');
+    //     }
+    // }
 
     public function confirmEmailChange(): void
     {
         $user = Auth::user();
-        if ($user->userType != 1) {
-            return;
-        }
 
         try {
             $this->validate([
@@ -346,24 +345,6 @@ new class extends Component
             return false;
         }
     }
-
-    /**
-     * Send an email verification notification to the current user.
-     */
-    // public function sendVerification(): void
-    // {
-    //     $user = Auth::user();
-
-    //     if ($user->hasVerifiedEmail()) {
-    //         $this->redirectIntended(default: route('dashboard', absolute: false));
-
-    //         return;
-    //     }
-
-    //     $user->sendEmailVerificationNotification();
-
-    //     Session::flash('status', 'verification-link-sent');
-    // }
 }; ?>
 
 <section>
@@ -424,37 +405,30 @@ new class extends Component
             <x-text-input wire:model="new_password_confirmation" id="new_password_confirmation" name="new_password_confirmation" type="password" class="mt-1 block w-full" autocomplete="new-password" />
             <x-input-error class="mt-2" :messages="$errors->get('new_password_confirmation')" />
         </div>
-        <div>
-            @if (session('status') === 'email-change-otp-sent' || session('status') === 'email-change-otp-invalid' || $pendingNewEmail)
-                <div class="mt-4">
-                    <x-input-label for="otp" :value="__('Enter OTP sent to your current email')" />
-                    @if ($pendingNewEmail)
-                        <p class="text-xs text-gray-500">Pending change to: <span class="font-semibold">{{ $pendingNewEmail }}</span></p>
-                    @endif
-                    <x-text-input wire:model="otp" id="otp" name="otp" type="text" class="mt-1 block w-full" maxlength="6" />
-                    <x-input-error class="mt-2" :messages="$errors->get('otp')" />
+    @endif
+    <div>
+    @if (session('status') === 'email-change-otp-sent' || session('status') === 'email-change-otp-invalid' || $pendingNewEmail)
+        <div class="mt-4">
+            <x-input-label for="otp" :value="__('Enter OTP sent to your current email')" />
+            <x-text-input wire:model="otp" id="otp" name="otp" type="text" class="mt-1 block w-full" maxlength="6" />
+            <x-input-error class="mt-2" :messages="$errors->get('otp')" />
 
-                    <x-primary-button wire:click.prevent="confirmEmailChange" class="mt-3">{{ __('Confirm Changes') }}</x-primary-button>
-                </div>
-            @endif
+            <x-primary-button wire:click.prevent="confirmEmailChange" class="mt-3">{{ __('Confirm Changes') }}</x-primary-button>
         </div>
     @endif
+    </div>
 
         <div class="flex items-center gap-4">
             @if (!session('status') || session('status') === 'email-change-confirmed')
                 <x-primary-button wire:loading.attr="disabled" wire:target="validateProfileChanges">
                     <span wire:loading.remove wire:target="validateProfileChanges">{{ __('Save') }}</span>
                     <span wire:loading wire:target="validateProfileChanges" class="flex items-center">
-                        <!-- <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg> -->
                         {{ __('Saving...') }}
                     </span>
                 </x-primary-button>
             @endif
-
-            <x-action-message class="me-3" on="profile-updated, email-change-confirmed">
+        
+            <x-action-message class="me-3" on="profile-updated">
                 {{ __('Saved.') }}
             </x-action-message>
         </div>

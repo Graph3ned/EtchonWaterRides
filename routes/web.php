@@ -55,10 +55,13 @@ Route::view('/admin/staffs', 'staffs')
     ->middleware(['auth', 'verified', 'admin'])
     ->name('staffs');
 
-Route::view('/admin/updateStaff/{staffId}', 'updateStaff')
-    ->middleware(['auth', 'verified', 'admin'])
-    ->name('updateStaff');
+// Route::view('/admin/updateStaff/{staffId}', 'updateStaff')
+//     ->middleware(['auth', 'verified', 'admin'])
+//     ->name('updateStaff');
 
+Route::view('/admin/staff-edit/{id}', 'staffEdit')
+    ->middleware(['auth', 'verified', 'admin'])
+    ->name('staffEdit');
 Route::middleware(['auth', 'verified', 'admin'])->group(function () {
         Volt::route('/admin/staff-register', 'pages.auth.register')
             ->name('register');    
@@ -178,8 +181,4 @@ Route::get('/admin/generate-report', function (\Illuminate\Http\Request $request
 Route::view('profile', 'profile')
     ->middleware(['auth'])
     ->name('profile');
-
-Route::view('/admin/staff-edit/{id}', 'staffEdit')
-    ->middleware(['auth', 'verified', 'admin'])
-    ->name('staffEdit');
 require __DIR__.'/auth.php';
