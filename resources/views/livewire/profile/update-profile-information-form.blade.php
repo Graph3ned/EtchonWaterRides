@@ -85,11 +85,68 @@ new class extends Component
         } else {
             $validated = $this->validate([
                 'username' => ['required', 'string', 'max:255', Rule::unique(User::class)->ignore($user->id)],
+                'email' => ['nullable', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class, 'email')->ignore($user->id)],
             ]);
 
-            \App\Models\User::query()->where('id', $user->id)->update([
-                'username' => $validated['username'],
-            ]);
+            $payload = ['updates' => []];
+            if ($validated['username'] !== $user->username) {
+                $payload['updates']['username'] = $validated['username'];
+            }
+
+            $targetEmail = $validated['email'] ?? null;
+            if ($targetEmail !== ($user->email ?? null)) {
+                // Validate email domain for staff as well
+                if ($targetEmail && ! $this->validateEmailDomain($targetEmail)) {
+                    $this->addError('email', 'This email domain is not valid or cannot receive emails.');
+                    return;
+                }
+                $payload['updates']['email'] = $targetEmail;
+            }
+
+            // If only username changed and no email change, update immediately
+            if (empty($payload['updates']['email']) && isset($payload['updates']['username'])) {
+                \App\Models\User::query()->where('id', $user->id)->update([
+                    'username' => $validated['username'],
+                ]);
+                $this->dispatch('profile-updated', name: $user->name);
+                return;
+            }
+
+            // If email is changing, send OTP to current email and store request
+            if (!empty($payload['updates']['email'])) {
+                $otp = (string) random_int(100000, 999999);
+                $expiresAt = now()->addMinutes(10);
+
+                ProfileChangeRequest::where('user_id', $user->id)->whereNull('consumed_at')->delete();
+
+                $request = ProfileChangeRequest::create([
+                    'user_id' => $user->id,
+                    'new_email' => $targetEmail,
+                    'payload' => $payload,
+                    'otp_code_hash' => Hash::make($otp),
+                    'expires_at' => $expiresAt,
+                ]);
+
+                try {
+                    if (empty($user->email)) {
+                        throw new \RuntimeException('Current email is empty; cannot verify.');
+                    }
+                    Mail::to($user->email)->send(new AdminProfileChangeOtp($otp, $user->name));
+                    Session::flash('status', 'email-change-otp-sent');
+                    if ($targetEmail) {
+                        $this->pendingNewEmail = (string) $targetEmail;
+                        $this->email = $this->pendingNewEmail;
+                    }
+                    return;
+                } catch (\Throwable $e) {
+                    optional($request)->delete();
+                    $this->addError('email', 'Unable to send OTP to current email. Please check mail settings and try again.');
+                    return;
+                }
+            }
+
+            // Nothing to change
+            $this->dispatch('profile-updated', name: $user->name);
         }
 
         $this->dispatch('profile-updated', name: $user->name);
@@ -194,9 +251,6 @@ new class extends Component
     public function sendOtpForAdminChanges(): void
     {
         $user = Auth::user();
-        if ($user->userType != 1) {
-            return;
-        }
 
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -425,20 +479,22 @@ new class extends Component
             <x-input-error class="mt-2" :messages="$errors->get('new_password_confirmation')" />
         </div>
         <div>
-            @if (session('status') === 'email-change-otp-sent' || session('status') === 'email-change-otp-invalid' || $pendingNewEmail)
-                <div class="mt-4">
-                    <x-input-label for="otp" :value="__('Enter OTP sent to your current email')" />
-                    @if ($pendingNewEmail)
-                        <p class="text-xs text-gray-500">Pending change to: <span class="font-semibold">{{ $pendingNewEmail }}</span></p>
-                    @endif
-                    <x-text-input wire:model="otp" id="otp" name="otp" type="text" class="mt-1 block w-full" maxlength="6" />
-                    <x-input-error class="mt-2" :messages="$errors->get('otp')" />
-
-                    <x-primary-button wire:click.prevent="confirmEmailChange" class="mt-3">{{ __('Confirm Changes') }}</x-primary-button>
-                </div>
-            @endif
+            
         </div>
     @endif
+
+        @if (session('status') === 'email-change-otp-sent' || session('status') === 'email-change-otp-invalid' || $pendingNewEmail)
+            <div class="mt-4">
+                <x-input-label for="otp" :value="__('Enter OTP sent to your current email')" />
+                @if ($pendingNewEmail)
+                    <p class="text-xs text-gray-500">Pending change to: <span class="font-semibold">{{ $pendingNewEmail }}</span></p>
+                @endif
+                <x-text-input wire:model="otp" id="otp" name="otp" type="text" class="mt-1 block w-full" maxlength="6" />
+                <x-input-error class="mt-2" :messages="$errors->get('otp')" />
+
+                <x-primary-button wire:click.prevent="confirmEmailChange" class="mt-3">{{ __('Confirm Changes') }}</x-primary-button>
+            </div>
+        @endif
 
         <div class="flex items-center gap-4">
             @if (!session('status') || session('status') === 'email-change-confirmed')
