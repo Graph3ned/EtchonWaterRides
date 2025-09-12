@@ -375,37 +375,36 @@ new class extends Component
 
         @if(auth()->check() && auth()->user()->userType == 1)
         <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            {{ __('Update your account\'s name, username, and password. Changes require OTP verification sent to your current email.') }}
+            {{ __('Choose only the fields you want to change and leave the others unchanged or blank. Changes require OTP verification sent to your current email.') }}
         </p>
         @endif
         
         @if(auth()->check() && auth()->user()->userType == 0)
         <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            {{ __("Update your account's username.") }}
+            {{ __("Choose only the fields you want to change and leave the others unchanged. Email change require OTP verification sent to your current email.") }}
         </p>
         @endif
     </header>
     
 
     <form wire:submit="validateProfileChanges" class="mt-6 space-y-6">
-
-    <div>
-        <x-input-label for="name" :value="__('Name')" />
-        <x-text-input wire:model="name" id="name" name="name" type="text" class="mt-1 block w-full" required autofocus autocomplete="name" />
-        <x-input-error class="mt-2" :messages="$errors->get('name')" />
-    </div>
-
     <div>
         <x-input-label for="username" :value="__('Username')" />
         <x-text-input wire:model="username" id="username" name="username" type="text" class="mt-1 block w-full" required autofocus autocomplete="username" />
         <x-input-error class="mt-2" :messages="$errors->get('username')" />
     </div>
 
+    <div>
+        <x-input-label for="email" :value="__('Email')" />
+        <x-text-input wire:model="email" id="email" name="email" type="email" class="mt-1 block w-full" autocomplete="email" />
+        <x-input-error class="mt-2" :messages="$errors->get('email')" />
+    </div>
+
     @if(auth()->check() && auth()->user()->userType == 1)
         <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input wire:model="email" id="email" name="email" type="email" class="mt-1 block w-full" autocomplete="email" />
-            <x-input-error class="mt-2" :messages="$errors->get('email')" />
+            <x-input-label for="name" :value="__('Name')" />
+            <x-text-input wire:model="name" id="name" name="name" type="text" class="mt-1 block w-full" required autofocus autocomplete="name" />
+            <x-input-error class="mt-2" :messages="$errors->get('name')" />
         </div>
 
         <div>

@@ -25,7 +25,7 @@
                                     <p class="text-white/80 text-sm">Modify your name, username, email, and password.</p>
                                     @endif
                                     @if(auth()->check() && auth()->user()->userType == 0)
-                                    <p class="text-white/80 text-sm">Update your account's profile information and username.</p>
+                                    <p class="text-white/80 text-sm">Modify your username and email.</p>
                                     @endif
                                 </div>
                             </div>
