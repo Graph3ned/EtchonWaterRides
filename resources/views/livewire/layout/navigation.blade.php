@@ -106,9 +106,9 @@ new class extends Component
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         @if(auth()->check() && auth()->user()->userType == 0)
             <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-            <x-nav-link :href="route('sales')" :active="request()->routeIs('sales')" wire:navigate>
-                            {{ __('Sales') }}
-                        </x-nav-link>
+                <x-nav-link :href="route('sales')" :active="request()->routeIs('sales')" wire:navigate>
+                    {{ __('Sales') }}
+                </x-nav-link>
             </div>
         @endif
 
