@@ -3,37 +3,63 @@
 
         <h1 class="text-2xl font-bold text-center mb-6 text-[#00A3E0]">Edit Ride</h1>
 
+        @if (session()->has('message'))
+            <div class="mb-4 p-4 bg-green-200 text-green-800 rounded-lg">
+                {{ session('message') }}
+            </div>
+        @endif
+
+        @if (session()->has('error'))
+            <div class="mb-4 p-4 bg-red-200 text-red-800 rounded-lg">
+                {{ session('error') }}
+            </div>
+        @endif
+
         <form wire:submit.prevent="updateRides">
             <!-- ----------------- ride type ----------------- -->
             <div class="mb-4">
-                <label for="rideType" class="block text-sm font-medium text-gray-700">Ride Type</label>
-                <select wire:model.live="rideType" 
-                    id="rideType" 
+                <label for="rideTypeId" class="block text-sm font-medium text-gray-700">Ride Type</label>
+                <select wire:model.live="rideTypeId" 
+                    id="rideTypeId" 
                     class="block w-full mt-1 rounded-lg border-gray-300 shadow-sm focus:border-[#00A3E0] focus:ring focus:ring-[#00A3E0] focus:ring-opacity-50">
                     <option value="" disabled>Select Ride Type</option>
-                    @foreach(array_keys($prices) as $type)
-                        <option value="{{ $type }}">{{ ucfirst(str_replace('_', ' ', $type)) }}</option>
+                    @foreach($rideTypes as $rideType)
+                        <option value="{{ $rideType->id }}">{{ $rideType->name }}</option>
                     @endforeach
                 </select>
-                @error('rideType') 
+                @error('rideTypeId') 
                     <span class="text-red-500">{{ $message }}</span> 
                 @enderror
             </div>
 
             <!-- ----------------- classification ----------------- -->
             <div class="mb-4">
-                <label for="classification" class="block text-sm font-medium text-gray-700">Classification</label>
-                <select wire:model.live="classification" 
-                    id="classification" 
+                <label for="classificationId" class="block text-sm font-medium text-gray-700">Classification</label>
+                <select wire:model.live="classificationId" 
+                    id="classificationId" 
                     class="block w-full mt-1 rounded-lg border-gray-300 shadow-sm focus:border-[#00A3E0] focus:ring focus:ring-[#00A3E0] focus:ring-opacity-50">
                     <option value="" disabled>Select Classification</option>
-                    @if($rideType && isset($prices[$rideType]))
-                        @foreach($prices[$rideType] as $key => $value)
-                            <option value="{{ $key }}">{{ ucfirst(str_replace('_', ' ', $key)) }}</option>
-                        @endforeach
-                    @endif
+                    @foreach($classifications as $classification)
+                        <option value="{{ $classification->id }}">{{ $classification->name }}</option>
+                    @endforeach
                 </select>
-                @error('classification') 
+                @error('classificationId') 
+                    <span class="text-red-500">{{ $message }}</span> 
+                @enderror
+            </div>
+
+            <!-- ----------------- specific ride ----------------- -->
+            <div class="mb-4">
+                <label for="rideId" class="block text-sm font-medium text-gray-700">Ride</label>
+                <select wire:model.live="rideId" 
+                    id="rideId" 
+                    class="block w-full mt-1 rounded-lg border-gray-300 shadow-sm focus:border-[#00A3E0] focus:ring focus:ring-[#00A3E0] focus:ring-opacity-50">
+                    <option value="" disabled>Select Ride</option>
+                    @foreach($rides as $ride)
+                        <option value="{{ $ride->id }}">{{ $ride->identifier }} ({{ $ride->classification->name }})</option>
+                    @endforeach
+                </select>
+                @error('rideId') 
                     <span class="text-red-500">{{ $message }}</span> 
                 @enderror
             </div>
@@ -53,17 +79,17 @@
                 @enderror
             </div>
 
-            <!-- ----------------- life jacket usage ----------------- -->
+            <!-- ----------------- life jacket quantity ----------------- -->
             <div class="mb-4">
-                <label for="life_jacket_usage" class="block text-sm font-medium text-gray-700">Life Jacket Usage</label>
-                <select wire:model="life_jacket_usage" 
-                    id="life_jacket_usage" 
+                <label for="life_jacket_quantity" class="block text-sm font-medium text-gray-700">Life Jacket Quantity</label>
+                <select wire:model="life_jacket_quantity" 
+                    id="life_jacket_quantity" 
                     class="block w-full mt-1 rounded-lg border-gray-300 shadow-sm focus:border-[#00A3E0] focus:ring focus:ring-[#00A3E0] focus:ring-opacity-50">
-                    @foreach(range(0, 5) as $usage)
-                        <option value="{{ $usage }}">{{ $usage }}</option>
+                    @foreach(range(0, 5) as $quantity)
+                        <option value="{{ $quantity }}">{{ $quantity }}</option>
                     @endforeach
                 </select>
-                @error('life_jacket_usage') 
+                @error('life_jacket_quantity') 
                     <span class="text-red-500">{{ $message }}</span> 
                 @enderror
             </div>
@@ -146,36 +172,25 @@
             <!-- Updated Time End Display -->
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700">New End Time</label>
-                <p class="text-lg font-semibold text-gray-800">{{ \Carbon\Carbon::parse($timeEnd)->format('h:i A') }}</p>
+                <p class="text-lg font-semibold text-gray-800">{{ \Carbon\Carbon::parse($endAt)->format('h:i A') }}</p>
             </div>
 
             <!-- Updated Total Price Display -->
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700">New Total Price</label>
-                <p class="text-lg font-semibold text-gray-800">₱{{ number_format($totalPrice, 0) }}</p>
+                <p class="text-lg font-semibold text-gray-800">₱{{ number_format($computedTotal, 2) }}</p>
             </div>
 
             <div class="flex space-x-4">
-                <!-- <button type="button" 
-                    wire:navigate 
-                    href="/staff/dashboard"
-                    wire:click="updateStatus"
-                    class="w-full bg-[#FF8C00] text-white px-5 py-2.5 rounded-lg font-medium
-                           transform transition-all duration-200 hover:-translate-y-1 
-                           hover:shadow-md hover:bg-[#E67E00]">
-                    endTime
-                </button> -->
-                <button type="button"  wire:navigate 
-                    href="/staff/dashboard"
-                    wire:click="updateStatus"
-                                class="w-full bg-red-500 text-white px-5 py-2.5 rounded-lg font-medium
-                                    transform transition-all duration-200 hover:-translate-y-1 
-                                    hover:shadow-md hover:bg-red-600">
-                                End Time
-                            </button>
                 <button type="button" 
-                    wire:navigate 
-                    href="/staff/dashboard"
+                    wire:click="updateStatus"
+                    class="w-full bg-red-500 text-white px-5 py-2.5 rounded-lg font-medium
+                           transform transition-all duration-200 hover:-translate-y-1 
+                           hover:shadow-md hover:bg-red-600">
+                    End Rental
+                </button>
+                <button type="button" 
+                    wire:click="$dispatch('closeModal')"
                     class="w-full bg-[#FF8C00] text-white px-5 py-2.5 rounded-lg font-medium
                            transform transition-all duration-200 hover:-translate-y-1 
                            hover:shadow-md hover:bg-[#E67E00]">
@@ -186,7 +201,7 @@
                     class="w-full bg-[#00A3E0] text-white py-2.5 px-5 rounded-lg font-medium 
                            transform transition-all duration-200 hover:-translate-y-1 
                            hover:shadow-md hover:bg-[#0093CC]">
-                    Save
+                    Update Rental
                 </button>
             </div>
         </form>

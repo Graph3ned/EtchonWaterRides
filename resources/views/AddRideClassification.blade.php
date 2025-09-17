@@ -11,7 +11,7 @@
         
         <div class="mx-auto max-w-7xl px-8">
             <div class=" dark:bg-gray-800 overflow-hidden sm:rounded-lg">
-                @livewire('add-ride-classification',['ride_type'=>$ride_type])
+                @livewire('add-ride-classification',['rideTypeId'=>$rideTypeId])
             </div>
         </div>
     </div>

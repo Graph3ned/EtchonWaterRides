@@ -4,6 +4,9 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\User;
+use App\Models\RideType;
+use App\Models\Classification;
+use App\Models\Ride;
 use Illuminate\Support\Facades\Hash;
 
 class AdminSeeder extends Seeder
@@ -13,12 +16,105 @@ class AdminSeeder extends Seeder
      */
     public function run(): void
     {
+        // Create admin user
         User::create([
-            'name' => 'admin',
+            'name' => 'Admin User',
             'email' => 'edbertetchon@gmail.com',
             'username' => 'admin',
-            'userType' => 1,
-            'password' => Hash::make('asdfasdf'),
+            'userType' => '1',
+            'password' => 'asdfasdf', // Laravel will hash this automatically
         ]);
+
+        // Create sample ride types
+        $paddleBoard = RideType::create(['name' => 'Paddle Board']);
+        $boat = RideType::create(['name' => 'Boat']);
+        $waterBike = RideType::create(['name' => 'Water Bike']);
+        $clearKayak = RideType::create(['name' => 'Clear Kayak']);
+
+        // Create Paddle Board classifications
+        $paddleBoardSmall = Classification::create([
+            'ride_type_id' => $paddleBoard->id,
+            'name' => 'Small',
+            'price_per_hour' => 250.00,
+        ]);
+
+        $paddleBoardBig = Classification::create([
+            'ride_type_id' => $paddleBoard->id,
+            'name' => 'Big',
+            'price_per_hour' => 300.00,
+        ]);
+
+        $paddleBoardRubber = Classification::create([
+            'ride_type_id' => $paddleBoard->id,
+            'name' => 'Rubber',
+            'price_per_hour' => 200.00,
+        ]);
+
+        // Create Boat classifications
+        $boatBig = Classification::create([
+            'ride_type_id' => $boat->id,
+            'name' => 'Big',
+            'price_per_hour' => 1000.00,
+        ]);
+
+        $boatSmall = Classification::create([
+            'ride_type_id' => $boat->id,
+            'name' => 'Small',
+            'price_per_hour' => 800.00,
+        ]);
+
+        // Create Water Bike classifications
+        $waterBikeWithPropeller = Classification::create([
+            'ride_type_id' => $waterBike->id,
+            'name' => 'With Propeller',
+            'price_per_hour' => 600.00,
+        ]);
+
+        $waterBikeWithoutPropeller = Classification::create([
+            'ride_type_id' => $waterBike->id,
+            'name' => 'Without Propeller',
+            'price_per_hour' => 500.00,
+        ]);
+
+        // Create Clear Kayak classifications
+        $clearKayakDouble = Classification::create([
+            'ride_type_id' => $clearKayak->id,
+            'name' => 'Double',
+            'price_per_hour' => 400.00,
+        ]);
+
+        // Create Paddle Board rides
+        // Small: yellow, blue, gray
+        Ride::create(['classification_id' => $paddleBoardSmall->id, 'identifier' => 'Yellow']);
+        Ride::create(['classification_id' => $paddleBoardSmall->id, 'identifier' => 'Blue']);
+        Ride::create(['classification_id' => $paddleBoardSmall->id, 'identifier' => 'Gray']);
+
+        // Big: Yellow
+        Ride::create(['classification_id' => $paddleBoardBig->id, 'identifier' => 'Yellow']);
+
+        // Rubber: Blue
+        Ride::create(['classification_id' => $paddleBoardRubber->id, 'identifier' => 'Blue']);
+
+        // Create Boat rides
+        // Big: Blue
+        Ride::create(['classification_id' => $boatBig->id, 'identifier' => 'Blue']);
+
+        // Small: Pink
+        Ride::create(['classification_id' => $boatSmall->id, 'identifier' => 'Pink']);
+
+        // Create Water Bike rides
+        // With Propeller: yellow, blue, red
+        Ride::create(['classification_id' => $waterBikeWithPropeller->id, 'identifier' => 'Yellow']);
+        Ride::create(['classification_id' => $waterBikeWithPropeller->id, 'identifier' => 'Blue']);
+        Ride::create(['classification_id' => $waterBikeWithPropeller->id, 'identifier' => 'Red']);
+
+        // Without Propeller: orange, green
+        Ride::create(['classification_id' => $waterBikeWithoutPropeller->id, 'identifier' => 'Orange']);
+        Ride::create(['classification_id' => $waterBikeWithoutPropeller->id, 'identifier' => 'Green']);
+
+        // Create Clear Kayak rides
+        // Double: Orange Paddle, Black Paddle
+        Ride::create(['classification_id' => $clearKayakDouble->id, 'identifier' => 'Orange Paddle']);
+        Ride::create(['classification_id' => $clearKayakDouble->id, 'identifier' => 'Black Paddle']);
     }
 } 

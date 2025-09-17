@@ -4,13 +4,15 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -45,5 +47,45 @@ class User extends Authenticatable
         return [
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Get the rentals for the user.
+     */
+    public function rentals(): HasMany
+    {
+        return $this->hasMany(Rental::class);
+    }
+
+    /**
+     * Get the staff logs for the user.
+     */
+    public function staffLogs(): HasMany
+    {
+        return $this->hasMany(StaffLog::class);
+    }
+
+    /**
+     * Get the profile change requests for the user.
+     */
+    public function profileChangeRequests(): HasMany
+    {
+        return $this->hasMany(ProfileChangeRequest::class);
+    }
+
+    /**
+     * Check if user is admin.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->userType === '1' || $this->userType === 1;
+    }
+
+    /**
+     * Check if user is staff.
+     */
+    public function isStaff(): bool
+    {
+        return $this->userType === '0' || $this->userType === 0;
     }
 }

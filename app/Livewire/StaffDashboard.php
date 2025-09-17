@@ -22,7 +22,9 @@ class StaffDashboard extends Component
 
     protected $listeners = [
         'rideCreated' => 'handleRideCreated',
-        'rideUpdated' => 'handleRideUpdated'
+        'rideUpdated' => 'handleRideUpdated',
+        'closeModal' => 'closeModal',
+        'refreshStaffDashboard' => 'refreshData'
     ];
     
     
@@ -33,10 +35,6 @@ class StaffDashboard extends Component
         $this->showModal = true;
     }
 
-    public function closeModal()
-    {
-        $this->showModal = false;
-    }
     public function mount()
     {
         $this->refreshRides();
@@ -44,9 +42,10 @@ class StaffDashboard extends Component
 
     private function refreshRides()
     {
-
-        $this->rides = Rental::whereDate('created_at', Carbon::today())->get();
-        $this->totalPrice = Rental::whereDate('created_at', Carbon::today())->sum('totalPrice');
+        $this->rides = Rental::with(['ride.classification.rideType'])
+            ->whereDate('created_at', Carbon::today())
+            ->get();
+        $this->totalPrice = Rental::whereDate('created_at', Carbon::today())->sum('computed_total');
     }
 
 //     private function refreshRides()
@@ -71,14 +70,12 @@ class StaffDashboard extends Component
 
     public function getFilteredRidesProperty()
     {
-        $currentTime = Carbon::now()->setTimezone('Asia/Manila')->format('H:i:s');
+        $currentTime = Carbon::now()->setTimezone('Asia/Manila');
         
         return collect($this->rides)->filter(function($ride) use ($currentTime) {
-            $timeEnd = Carbon::parse($ride->timeEnd)->format('H:i:s');
-            
             return match($this->rideFilter) {
-                'ongoing' => $ride->status == '0',
-                'ended' => $currentTime >= $timeEnd || $ride->status == '1',
+                'ongoing' => $ride->status == Rental::STATUS_ACTIVE,
+                'ended' => $ride->status == Rental::STATUS_COMPLETED || ($ride->end_at && $currentTime >= $ride->end_at),
                 'all' => true
             };
         })->values();
@@ -94,10 +91,23 @@ class StaffDashboard extends Component
 
     public function deleteRide()
     {
-        Rental::find($this->rideToDelete)->delete();
+        $rental = Rental::find($this->rideToDelete);
+        
+        if ($rental) {
+            // Get the ride before deleting the rental
+            $ride = $rental->ride;
+            
+            // Delete the rental
+            $rental->delete();
+            
+            // Update ride status back to AVAILABLE
+            if ($ride) {
+                $ride->update(['is_active' => \App\Models\Ride::STATUS_AVAILABLE]);
+            }
+        }
+        
         $this->refreshRides();
         $this->closeModal();
-
     }
 
     public function editRide($rideId)
@@ -109,7 +119,8 @@ class StaffDashboard extends Component
     public function handleRideCreated()
     {
         $this->showAddRides = false;
-        // Add any success message or refresh logic
+        // Refresh the data to show the new rental
+        $this->refreshData();
     }
 
     public function handleRideUpdated()
@@ -117,6 +128,24 @@ class StaffDashboard extends Component
         $this->showEditModal = false;
         $this->editingRideId = null;
         // Add any success message or refresh logic
+    }
+
+    public function closeModal()
+    {
+        $this->showAddRides = false;
+        $this->showEditModal = false;
+        $this->editingRideId = null;
+        $this->showModal = false;
+    }
+
+    public function refreshData()
+    {
+        // Force refresh of the component data by clearing computed properties
+        unset($this->totalPrice);
+        unset($this->filteredRides);
+        
+        // Recalculate totals and refresh the view
+        $this->refreshRides();
     }
 
     public function toggleMarkAsDone($rideId)

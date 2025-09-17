@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('profile_change_requests', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->string('new_email')->nullable();
             $table->string('otp_code_hash', 255);
             $table->json('payload')->nullable();
@@ -25,5 +25,3 @@ return new class extends Migration
         Schema::dropIfExists('profile_change_requests');
     }
 };
-
-

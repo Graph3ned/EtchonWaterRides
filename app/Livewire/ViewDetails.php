@@ -2,20 +2,22 @@
 namespace App\Livewire;
 
 use Livewire\Component;
-use App\Models\prices;
+use App\Models\RideType;
+use App\Models\Classification;
+use App\Models\Ride;
 
 class ViewDetails extends Component
 {
-    public $id;
-    public $ride_type;
-    public $prices = [];
+    public $rideTypeId;
+    public $rideType;
+    public $classifications = [];
     public $classificationShowModal = false;
     public $classificationModalDetails;
     public $classificationToDelete;
     public $alertMessage = null; 
     public $showModal = false;
     public $modalDetails;
-    public $rideToDelete;
+    public $rideTypeToDelete;
     
     public function classificationConfirmDelete($id)
     {
@@ -28,33 +30,42 @@ class ViewDetails extends Component
     {
         $this->classificationShowModal = false;
     }
-    public function confirmDelete($ride_type)
+    public function confirmDelete($rideTypeId)
     {
-        $this->rideToDelete = $ride_type;
-        $this->modalDetails = "Are you sure you want to delete ride? You will also delete all of it's classification";
+        $this->rideTypeToDelete = $rideTypeId;
+        $this->modalDetails = "Are you sure you want to delete this ride type? You will also delete all of its classifications and rides.";
         $this->showModal = true;
     }
+    
     public function closeModal()
     {
         $this->showModal = false;
     }
+    
     public function delete()
     {
-        // Delete all prices with the same ride_type
-        prices::where('ride_type', $this->rideToDelete)->delete();
+        // Soft delete the ride type (this will cascade soft delete classifications and rides)
+        $rideType = RideType::findOrFail($this->rideTypeToDelete);
+        $rideTypeName = $rideType->name;
+        $classificationCount = $rideType->classifications()->count();
+        $rideCount = $rideType->classifications()->withCount('rides')->get()->sum('rides_count');
+        
+        $rideType->delete();
+
+        // Show success message
+        session()->flash('success', "Successfully deleted ride type '{$rideTypeName}' with {$classificationCount} classification(s) and {$rideCount} ride(s).");
 
         // Reload the page to reflect the changes
-        return redirect()->route('AdminDashboard');
+        return redirect()->route('RidesRate');
     }
-    public function mount($ride_type)
+    
+    public function mount($rideTypeId)
     {
-        $this->ride_type = $ride_type;
-
-        // Fetch all prices for the given ride type (instead of just one)
-        $this->prices = prices::where('ride_type', $this->ride_type)->get(); // get() will fetch multiple rows
-
-        // If no prices are found, redirect
+        $this->rideTypeId = $rideTypeId;
         
+        // Load ride type with its classifications and rides
+        $this->rideType = RideType::with(['classifications.rides'])->findOrFail($rideTypeId);
+        $this->classifications = $this->rideType->classifications;
     }
 
     public function render()
@@ -63,17 +74,21 @@ class ViewDetails extends Component
     }
 
     public function deleteClassification()
-{
-    // Assuming 'classificationToDelete' holds the ID of the classification to be deleted
-    prices::where('id', $this->classificationToDelete)->delete();
+    {
+        // Soft delete the classification (this will cascade soft delete rides)
+        $classification = Classification::findOrFail($this->classificationToDelete);
+        $classificationName = $classification->name;
+        $rideCount = $classification->rides()->count();
+        
+        $classification->delete();
 
-    // After deleting, close the modal and refresh the page (or navigate back)
-    $this->classificationShowModal = false;
+        // Show success message
+        session()->flash('success', "Successfully deleted classification '{$classificationName}' with {$rideCount} ride(s).");
 
-    // Refresh prices list to reflect the deleted record
-    $this->prices = prices::where('ride_type', $this->ride_type)->get();
+        // After deleting, close the modal and refresh the data
+        $this->classificationShowModal = false;
 
-    // You can redirect or just refresh
-    // return redirect()->route('priceClassification', ['ride_type' => $this->ride_type]);
-}
+        // Refresh classifications list to reflect the deleted record
+        $this->classifications = $this->rideType->fresh()->classifications;
+    }
 }

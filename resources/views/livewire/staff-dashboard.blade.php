@@ -37,8 +37,8 @@
                     <thead class="bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-sm font-semibold sticky top-0 z-10">
                         <tr class="border-b border-blue-400">
                             <th class="px-4 py-3 text-left">No.</th>
-                            <th class="px-4 py-3 text-left">Ride Type</th>
-                            <th class="px-4 py-3 text-left hidden lg:table-cell">Classification</th>
+                            <th class="px-4 py-3 text-left">Ride Type & Classification</th>
+                            <th class="px-4 py-3 text-left hidden sm:table-cell">Identification</th>
                             <th class="px-4 py-3 text-left hidden sm:table-cell">Duration</th>
                             <th class="px-4 py-3 text-left hidden md:table-cell">Life Jackets</th>
                             <th class="px-4 py-3 text-left">Total</th>
@@ -55,26 +55,29 @@
                                 <td class="px-4 py-3 text-gray-700">
                                     {{ $filteredRides->count() - $loop->iteration + 1 }}
                                 </td>
-                                <td class="px-4 py-3 lg:w-[150px] lg:min-w-[150px]">
-                                    <!-- Ride Type with bigger text and bold -->
-                                    <div class="text-gray-700 font-bold text-lg">{{ str_replace('_', ' ', $ride->rideType) }}</div>
-                                    <div class="lg:hidden text-sm min-w-[150px] -mt-1">
-                                        <span class="text-blue-600 font-medium">{{ str_replace('_', ' ', $ride->classification) }}</span>
-                                    </div>
+                                <td class="px-4 py-3 lg:w-[200px] lg:min-w-[200px]">
+                                    <!-- Combined Ride Type & Classification -->
+                                    <div class="text-gray-700 font-bold text-lg">{{ $ride->ride->classification->rideType->name ?? 'Unknown' }}</div>
+                                    <div class="text-sm text-blue-600 font-medium">{{ $ride->ride->classification->name ?? 'Unknown' }}</div>
                                     <!-- Mobile view details -->
                                     <div class="lg:hidden space-y-1.5 mt-2">
+                                        <!-- Identification -->
+                                        <div class="text-xs min-w-[150px]">
+                                            <span class="text-green-600 font-medium">ID:</span>
+                                            <span class="text-gray-600 font-semibold">{{ $ride->ride->identifier ?? 'Unknown' }}</span>
+                                        </div>
                                         <!-- Time info with added top margin to separate from classification -->
                                         <div class="md:hidden text-xs space-y-1 mt-2">
                                             <div class="flex flex-col min-w-[150px]">
-                                                <span class="text-indigo-600 font-medium">Starts: <span class="text-gray-600">{{ \Carbon\Carbon::parse($ride->timeStart)->format('h:i A') }}</span></span>
+                                                <span class="text-indigo-600 font-medium">Starts: <span class="text-gray-600">{{ \Carbon\Carbon::parse($ride->start_at)->format('h:i A') }}</span></span>
                                                 
                                             </div>
                                             <div class="flex flex-col min-w-[150px]">
-                                                <span class="text-indigo-600 font-medium">End: <span class="text-gray-600">{{ \Carbon\Carbon::parse($ride->timeEnd)->format('h:i A') }}</span></span>
+                                                <span class="text-indigo-600 font-medium">End: <span class="text-gray-600">{{ \Carbon\Carbon::parse($ride->end_at)->format('h:i A') }}</span></span>
                                                 
                                             </div>
                                             <div class="flex flex-col min-w-[150px] text-sm">
-                                                <span class="text-indigo-600 font-medium">Remaining: <span class="text-gray-600 remaining-time font-bold" data-end="{{ \Carbon\Carbon::parse($ride->timeEnd)->format('Y-m-d H:i:s') }}"></span></span>
+                                                <span class="text-indigo-600 font-medium">Remaining: <span class="text-gray-600 remaining-time font-bold" data-end="{{ \Carbon\Carbon::parse($ride->end_at)->format('Y-m-d H:i:s') }}"></span></span>
                                                 
                                             </div>
                                         </div>
@@ -83,13 +86,13 @@
                                         <div class="sm:hidden text-xs min-w-[150px]">
                                             <span class="text-emerald-600 font-medium">Duration:</span>
                                             <span class="text-gray-600">
-                                                @if ($ride->duration >= 60)
-                                                    {{ intdiv($ride->duration, 60) }}hr{{ intdiv($ride->duration, 60) > 1 ? 's' : '' }}
-                                                    @if ($ride->duration % 60 > 0)
-                                                        {{ $ride->duration % 60 }}min
+                                                @if ($ride->duration_minutes >= 60)
+                                                    {{ intdiv($ride->duration_minutes, 60) }}hr{{ intdiv($ride->duration_minutes, 60) > 1 ? 's' : '' }}
+                                                    @if ($ride->duration_minutes % 60 > 0)
+                                                        {{ $ride->duration_minutes % 60 }}min
                                                     @endif
                                                 @else
-                                                    {{ $ride->duration }}min
+                                                    {{ $ride->duration_minutes }}min
                                                 @endif
                                             </span>
                                         </div>
@@ -97,48 +100,50 @@
                                         <!-- Jackets -->
                                         <div class="md:hidden text-xs min-w-[150px]">
                                             <span class="text-emerald-600 font-medium">Jackets:</span>
-                                            <span class="text-gray-600">{{ $ride->life_jacket_usage }}</span>
+                                            <span class="text-gray-600">{{ $ride->life_jacket_quantity }}</span>
                                         </div>
                                         
                                         <!-- Note moved to bottom -->
-                                        <div class="text-xs min-w-[150px]">
+                                        <div class="text-xs min-w-[150px] max-w-[200px]">
                                             <span class="text-purple-600 font-medium">Note:</span>
-                                            <span class="text-gray-600">{{ $ride->note ?? '-' }}</span>
+                                            <span class="text-gray-600 truncate block" title="{{ $ride->note ?? '-' }}">{{ $ride->note ?? '-' }}</span>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-4 py-3 text-gray-700 hidden lg:table-cell">
-                                    {{ str_replace('_', ' ', $ride->classification) }}
+                                <td class="px-4 py-3 text-gray-700 hidden sm:table-cell">
+                                    <div class="font-semibold text-gray-800">{{ $ride->ride->identifier ?? 'Unknown' }}</div>
                                 </td>
                                 <td class="px-4 py-3 text-gray-700 hidden sm:table-cell">
-                                    @if ($ride->duration >= 60)
-                                        {{ intdiv($ride->duration, 60) }}hr{{ intdiv($ride->duration, 60) > 1 ? 's' : '' }}
-                                        @if ($ride->duration % 60 > 0)
-                                            {{ $ride->duration % 60 }}min
+                                    @if ($ride->duration_minutes >= 60)
+                                        {{ intdiv($ride->duration_minutes, 60) }}hr{{ intdiv($ride->duration_minutes, 60) > 1 ? 's' : '' }}
+                                        @if ($ride->duration_minutes % 60 > 0)
+                                            {{ $ride->duration_minutes % 60 }}min
                                         @endif
                                     @else
-                                        {{ $ride->duration }}min
+                                        {{ $ride->duration_minutes }}min
                                     @endif
                                 </td>
                                 <td class="px-4 py-3 text-gray-700 text-center hidden md:table-cell">
-                                    {{ $ride->life_jacket_usage }}
+                                    {{ $ride->life_jacket_quantity }}
                                 </td>
                                 <td class="px-4 py-3 text-gray-700">
-                                    <span class="font-bold pr-1">₱</span>{{ number_format($ride->totalPrice, 2) }}
+                                    <span class="font-bold pr-1">₱</span>{{ number_format($ride->computed_total, 2) }}
                                 </td>
                                 <td class="px-4 py-3 text-gray-700 hidden md:table-cell">
-                                    {{ \Carbon\Carbon::parse($ride->timeStart)->format('h:i A') }}
+                                    {{ \Carbon\Carbon::parse($ride->start_at)->format('h:i A') }}
                                 </td>
                                 <td class="px-4 py-3 text-gray-700 hidden md:table-cell timeEnd">
-                                    {{ \Carbon\Carbon::parse($ride->timeEnd)->format('h:i A') }}
+                                    {{ \Carbon\Carbon::parse($ride->end_at)->format('h:i A') }}
                                 </td>
                                 <td class="px-4 py-3 hidden md:table-cell remaining-time" 
-                                    data-end="{{ \Carbon\Carbon::parse($ride->timeEnd)->format('Y-m-d H:i:s') }}"
+                                    data-end="{{ \Carbon\Carbon::parse($ride->end_at)->format('Y-m-d H:i:s') }}"
                                     data-marked="{{ isset($markedAsDone[$ride->id]) ? 'true' : 'false' }}">
                                     <!-- Remaining time will be populated by JS -->
                                 </td>
-                                <td class="px-4 py-3 text-gray-700 hidden lg:table-cell">
-                                    {{ $ride->note ?? '-' }}
+                                <td class="px-4 py-3 text-gray-700 hidden lg:table-cell max-w-[200px]">
+                                    <div class="truncate" title="{{ $ride->note ?? '-' }}">
+                                        {{ $ride->note ?? '-' }}
+                                    </div>
                                 </td>
                                 <td class="px-4 py-3 text-center">
                                     <div class="flex flex-col sm:flex-row justify-center space-y-2 sm:space-y-0 sm:space-x-2">
@@ -200,7 +205,7 @@
 
                     <!-- Modal panel -->
                     <div class="relative bg-white rounded-lg shadow-xl transform transition-all w-full max-w-lg">
-                        @livewire('edit-ride', ['rideId' => $editingRideId])
+                        @livewire('edit-ride', ['rentalId' => $editingRideId])
                     </div>
                 </div>
             </div>
@@ -280,7 +285,7 @@
     let alarmAudio = null;
 
     function testTimeOut() {
-        const modalDetails = `<span class="font-bold text-red-500">Test Ride</span> <span class="font-bold text-red-500">Test Classification</span> has ended.`;
+        const modalDetails = `<span class="font-bold text-red-500">Test Ride</span> - <span class="font-bold text-red-500">Test Classification</span> (Test ID) has ended.`;
         document.getElementById('modalRideDetails').innerHTML = modalDetails;
         playAlarmSound();
         openModal('modalConfirmAlarm');
@@ -328,9 +333,10 @@
             if (timeEnd === currentTimeString) {
                 const rideRow = element.closest('tr');
                 const rideType = rideRow.querySelector('td:nth-child(2) > div:first-child').textContent.trim();
-                const classification = rideRow.querySelector('td:nth-child(3)').textContent.trim();
+                const classification = rideRow.querySelector('td:nth-child(2) > div:nth-child(2)').textContent.trim();
+                const identification = rideRow.querySelector('td:nth-child(3) > div').textContent.trim();
 
-                const modalDetails = `<span class="font-bold text-red-500">${rideType}</span> <span class="font-bold text-red-500">${classification}</span> has ended.`;
+                const modalDetails = `<span class="font-bold text-red-500">${rideType}</span> - <span class="font-bold text-red-500">${classification}</span> (${identification}) has ended.`;
                 document.getElementById('modalRideDetails').innerHTML = modalDetails;
 
                 playAlarmSound();

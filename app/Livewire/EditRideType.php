@@ -2,43 +2,51 @@
 
 namespace App\Livewire;
 
-use App\Models\prices;
+use App\Models\RideType;
 use Livewire\Component;
 
 class EditRideType extends Component
 {
-    public $price;         // Store the price object
-    public $ride_type;     // Store the ride_type that can be edited
+    public $rideTypeId;
+    public $rideType;
+    public $name;
 
-    // Mount method to load the price data
-    public function mount($ride_type)
+    protected $rules = [
+        'name' => 'required|string|max:255|unique:ride_types,name',
+    ];
+
+    protected $messages = [
+        'name.required' => 'Ride type name is required.',
+        'name.unique' => 'This ride type name already exists.',
+    ];
+
+    // Mount method to load the ride type data
+    public function mount($rideTypeId)
     {
-        // Find the price record by ride_type and load its values
-        $this->price = prices::where('ride_type', $ride_type)->firstOrFail();
-        $this->ride_type = $this->price->ride_type;
+        $this->rideTypeId = $rideTypeId;
+        $this->rideType = RideType::findOrFail($rideTypeId);
+        $this->name = $this->rideType->name;
     }
 
-    // Update only the ride_type field
-    public function updatePrice()
+    // Update the ride type name
+    public function updateRideType()
     {
-        // Validate the ride_type field only
-        $this->validate([
-            'ride_type' => 'required|string|max:255',
-        ]);
+        // Temporarily ignore unique rule for current record
+        $this->rules['name'] = 'required|string|max:255|unique:ride_types,name,' . $this->rideType->id;
+        
+        $this->validate();
 
-        // Capitalize the first letter and replace spaces with underscores
-        $this->ride_type = ucfirst(str_replace(' ', '_', $this->ride_type));
+        try {
+            $this->rideType->update([
+                'name' => trim($this->name),
+            ]);
 
-        // Update all records with the same ride_type
-        prices::where('ride_type', $this->price->ride_type)->update([
-            'ride_type' => $this->ride_type,
-        ]);
+            session()->flash('success', 'Ride type updated successfully!');
+            return redirect()->route('ViewDetails', ['rideTypeId' => $this->rideType->id]);
 
-        // Flash a success message
-        session()->flash('message', 'Ride type updated successfully!');
-
-        // Redirect to the admin dashboard (or wherever you need to go)
-        return redirect()->route('ViewDetails', ['ride_type' => $this->ride_type]);
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error updating ride type: ' . $e->getMessage());
+        }
     }
 
     // Render the component view

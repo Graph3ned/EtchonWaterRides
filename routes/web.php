@@ -39,11 +39,15 @@ Route::view('/admin/rides-rate', 'RidesRate')
     ->middleware(['auth', 'verified', 'admin'])
     ->name('RidesRate');
 
+Route::view('/admin/ride-availability', 'RideAvailability')
+    ->middleware(['auth', 'verified'])
+    ->name('RideAvailability');
+
 Route::view('/admin/create', 'AddWaterRide')
     ->middleware(['auth', 'verified', 'admin'])
     ->name('AddWaterRide');
 
-Route::view('/admin/edit-ride-type/{ride_type}', 'EditRideType')
+Route::view('/admin/edit-ride-type/{rideTypeId}', 'EditRideType')
     ->middleware(['auth', 'verified', 'admin'])
     ->name('EditRideType');
 
@@ -67,13 +71,22 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
             ->name('register');    
     });
 
-Route::view('/admin/view-details/{ride_type}', 'ViewDetails')
+Route::view('/admin/view-details/{rideTypeId}', 'ViewDetails')
     ->middleware(['auth', 'verified', 'admin'])
     ->name('ViewDetails');
 
-Route::view('/admin/add-ride-classification/{ride_type}', 'AddRideClassification')
+Route::view('/admin/add-ride-classification/{rideTypeId}', 'AddRideClassification')
     ->middleware(['auth', 'verified', 'admin'])
     ->name('AddRideClassification');
+
+Route::view('/admin/edit-ride-type/{rideTypeId}', 'EditRideType')
+    ->middleware(['auth', 'verified', 'admin'])
+    ->name('EditRideType');
+
+Route::get('/admin/edit-classification/{classificationId}', function ($classificationId) {
+    return view('EditClassification', ['classificationId' => $classificationId]);
+})->middleware(['auth', 'verified', 'admin'])
+    ->name('EditClassification');
 
 Route::view('/admin/priceEdit/{id}', 'priceEdit')
     ->middleware(['auth', 'verified', 'admin'])

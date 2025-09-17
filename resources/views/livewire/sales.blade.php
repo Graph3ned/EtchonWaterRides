@@ -42,8 +42,8 @@
                       class="w-full text-sm rounded-lg border-gray-200 bg-gray-50 focus:bg-white hover:bg-gray-50/80
                              focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200">
                 <option value="">All Staff</option>
-                @foreach ($load->unique('user') as $ride)
-                  <option value="{{ $ride->user }}" class="py-2">{{ $ride->user }}</option>
+                @foreach ($users as $user)
+                  <option value="{{ $user }}" class="py-2">{{ $user }}</option>
                 @endforeach
               </select>
             </div>
@@ -62,8 +62,8 @@
                         class="w-full text-sm rounded-lg border-gray-200 bg-gray-50 focus:bg-white hover:bg-gray-50/80
                                focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200">
                   <option value="">All Types</option>
-                  @foreach ($load->unique('rideType') as $ride)
-                    <option value="{{ $ride->rideType }}" class="py-2">{{ str_replace('_', ' ', $ride->rideType) }}</option>
+                  @foreach ($rideTypes as $rideType)
+                    <option value="{{ $rideType }}" class="py-2">{{ str_replace('_', ' ', $rideType) }}</option>
                   @endforeach
                 </select>
               </div>
@@ -80,8 +80,8 @@
                         class="w-full text-sm rounded-lg border-gray-200 bg-gray-50 focus:bg-white hover:bg-gray-50/80
                                focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200">
                   <option value="">All Classifications</option>
-                  @foreach ($load->where('rideType', $selectedRideType)->unique('classification') as $ride)
-                    <option value="{{ $ride->classification }}" class="py-2">{{ str_replace('_', ' ', $ride->classification) }}</option>
+                  @foreach ($classifications as $classificationOption)
+                    <option value="{{ $classificationOption }}" class="py-2">{{ str_replace('_', ' ', $classificationOption) }}</option>
                   @endforeach
                 </select>
               </div>
@@ -293,8 +293,8 @@
               <tr class="border-b border-blue-400">
                 <th class="px-4 py-3 text-left">No.</th>
                 <th class="px-4 py-3 text-left">Staff</th>
-                <th class="px-4 py-3 text-left">Type</th>
-                <th class="px-4 py-3 text-left hidden lg:table-cell">Class</th>
+                <th class="px-4 py-3 text-left">Ride Type & Classification</th>
+                <th class="px-4 py-3 text-left hidden lg:table-cell">Identification</th>
                 <th class="px-4 py-3 text-left hidden sm:table-cell">Duration</th>
                 <th class="px-4 py-3 text-left hidden md:table-cell">Jackets</th>
                 <th class="px-4 py-3 text-left">Total</th>
@@ -311,17 +311,14 @@
                     {{ ($rides->total() - ($rides->currentPage() - 1) * $rides->perPage()) - $loop->iteration + 1 }}
                   </td>
                   <td class="px-4 py-3">
-                    <div class="text-gray-700">{{ $ride->user }}</div>
+                    <div class="text-gray-700">{{ $ride->user_name_at_time }}</div>
                   </td>
-                  <td class="px-4 py-3 lg:w-[150px] lg:min-w-[150px]">
-                    <div class="text-gray-700 font-medium">{{ str_replace('_', ' ', $ride->rideType) }}</div>
+                  <td class="px-4 py-3 lg:w-[200px] lg:min-w-[200px]">
+                    <!-- Match Staff Dashboard style: Bold Ride Type then Classification -->
+                    <div class="text-gray-700 font-bold text-lg">{{ $ride->ride->classification->rideType->name ?? ($ride->ride_type_name_at_time ?? 'Unknown') }}</div>
+                    <div class="text-sm text-blue-600 font-medium">{{ $ride->ride->classification->name ?? ($ride->classification_name_at_time ?? 'Unknown') }}</div>
                     <!-- Mobile view details with improved styling -->
                     <div class="lg:hidden space-y-1.5 mt-2">
-                        <!-- Classification - matches hidden lg:table-cell -->
-                        <div class="text-xs min-w-[150px]">
-                            <span class="text-blue-600 font-medium">Class:</span>
-                            <span class="text-gray-600">{{ str_replace('_', ' ', $ride->classification) }}</span>
-                        </div>
                         
                         <!-- Only show these details when their corresponding columns are hidden -->
                         <div class="space-y-1.5">
@@ -329,13 +326,13 @@
                             <div class="sm:hidden text-xs min-w-[150px]">
                                 <span class="text-emerald-600 font-medium">Duration:</span>
                                 <span class="text-gray-600">
-                                    @if ($ride->duration >= 60)
-                                        {{ intdiv($ride->duration, 60) }}hr{{ intdiv($ride->duration, 60) > 1 ? 's' : '' }}
-                                        @if ($ride->duration % 60 > 0)
-                                            {{ $ride->duration % 60 }}min
+                                    @if ($ride->duration_minutes >= 60)
+                                        {{ intdiv($ride->duration_minutes, 60) }}hr{{ intdiv($ride->duration_minutes, 60) > 1 ? 's' : '' }}
+                                        @if ($ride->duration_minutes % 60 > 0)
+                                            {{ $ride->duration_minutes % 60 }}min
                                         @endif
                                     @else
-                                        {{ $ride->duration }}min
+                                        {{ $ride->duration_minutes }}min
                                     @endif
                                 </span>
                             </div>
@@ -349,18 +346,18 @@
                             <!-- Jackets - matches hidden md:table-cell -->
                             <div class="md:hidden text-xs min-w-[150px]">
                                 <span class="text-emerald-600 font-medium">Jackets:</span>
-                                <span class="text-gray-600">{{ $ride->life_jacket_usage }}</span>
+                                <span class="text-gray-600">{{ $ride->life_jacket_quantity }}</span>
                             </div>
 
                             <!-- Time info - matches hidden md:table-cell -->
                             <div class="md:hidden text-xs space-y-1">
                                 <div class="flex flex-col min-w-[150px]">
                                     <span class="text-indigo-600 font-medium">Start:</span>
-                                    <span class="text-gray-600 ml-4">{{ \Carbon\Carbon::parse($ride->timeStart)->format('h:i A') }}</span>
+                                    <span class="text-gray-600 ml-4">{{ \Carbon\Carbon::parse($ride->start_at)->format('h:i A') }}</span>
                                 </div>
                                 <div class="flex flex-col min-w-[150px]">
                                     <span class="text-indigo-600 font-medium">End:</span>
-                                    <span class="text-gray-600 ml-4">{{ \Carbon\Carbon::parse($ride->timeEnd)->format('h:i A') }}</span>
+                                    <span class="text-gray-600 ml-4">{{ \Carbon\Carbon::parse($ride->end_at)->format('h:i A') }}</span>
                                 </div>
                             </div>
 
@@ -372,21 +369,21 @@
                         </div>
                     </div>
                   </td>
-                  <td class="px-4 py-3 text-gray-700 hidden lg:table-cell">{{ str_replace('_', ' ', $ride->classification) }}</td>
+                  <td class="px-4 py-3 text-gray-700 hidden lg:table-cell">{{ $ride->ride->identifier ?? $ride->ride_identifier_at_time ?? 'Unknown' }}</td>
                   <td class="px-4 py-3 text-gray-700 hidden sm:table-cell">
-                    @if ($ride->duration >= 60)
-                      {{ intdiv($ride->duration, 60) }}hr{{ intdiv($ride->duration, 60) > 1 ? 's' : '' }}
-                      @if ($ride->duration % 60 > 0)
-                        {{ $ride->duration % 60 }}min
+                    @if ($ride->duration_minutes >= 60)
+                      {{ intdiv($ride->duration_minutes, 60) }}hr{{ intdiv($ride->duration_minutes, 60) > 1 ? 's' : '' }}
+                      @if ($ride->duration_minutes % 60 > 0)
+                        {{ $ride->duration_minutes % 60 }}min
                       @endif
                     @else
-                      {{ $ride->duration }}min
+                      {{ $ride->duration_minutes }}min
                     @endif
                   </td>
-                  <td class="px-4 py-3 text-gray-700 text-center hidden md:table-cell">{{ $ride->life_jacket_usage }}</td>
-                  <td class="px-4 py-3 text-gray-700">₱{{ number_format($ride->totalPrice, 2) }}</td>
-                  <td class="px-4 py-3 text-gray-700 hidden md:table-cell">{{ \Carbon\Carbon::parse($ride->timeStart)->format('h:i A') }}</td>
-                  <td class="px-4 py-3 text-gray-700 hidden md:table-cell">{{ \Carbon\Carbon::parse($ride->timeEnd)->format('h:i A') }}</td>
+                  <td class="px-4 py-3 text-gray-700 text-center hidden md:table-cell">{{ $ride->life_jacket_quantity }}</td>
+                  <td class="px-4 py-3 text-gray-700">₱{{ number_format($ride->computed_total, 2) }}</td>
+                  <td class="px-4 py-3 text-gray-700 hidden md:table-cell">{{ \Carbon\Carbon::parse($ride->start_at)->format('h:i A') }}</td>
+                  <td class="px-4 py-3 text-gray-700 hidden md:table-cell">{{ \Carbon\Carbon::parse($ride->end_at)->format('h:i A') }}</td>
                   <td class="px-4 py-3 text-gray-700 hidden lg:table-cell">{{ \Carbon\Carbon::parse($ride->created_at)->format('M d, Y') }}</td>
                   <td class="px-4 py-3 text-gray-700 hidden lg:table-cell">{{ $ride->note ?? '-' }}</td>
                 </tr>

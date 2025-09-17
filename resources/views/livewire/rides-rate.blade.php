@@ -2,7 +2,7 @@
   <div class="w-full rounded-lg relative overflow-hidden">
     <!-- Success Message -->
     @if (session()->has('success'))
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <div id="success-message" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4 transition-opacity duration-500" role="alert">
             <span class="block sm:inline">{{ session('success') }}</span>
         </div>
     @endif
@@ -26,17 +26,18 @@
       <!-- Price Cards Grid -->
       <div class="p-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          @foreach ($prices->reverse()->unique('ride_type') as $price)
+          @foreach ($rideTypes as $rideType)
             <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 
                         transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group">
               <div class="p-6">
 
                 <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                   <h3 class="text-lg font-semibold text-gray-800">
-                    {{ str_replace('_', ' ', $price->ride_type) }}
+                    {{ $rideType->name }}
                   </h3>
+                  <!-- <div class="text-sm text-gray-500">Classifications: {{ $rideType->classifications_count }}</div> -->
 
-                  <button wire:navigate href="/admin/view-details/{{$price->ride_type}}" 
+                  <button wire:navigate href="/admin/view-details/{{ $rideType->id }}" 
                           class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 
                                  hover:from-cyan-600 hover:to-blue-700 rounded-lg transition-all duration-200 
                                  text-white text-sm font-medium shadow-md hover:shadow-lg max-w-[150px] md:max-w-none">
@@ -56,3 +57,18 @@
   </div>
 </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-hide success messages after 5 seconds
+    const successMessage = document.getElementById('success-message');
+    if (successMessage) {
+        setTimeout(function() {
+            successMessage.style.opacity = '0';
+            setTimeout(function() {
+                successMessage.style.display = 'none';
+            }, 500);
+        }, 5000);
+    }
+});
+</script>

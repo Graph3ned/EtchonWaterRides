@@ -2,63 +2,299 @@
 namespace App\Livewire;
 
 use Livewire\Component;
-use App\Models\prices;
+use App\Models\RideType;
+use App\Models\Classification;
+use App\Models\Ride;
 
 class AddWaterRide extends Component
 {
-    public $ride_type;
-    public $classification;
-    public $price_per_hour;
-    public $rideTypes = []; // To store the list of ride types
-    public $isCustomRideType = false;  // To toggle custom ride type input
-
-    protected $rules = [
-        'ride_type' => 'required|string|max:255',
-        'classification' => 'required|string|max:255',
-        'price_per_hour' => 'required|numeric|min:0.01|max:999999.99',
+    // Step 1: Ride Type Creation (only new)
+    public $newRideTypeName = '';
+    
+    // Step 2: Multiple classifications with identifiers
+    public $classificationsInput = [
+        [
+            'name' => '',
+            'price_per_hour' => '',
+            'identifiers' => [''],
+        ],
     ];
+    public $isActive = true;
+    
+    // UI State
+    public $currentStep = 1;
+    public $maxSteps = 2;
+
+    protected function rules()
+    {
+        return [
+            'newRideTypeName' => [
+                'required',
+                'string',
+                'max:255',
+                function ($attribute, $value, $fail) {
+                    $activeRideType = RideType::where('name', $value)->first();
+                    if ($activeRideType) {
+                        $fail('This ride type already exists.');
+                    }
+                }
+            ],
+            'classificationsInput' => 'required|array|min:1',
+            'classificationsInput.*.name' => 'required|string|max:255',
+            'classificationsInput.*.price_per_hour' => 'required|numeric|min:0.01|max:999999.99',
+            'classificationsInput.*.identifiers' => 'required|array|min:1',
+            'classificationsInput.*.identifiers.*' => 'required|string|max:255',
+            'isActive' => 'boolean',
+        ];
+    }
 
     protected $messages = [
-        'ride_type.required' => 'Ride type is required.',
-        'ride_type.string' => 'Ride type must be text.',
-        'ride_type.max' => 'Ride type cannot exceed 255 characters.',
-        'classification.required' => 'Classification is required.',
-        'classification.string' => 'Classification must be text.',
-        'classification.max' => 'Classification cannot exceed 255 characters.',
-        'price_per_hour.required' => 'Price per hour is required.',
-        'price_per_hour.numeric' => 'Price per hour must be a number.',
-        'price_per_hour.min' => 'Price per hour must be greater than 0.',
-        'price_per_hour.max' => 'Price per hour cannot exceed 999,999.99.',
+        'newRideTypeName.required' => 'Ride type name is required.',
+        'newRideTypeName.unique' => 'This ride type already exists.',
+        'classificationsInput.required' => 'Add at least one classification.',
+        'classificationsInput.*.name.required' => 'Classification name is required.',
+        'classificationsInput.*.price_per_hour.required' => 'Classification price is required.',
+        'classificationsInput.*.identifiers.required' => 'Add at least one identifier per classification.',
+        'classificationsInput.*.identifiers.*.required' => 'Identifier is required.',
     ];
 
     public function mount()
     {
-        // Fetch ride types from the database
-        $this->rideTypes = prices::pluck('ride_type')->unique()->toArray(); // Make sure this is the right model
+        $this->loadRideTypes();
+    }
+
+    public function loadRideTypes() {}
+
+    public function resetClassificationFields()
+    {
+        $this->classificationsInput = [
+            [
+                'name' => '',
+                'price_per_hour' => '',
+                'identifiers' => [''],
+            ],
+        ];
+        $this->isActive = true;
+    }
+
+    public function nextStep()
+    {
+        if ($this->currentStep === 1) {
+            $this->validateStep1();
+        } elseif ($this->currentStep === 2) {
+            $this->validateStep2();
+        }
+        
+        if ($this->currentStep < $this->maxSteps) {
+            $this->currentStep++;
+        }
+    }
+
+    public function previousStep()
+    {
+        if ($this->currentStep > 1) {
+            $this->currentStep--;
+        }
+    }
+
+    protected function validateStep1()
+    {
+        $this->validate([
+            'newRideTypeName' => [
+                'required',
+                'string',
+                'max:255',
+                function ($attribute, $value, $fail) {
+                    $activeRideType = RideType::where('name', $value)->first();
+                    if ($activeRideType) {
+                        $fail('This ride type already exists.');
+                    }
+                }
+            ],
+        ]);
+    }
+
+    protected function validateStep2()
+    {
+        $this->validate([
+            'classificationsInput' => 'required|array|min:1',
+            'classificationsInput.*.name' => 'required|string|max:255',
+            'classificationsInput.*.price_per_hour' => 'required|numeric|min:0.01|max:999999.99',
+            'classificationsInput.*.identifiers' => 'required|array|min:1',
+            'classificationsInput.*.identifiers.*' => 'required|string|max:255',
+        ]);
+    }
+
+    public function addClassification()
+    {
+        $this->classificationsInput[] = [
+            'name' => '',
+            'price_per_hour' => '',
+            'identifiers' => [''],
+        ];
+    }
+
+    public function removeClassification($index)
+    {
+        unset($this->classificationsInput[$index]);
+        $this->classificationsInput = array_values($this->classificationsInput);
+    }
+
+    public function addIdentifier($classificationIndex)
+    {
+        $this->classificationsInput[$classificationIndex]['identifiers'][] = '';
+    }
+
+    public function removeIdentifier($classificationIndex, $identifierIndex)
+    {
+        unset($this->classificationsInput[$classificationIndex]['identifiers'][$identifierIndex]);
+        $this->classificationsInput[$classificationIndex]['identifiers'] = array_values($this->classificationsInput[$classificationIndex]['identifiers']);
     }
 
     public function submit()
     {
         $this->validate();
         
-        // Capitalize the first letter of every word
-        $this->ride_type = ucwords($this->ride_type);
-        $this->classification = ucwords($this->classification);
+        try {
+            // Step 1: Check for soft deleted ride type with same name and restore it
+            $existingRideType = RideType::withTrashed()->where('name', $this->newRideTypeName)->first();
+            
+            if ($existingRideType && $existingRideType->trashed()) {
+                // Restore the soft deleted ride type
+                $existingRideType->restore();
+                $rideType = $existingRideType;
+                
+                // Get all existing classifications and rides (including soft deleted)
+                $allClassifications = Classification::withTrashed()->where('ride_type_id', $rideType->id)->get();
+                $allRides = Ride::withTrashed()->whereIn('classification_id', $allClassifications->pluck('id'))->get();
+                
+                $restoredClassifications = 0;
+                $restoredRides = 0;
+                $createdClassifications = 0;
+                $createdRides = 0;
+                $softDeletedClassifications = 0;
+                $softDeletedRides = 0;
+                
+                // Process each classification from the form
+                foreach ($this->classificationsInput as $c) {
+                    $classificationName = trim($c['name']);
+                    $existingClassification = $allClassifications->where('name', $classificationName)->first();
+                    
+                    if ($existingClassification) {
+                        // Classification exists, restore if soft deleted and update
+                        if ($existingClassification->trashed()) {
+                            $existingClassification->restore();
+                            $restoredClassifications++;
+                        }
+                        
+                        // Update price if changed
+                        if ($existingClassification->price_per_hour != $c['price_per_hour']) {
+                            $existingClassification->update(['price_per_hour' => $c['price_per_hour']]);
+                        }
+                        
+                        $classification = $existingClassification;
+                    } else {
+                        // Create new classification
+                        $classification = Classification::create([
+                            'ride_type_id' => $rideType->id,
+                            'name' => $classificationName,
+                            'price_per_hour' => $c['price_per_hour'],
+                        ]);
+                        $createdClassifications++;
+                    }
+                    
+                    // Process identifiers for this classification
+                    $newIdentifiers = array_filter(array_map('trim', $c['identifiers']));
+                    $classificationRides = $allRides->where('classification_id', $classification->id);
+                    $existingIdentifiers = $classificationRides->pluck('identifier')->toArray();
+                    
+                    // Process each identifier
+                    foreach ($newIdentifiers as $identifier) {
+                        $existingRide = $classificationRides->where('identifier', $identifier)->first();
+                        
+                        if ($existingRide) {
+                            // Ride exists, restore if soft deleted and update status
+                            if ($existingRide->trashed()) {
+                                $existingRide->restore();
+                                $restoredRides++;
+                            }
+                            
+                            // Update active status if changed
+                            if ($existingRide->is_active != $this->isActive) {
+                                $existingRide->update(['is_active' => $this->isActive]);
+                            }
+                        } else {
+                            // Create new ride
+                            Ride::create([
+                                'classification_id' => $classification->id,
+                                'identifier' => $identifier,
+                                'is_active' => $this->isActive,
+                            ]);
+                            $createdRides++;
+                        }
+                    }
+                    
+                    // Soft delete rides that are no longer in the identifiers list
+                    foreach ($classificationRides as $ride) {
+                        if (!in_array($ride->identifier, $newIdentifiers) && !$ride->trashed()) {
+                            $ride->delete();
+                            $softDeletedRides++;
+                        }
+                    }
+                }
+                
+                // Soft delete classifications that are no longer in the form
+                $formClassificationNames = array_map(function($c) { return trim($c['name']); }, $this->classificationsInput);
+                foreach ($allClassifications as $classification) {
+                    if (!in_array($classification->name, $formClassificationNames) && !$classification->trashed()) {
+                        $classification->delete();
+                        $softDeletedClassifications++;
+                    }
+                }
+                
+                $totalAdded = $restoredClassifications + $createdClassifications + $restoredRides + $createdRides;
+                $totalRemoved = $softDeletedClassifications + $softDeletedRides;
+                
+                $message = 'Successfully added ride type "' . $this->newRideTypeName . '"';
+                if ($totalAdded > 0) $message .= " with {$totalAdded} item(s)";
+                if ($totalRemoved > 0) $message .= " (replaced {$totalRemoved} old item(s))";
+                $message .= ".";
+                
+                session()->flash('success', $message);
+            } else {
+                // Create new ride type
+                $rideType = RideType::create(['name' => $this->newRideTypeName]);
+                
+                $createdRides = 0;
+                
+                // Create classifications and their rides
+                foreach ($this->classificationsInput as $c) {
+                    $classification = Classification::create([
+                        'ride_type_id' => $rideType->id,
+                        'name' => trim($c['name']),
+                        'price_per_hour' => $c['price_per_hour'],
+                    ]);
 
-        // Replace spaces with underscores in both ride_type and classification
-        $this->ride_type = str_replace(' ', '_', $this->ride_type);
-        $this->classification = str_replace(' ', '_', $this->classification);
+                    foreach ($c['identifiers'] as $identifier) {
+                        if (!empty(trim($identifier))) {
+                            Ride::create([
+                                'classification_id' => $classification->id,
+                                'identifier' => trim($identifier),
+                                'is_active' => $this->isActive,
+                            ]);
+                            $createdRides++;
+                        }
+                    }
+                }
+                
+                session()->flash('success', 'Successfully added ride type "' . $this->newRideTypeName . '" with ' . count($this->classificationsInput) . ' classification(s) and ' . $createdRides . ' ride(s).');
+            }
+            
+            return redirect()->route('RidesRate');
 
-        // Save the data to the database
-        prices::create([
-            'ride_type' => $this->ride_type,
-            'classification' => $this->classification,
-            'price_per_hour' => $this->price_per_hour,
-        ]);
-
-        // Redirect with a success message
-        session()->flash('success', 'Ride created successfully!');
-        return redirect('admin/rides-rate');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error creating rides: ' . $e->getMessage());
+        }
     }
 
     public function render()

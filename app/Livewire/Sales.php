@@ -216,24 +216,43 @@ class Sales extends Component
 
     public function render()
     {
-        // Apply filters to fetch the rides without pagination for total price calculation
+        // Apply filters using new schema (snapshots + joins) and order by start time
         $filteredRidesQuery = $this->buildFilteredRidesQuery()
-            ->orderBy('created_at', 'desc');
+            ->orderBy('start_at', 'desc');
 
         // Calculate the total price based on the filtered rides
-        $this->totalPrice = $filteredRidesQuery->sum('totalPrice');
+        $this->totalPrice = (clone $filteredRidesQuery)->sum('computed_total');
 
         // Fetch the rides with pagination (for display purposes)
         $rides = $filteredRidesQuery->paginate($this->paginate);
 
-        // Fetch the distinct values for filtering
-        $users = Rental::distinct()->pluck('user');
-        $rideTypes = Rental::when($this->selectedUser, fn($query) => $query->where('user', $this->selectedUser))
-            ->distinct()->pluck('rideType');
+        // Fetch the distinct values for filtering from snapshot columns / joins
+        $users = Rental::query()
+            ->distinct()
+            ->pluck('user_name_at_time');
+
+        // Ride types via join: rentals -> rides -> classifications -> ride_types
+        $rideTypes = Rental::query()
+            ->selectRaw('DISTINCT ride_types.name')
+            ->join('rides', 'rentals.ride_id', '=', 'rides.id')
+            ->join('classifications', 'rides.classification_id', '=', 'classifications.id')
+            ->join('ride_types', 'classifications.ride_type_id', '=', 'ride_types.id')
+            ->when($this->selectedUser !== '', fn($q) => $q->where('rentals.user_name_at_time', $this->selectedUser))
+            ->pluck('ride_types.name');
+
         $classifications = Rental::query()
-            ->when($this->selectedUser !== '', fn($query) => $query->where('user', $this->selectedUser))
-            ->when($this->selectedRideType !== '', fn($query) => $query->where('rideType', $this->selectedRideType))
-            ->distinct()->pluck('classification');
+            ->when($this->selectedUser !== '', fn($q) => $q->where('user_name_at_time', $this->selectedUser))
+            ->when($this->selectedRideType !== '', function ($q) {
+                $q->whereIn('rentals.ride_id', function ($sub) {
+                    $sub->select('rides.id')
+                        ->from('rides')
+                        ->join('classifications', 'rides.classification_id', '=', 'classifications.id')
+                        ->join('ride_types', 'classifications.ride_type_id', '=', 'ride_types.id')
+                        ->where('ride_types.name', $this->selectedRideType);
+                });
+            })
+            ->distinct()
+            ->pluck('classification_name_at_time');
 
         // Dispatch chart update after render
         $this->dispatch('updateChart');
@@ -280,28 +299,45 @@ class Sales extends Component
     protected function buildFilteredRidesQuery()
     {
         $query = Rental::query()
-            ->when($this->selectedUser, fn($query) => $query->where('user', $this->selectedUser))
-            ->when($this->selectedRideType, fn($query) => $query->where('rideType', $this->selectedRideType))
-            ->when($this->classification, fn($query) => $query->where('classification', $this->classification));
+            // filter by snapshot staff name
+            ->when($this->selectedUser !== '', fn($q) => $q->where('user_name_at_time', $this->selectedUser))
+            // filter by ride type via join chain
+            ->when($this->selectedRideType !== '', function ($q) {
+                $q->whereIn('rentals.ride_id', function ($sub) {
+                    $sub->select('rides.id')
+                        ->from('rides')
+                        ->join('classifications', 'rides.classification_id', '=', 'classifications.id')
+                        ->join('ride_types', 'classifications.ride_type_id', '=', 'ride_types.id')
+                        ->where('ride_types.name', $this->selectedRideType);
+                });
+            })
+            // filter by snapshot classification name
+            ->when($this->classification !== '', fn($q) => $q->where('classification_name_at_time', $this->classification));
 
         return $this->applyDateRangeFilter($query);
     }
 
     public function getAllRidesForChart()
     {
-        $query = Rental::query();  // Assuming your model is named Ride
+        $query = Rental::query();
 
         // Apply the same filters as your paginated query
         if ($this->selectedUser) {
-            $query->where('user', $this->selectedUser);
+            $query->where('user_name_at_time', $this->selectedUser);
         }
 
         if ($this->selectedRideType) {
-            $query->where('rideType', $this->selectedRideType);
+            $query->whereIn('rentals.ride_id', function ($sub) {
+                $sub->select('rides.id')
+                    ->from('rides')
+                    ->join('classifications', 'rides.classification_id', '=', 'classifications.id')
+                    ->join('ride_types', 'classifications.ride_type_id', '=', 'ride_types.id')
+                    ->where('ride_types.name', $this->selectedRideType);
+            });
         }
 
         if ($this->classification) {
-            $query->where('classification', $this->classification);
+            $query->where('classification_name_at_time', $this->classification);
         }
 
         // Apply date filters
@@ -369,7 +405,7 @@ class Sales extends Component
                 return Carbon::parse($ride->created_at)->format('Y-m-d');
             })
             ->map(function($group) {
-                return $group->sum('totalPrice');
+                return $group->sum('computed_total');
             })
             ->sortKeys();
         
@@ -385,7 +421,7 @@ class Sales extends Component
                 return Carbon::parse($ride->created_at)->format('Y-m-d');
             })
             ->map(function($group) {
-                return $group->sum('totalPrice');
+                return $group->sum('computed_total');
             })
             ->sortKeys();
         
