@@ -2,8 +2,10 @@
 namespace App\Livewire;
 
 use App\Models\Rental;
+use App\Models\StaffLog;
 use Livewire\Component;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class StaffDashboard extends Component
 {
@@ -13,12 +15,17 @@ class StaffDashboard extends Component
     public $showModal = false;
     public $modalDetails;
     public $rideToDelete;
+    public $deleteReason = '';
     public $showAddRides = false;
     public $showEditModal = false;
     public $editingRideId = null;
     public $rideFilter = 'ongoing';
     public $markedAsDone = [];
     //public $status = '0';
+
+    protected $rules = [
+        'deleteReason' => 'required|string|min:3|max:255',
+    ];
 
     protected $listeners = [
         'rideCreated' => 'handleRideCreated',
@@ -32,6 +39,8 @@ class StaffDashboard extends Component
     {
         $this->rideToDelete = $rideId;
         $this->modalDetails = "Are you sure you want to delete ride?";
+        $this->deleteReason = '';
+        $this->resetValidation();
         $this->showModal = true;
     }
 
@@ -91,12 +100,29 @@ class StaffDashboard extends Component
 
     public function deleteRide()
     {
-        $rental = Rental::find($this->rideToDelete);
+        // Validate delete reason
+        $this->validate();
+
+        $rental = Rental::with('ride')->find($this->rideToDelete);
         
         if ($rental) {
             // Get the ride before deleting the rental
             $ride = $rental->ride;
             
+            // Write a staff log with delete reason (in addition to automatic delete log)
+            try {
+                StaffLog::create([
+                    'user_id' => Auth::id(),
+                    'action' => 'delete',
+                    'model_type' => Rental::class,
+                    'model_id' => $rental->id,
+                    'old_values' => array_merge($rental->getOriginal(), ['delete_reason' => $this->deleteReason]),
+                    'new_values' => null,
+                ]);
+            } catch (\Exception $e) {
+                // fail silently; the model delete will still be logged by trait
+            }
+
             // Delete the rental
             $rental->delete();
             

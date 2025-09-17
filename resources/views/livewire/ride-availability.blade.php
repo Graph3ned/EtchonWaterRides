@@ -31,13 +31,7 @@
                                 <span class="ml-2 text-sm text-white opacity-90">Live</span>
                             </div>
                         </div>
-                        <button wire:click="refreshData(true)" 
-                                class="px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white rounded-lg transition-all duration-200 flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                            </svg>
-                            Refresh
-                        </button>
+                        
                     </div>
                 </div>
 
@@ -65,8 +59,9 @@
                                 @endforeach
                             </select>
                         </div>
-                        
-                        
+                        <div class="flex md:items-end">
+                            <button wire:click="clearFilters" class="self-start md:self-auto mt-6 md:mt-0 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg">Clear Filters</button>
+                        </div>
                     </div>
                 </div>
 
@@ -162,6 +157,38 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <p>No rides are currently being used.</p>
+                        </div>
+                    @endif
+                </div>
+
+                <!-- Inactive Rides -->
+                <div class="p-6 border-t border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 12H6" />
+                        </svg>
+                        Inactive Rides ({{ $inactiveRides->count() }})
+                    </h3>
+
+                    @if($inactiveRides->count() > 0)
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            @foreach($inactiveRides as $ride)
+                                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <h4 class="font-medium text-gray-800">{{ $ride->classification->rideType->name ?? 'Unknown Ride Type' }}</h4>
+                                        <span class="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">Inactive</span>
+                                    </div>
+                                    <p class="text-sm text-gray-600">{{ $ride->classification->name ?? 'Unknown Classification' }}</p>
+                                    <p class="text-sm text-gray-500">{{ $ride->identifier }}</p>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="text-center py-8 text-gray-500">
+                            <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 12H6" />
+                            </svg>
+                            <p>No inactive rides found with current filters.</p>
                         </div>
                     @endif
                 </div>

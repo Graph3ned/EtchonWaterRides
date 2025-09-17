@@ -30,6 +30,12 @@ class RideAvailability extends Component
         }
     }
 
+    public function clearFilters()
+    {
+        $this->selectedRideType = '';
+        $this->selectedClassification = '';
+    }
+
     private function fixInconsistentRideStatuses()
     {
         // Find rides marked as used but have no active rentals
@@ -70,7 +76,7 @@ class RideAvailability extends Component
         // Get ride types for filtering
         $rideTypes = RideType::with(['classifications.rides'])
             ->whereHas('classifications.rides', function($query) {
-                $query->whereIn('is_active', [Ride::STATUS_AVAILABLE, Ride::STATUS_USED]);
+                $query->whereIn('is_active', [Ride::STATUS_AVAILABLE, Ride::STATUS_USED, Ride::STATUS_INACTIVE]);
             })
             ->get();
 
@@ -79,14 +85,14 @@ class RideAvailability extends Component
         if ($this->selectedRideType) {
             $classifications = Classification::where('ride_type_id', $this->selectedRideType)
                 ->whereHas('rides', function($query) {
-                    $query->whereIn('is_active', [Ride::STATUS_AVAILABLE, Ride::STATUS_USED]);
+                    $query->whereIn('is_active', [Ride::STATUS_AVAILABLE, Ride::STATUS_USED, Ride::STATUS_INACTIVE]);
                 })
                 ->get();
         }
 
         // Build rides query
         $ridesQuery = Ride::with(['classification.rideType'])
-            ->whereIn('is_active', [Ride::STATUS_AVAILABLE, Ride::STATUS_USED])
+            ->whereIn('is_active', [Ride::STATUS_AVAILABLE, Ride::STATUS_USED, Ride::STATUS_INACTIVE])
             ->whereHas('classification')
             ->whereHas('classification.rideType');
 
@@ -151,6 +157,10 @@ class RideAvailability extends Component
             return $ride->time_left_minutes ?? 999999;
         });
 
+        $inactiveRides = $rides->filter(function($ride) {
+            return $ride->is_active === Ride::STATUS_INACTIVE;
+        });
+
         // Calculate ride type stats
         $rideTypeStats = [];
         foreach ($rideTypes as $rideType) {
@@ -188,6 +198,7 @@ class RideAvailability extends Component
             'classifications' => $classifications,
             'availableRides' => $availableRides,
             'usedRides' => $usedRides,
+            'inactiveRides' => $inactiveRides,
             'rideTypeStats' => $rideTypeStats
         ]);
     }

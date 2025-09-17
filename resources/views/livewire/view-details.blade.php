@@ -22,9 +22,13 @@
         <div class="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-100 transition-all duration-300 hover:shadow-2xl">
             <!-- Header -->
             <div class="bg-gradient-to-r from-cyan-500 to-blue-600 p-6">
-                <div class="flex justify-between items-center">
-                    <h2 class="text-2xl font-bold text-white">{{ $rideType->name }}</h2>
-                </div>
+                <!-- <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"> -->
+                    <h2 class="text-3xl font-bold text-white mb-2">{{ $rideType->name }}</h2>
+                    <div class="flex flex-col items-start gap-2">
+                        <input type="file" wire:model="rideTypeImage" accept="image/*" class="text-sm text-white/90 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-white/20 file:text-white hover:file:bg-white/30" />
+                        <button wire:click="saveRideTypeImage" class="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm font-medium">Change Picture</button>
+                    </div>
+                <!-- </div> -->
             </div>
 
             <!-- Content -->

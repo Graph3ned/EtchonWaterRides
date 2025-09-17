@@ -51,6 +51,18 @@
                                 @error('newRideTypeName')
                                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                 @enderror
+                                <div class="mt-4">
+                                    <label class="flex items-center text-gray-700 font-medium text-sm">Ride Type Image (optional)</label>
+                                    <input type="file" wire:model="rideTypeImage" accept="image/*" class="w-full text-sm rounded-lg border-gray-200 bg-gray-50 focus:bg-white hover:bg-gray-50/80 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                                    @error('rideTypeImage')
+                                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                    @enderror
+                                    @if ($rideTypeImage)
+                                        <div class="mt-2">
+                                            <img src="{{ $rideTypeImage->temporaryUrl() }}" alt="Preview" class="h-20 w-20 object-cover rounded" />
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
                         </div>
                     @endif

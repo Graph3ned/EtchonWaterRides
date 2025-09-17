@@ -5,9 +5,11 @@ use Livewire\Component;
 use App\Models\RideType;
 use App\Models\Classification;
 use App\Models\Ride;
+use Livewire\WithFileUploads;
 
 class ViewDetails extends Component
 {
+    use WithFileUploads;
     public $rideTypeId;
     public $rideType;
     public $classifications = [];
@@ -18,6 +20,7 @@ class ViewDetails extends Component
     public $showModal = false;
     public $modalDetails;
     public $rideTypeToDelete;
+    public $rideTypeImage;
     
     public function classificationConfirmDelete($id)
     {
@@ -66,6 +69,20 @@ class ViewDetails extends Component
         // Load ride type with its classifications and rides
         $this->rideType = RideType::with(['classifications.rides'])->findOrFail($rideTypeId);
         $this->classifications = $this->rideType->classifications;
+    }
+
+    public function saveRideTypeImage()
+    {
+        $this->validate([
+            'rideTypeImage' => 'required|image|max:2048',
+        ]);
+
+        $path = $this->rideTypeImage->store('ride-types', 'public');
+        $this->rideType->update(['image_path' => $path]);
+
+        $this->rideTypeImage = null;
+        $this->rideType = $this->rideType->fresh();
+        session()->flash('success', 'Ride type picture updated.');
     }
 
     public function render()

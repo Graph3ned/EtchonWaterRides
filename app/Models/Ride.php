@@ -13,9 +13,9 @@ class Ride extends Model
     use HasFactory, SoftDeletes;
 
     // Ride status constants
-    const STATUS_AVAILABLE = 1;  // Active and available for rental
-    const STATUS_USED = 2;        // Active but currently being used
-    const STATUS_INACTIVE = 3;     // Inactive/disabled
+    const STATUS_INACTIVE = 0;     // Inactive/disabled
+    const STATUS_AVAILABLE = 1;    // Active and available for rental
+    const STATUS_USED = 2;         // Active but currently being used
 
     protected $fillable = [
         'classification_id',

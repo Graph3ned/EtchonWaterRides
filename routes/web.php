@@ -106,17 +106,27 @@ Route::get('/admin/generate-report', function (\Illuminate\Http\Request $request
 	$selectedDay = session('selected_day', '');
 	$selectedMonth = session('selected_month', '');
 
-	$query = Rental::query();
+    $query = Rental::query()->with(['ride.classification.rideType']);
 
-	if ($selectedUser !== '') {
-		$query->where('user', $selectedUser);
-	}
-	if ($selectedRideType !== '') {
-		$query->where('rideType', $selectedRideType);
-	}
-	if ($classification !== '') {
-		$query->where('classification', $classification);
-	}
+    if ($selectedUser !== '') {
+        $query->where('user_name_at_time', $selectedUser);
+    }
+    if ($selectedRideType !== '') {
+        $query->where(function($q) use ($selectedRideType) {
+            $q->where('ride_type_name_at_time', $selectedRideType)
+              ->orWhereHas('ride.classification.rideType', function($rq) use ($selectedRideType) {
+                  $rq->where('name', $selectedRideType);
+              });
+        });
+    }
+    if ($classification !== '') {
+        $query->where(function($q) use ($classification) {
+            $q->where('classification_name_at_time', $classification)
+              ->orWhereHas('ride.classification', function($rq) use ($classification) {
+                  $rq->where('name', $classification);
+              });
+        });
+    }
 
 	switch ($dateRange) {
 		case 'today':
@@ -169,8 +179,8 @@ Route::get('/admin/generate-report', function (\Illuminate\Http\Request $request
 			break;
 	}
 
-	// Get all columns from the rentals table
-	$rides = $query->orderBy('created_at', 'desc')->get();
+    // Get all matching rentals
+    $rides = $query->orderBy('created_at', 'desc')->get();
 
 	$filename = 'complete_rentals_report_' . Carbon::now()->format('Ymd_His') . '.csv';
 
@@ -179,12 +189,13 @@ Route::get('/admin/generate-report', function (\Illuminate\Http\Request $request
 		// UTF-8 BOM for Excel
 		fprintf($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
 		
-		// CSV Headers - all columns from the table
+        // CSV Headers
 		fputcsv($handle, [
 			'No.',
 			'Staff',
 			'Ride Type',
 			'Classification',
+            'Identification',
 			'Duration (minutes)',
 			'Life Jackets',
 			'Total Price',
@@ -197,21 +208,32 @@ Route::get('/admin/generate-report', function (\Illuminate\Http\Request $request
 
 		// CSV Data
 		$counter = 1;
-		foreach ($rides as $ride) {
+        foreach ($rides as $ride) {
+            $rideTypeName = $ride->ride->classification->rideType->name ?? ($ride->ride_type_name_at_time ?? 'Unknown');
+            $classificationName = $ride->ride->classification->name ?? ($ride->classification_name_at_time ?? 'Unknown');
+            $identifier = $ride->ride->identifier ?? ($ride->ride_identifier_at_time ?? 'Unknown');
+            $durationMinutes = $ride->duration_minutes ?? 0;
+            $lifeJackets = $ride->life_jacket_quantity ?? 0;
+            $total = number_format((float) ($ride->computed_total ?? 0), 2, '.', '');
+            $startTime = $ride->start_at ? Carbon::parse($ride->start_at)->format('h:i A') : '';
+            $endTime = $ride->end_at ? Carbon::parse($ride->end_at)->format('h:i A') : '';
+            $dateVal = $ride->created_at ? Carbon::parse($ride->created_at)->format('M/d/Y') : '';
+            $staffName = $ride->user_name_at_time ?? ($ride->user->name ?? 'Unknown');
 			fputcsv($handle, [
 				$counter++,
-				$ride->user,
-				str_replace('_', ' ', $ride->rideType),
-				str_replace('_', ' ', $ride->classification),
-				$ride->duration >= 60 
-					? (intdiv($ride->duration, 60) . 'hr' . ($ride->duration % 60 > 0 ? ' ' . ($ride->duration % 60) . 'min' : ''))
-					: $ride->duration . 'min',
-				$ride->life_jacket_usage,
-				number_format((float) $ride->totalPrice, 2, '.', ''),
-				Carbon::parse($ride->timeStart)->format('h:i A'),
-				Carbon::parse($ride->timeEnd)->format('h:i A'),
-				Carbon::parse($ride->created_at)->format('M/d/Y'),
-				$ride->note ?? '-',
+                $staffName,
+                $rideTypeName,
+                $classificationName,
+                $identifier,
+                $durationMinutes >= 60 
+                    ? (intdiv($durationMinutes, 60) . 'hr' . ($durationMinutes % 60 > 0 ? ' ' . ($durationMinutes % 60) . 'min' : ''))
+                    : $durationMinutes . 'min',
+                $lifeJackets,
+                $total,
+                $startTime,
+                $endTime,
+                $dateVal,
+                $ride->note ?? '-',
 			]);
 		}
 		fclose($handle);

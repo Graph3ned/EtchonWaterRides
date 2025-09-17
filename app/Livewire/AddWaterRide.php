@@ -5,11 +5,14 @@ use Livewire\Component;
 use App\Models\RideType;
 use App\Models\Classification;
 use App\Models\Ride;
+use Livewire\WithFileUploads;
 
 class AddWaterRide extends Component
 {
+    use WithFileUploads;
     // Step 1: Ride Type Creation (only new)
     public $newRideTypeName = '';
+    public $rideTypeImage;
     
     // Step 2: Multiple classifications with identifiers
     public $classificationsInput = [
@@ -39,6 +42,7 @@ class AddWaterRide extends Component
                     }
                 }
             ],
+            'rideTypeImage' => 'nullable|image|max:2048',
             'classificationsInput' => 'required|array|min:1',
             'classificationsInput.*.name' => 'required|string|max:255',
             'classificationsInput.*.price_per_hour' => 'required|numeric|min:0.01|max:999999.99',
@@ -111,6 +115,7 @@ class AddWaterRide extends Component
                     }
                 }
             ],
+            'rideTypeImage' => 'nullable|image|max:2048',
         ]);
     }
 
@@ -163,6 +168,11 @@ class AddWaterRide extends Component
                 // Restore the soft deleted ride type
                 $existingRideType->restore();
                 $rideType = $existingRideType;
+                // Optionally update image if a new one is uploaded
+                if ($this->rideTypeImage) {
+                    $imagePath = $this->rideTypeImage->store('ride-types', 'public');
+                    $rideType->update(['image_path' => $imagePath]);
+                }
                 
                 // Get all existing classifications and rides (including soft deleted)
                 $allClassifications = Classification::withTrashed()->where('ride_type_id', $rideType->id)->get();
@@ -263,7 +273,11 @@ class AddWaterRide extends Component
                 session()->flash('success', $message);
             } else {
                 // Create new ride type
-                $rideType = RideType::create(['name' => $this->newRideTypeName]);
+                $imagePath = null;
+                if ($this->rideTypeImage) {
+                    $imagePath = $this->rideTypeImage->store('ride-types', 'public');
+                }
+                $rideType = RideType::create(['name' => $this->newRideTypeName, 'image_path' => $imagePath]);
                 
                 $createdRides = 0;
                 

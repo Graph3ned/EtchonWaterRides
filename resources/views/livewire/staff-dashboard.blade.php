@@ -57,14 +57,14 @@
                                 </td>
                                 <td class="px-4 py-3 lg:w-[200px] lg:min-w-[200px]">
                                     <!-- Combined Ride Type & Classification -->
-                                    <div class="text-gray-700 font-bold text-lg">{{ $ride->ride->classification->rideType->name ?? 'Unknown' }}</div>
-                                    <div class="text-sm text-blue-600 font-medium">{{ $ride->ride->classification->name ?? 'Unknown' }}</div>
+                                    <div class="text-gray-700 font-bold text-lg">{{ $ride->ride_type_name_at_time ?? ($ride->ride->classification->rideType->name ?? 'Unknown') }}</div>
+                                    <div class="text-sm text-blue-600 font-medium">{{ $ride->classification_name_at_time ?? ($ride->ride->classification->name ?? 'Unknown') }}</div>
                                     <!-- Mobile view details -->
                                     <div class="lg:hidden space-y-1.5 mt-2">
                                         <!-- Identification -->
                                         <div class="text-xs min-w-[150px]">
                                             <span class="text-green-600 font-medium">ID:</span>
-                                            <span class="text-gray-600 font-semibold">{{ $ride->ride->identifier ?? 'Unknown' }}</span>
+                                            <span class="text-gray-600 font-semibold">{{ $ride->ride_identifier_at_time ?? ($ride->ride->identifier ?? 'Unknown') }}</span>
                                         </div>
                                         <!-- Time info with added top margin to separate from classification -->
                                         <div class="md:hidden text-xs space-y-1 mt-2">
@@ -111,7 +111,7 @@
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 text-gray-700 hidden sm:table-cell">
-                                    <div class="font-semibold text-gray-800">{{ $ride->ride->identifier ?? 'Unknown' }}</div>
+                                    <div class="font-semibold text-gray-800">{{ $ride->ride_identifier_at_time ?? ($ride->ride->identifier ?? 'Unknown') }}</div>
                                 </td>
                                 <td class="px-4 py-3 text-gray-700 hidden sm:table-cell">
                                     @if ($ride->duration_minutes >= 60)
@@ -220,7 +220,15 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                         <h3 class="text-xl font-normal text-gray-500 mb-6">{{ $modalDetails }}</h3>
-                        <div class="flex justify-center space-x-3">
+                        <div class="flex flex-col space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Reason for deletion <span class="text-red-500">*</span></label>
+                                <input type="text" wire:model.defer="deleteReason" placeholder="Enter reason..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400" />
+                                @error('deleteReason')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div class="flex justify-center space-x-3">
                             <button wire:click="deleteRide"
                                     class="bg-red-500 text-white px-5 py-2 rounded-lg font-medium
                                            transform transition-all duration-200 hover:-translate-y-1 
@@ -233,6 +241,7 @@
                                            hover:shadow-md hover:bg-gray-200">
                                 No, cancel
                             </button>
+                            </div>
                         </div>
                     </div>
                 </div>

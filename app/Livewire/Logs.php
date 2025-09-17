@@ -65,6 +65,12 @@ class Logs extends Component
                     'value' => $resolve($oldValues, ['identifier', 'ride_identifier_at_time'])
                 ];
             }
+            if (isset($oldValues['delete_reason']) && $oldValues['delete_reason'] !== '') {
+                $details[] = [
+                    'label' => 'Delete Reason',
+                    'value' => $oldValues['delete_reason']
+                ];
+            }
             if (isset($oldValues['timeStart']) || isset($oldValues['start_at'])) {
                 $details[] = [
                     'label' => 'Time Start',

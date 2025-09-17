@@ -35,13 +35,13 @@ class AdminSeeder extends Seeder
         $paddleBoardSmall = Classification::create([
             'ride_type_id' => $paddleBoard->id,
             'name' => 'Small',
-            'price_per_hour' => 250.00,
+            'price_per_hour' => 100.00,
         ]);
 
         $paddleBoardBig = Classification::create([
             'ride_type_id' => $paddleBoard->id,
             'name' => 'Big',
-            'price_per_hour' => 300.00,
+            'price_per_hour' => 200.00,
         ]);
 
         $paddleBoardRubber = Classification::create([
@@ -54,33 +54,33 @@ class AdminSeeder extends Seeder
         $boatBig = Classification::create([
             'ride_type_id' => $boat->id,
             'name' => 'Big',
-            'price_per_hour' => 1000.00,
+            'price_per_hour' => 300.00,
         ]);
 
         $boatSmall = Classification::create([
             'ride_type_id' => $boat->id,
             'name' => 'Small',
-            'price_per_hour' => 800.00,
+            'price_per_hour' => 200.00,
         ]);
 
         // Create Water Bike classifications
         $waterBikeWithPropeller = Classification::create([
             'ride_type_id' => $waterBike->id,
             'name' => 'With Propeller',
-            'price_per_hour' => 600.00,
+            'price_per_hour' => 200.00,
         ]);
 
         $waterBikeWithoutPropeller = Classification::create([
             'ride_type_id' => $waterBike->id,
             'name' => 'Without Propeller',
-            'price_per_hour' => 500.00,
+            'price_per_hour' => 200.00,
         ]);
 
         // Create Clear Kayak classifications
         $clearKayakDouble = Classification::create([
             'ride_type_id' => $clearKayak->id,
             'name' => 'Double',
-            'price_per_hour' => 400.00,
+            'price_per_hour' => 300.00,
         ]);
 
         // Create Paddle Board rides

@@ -275,6 +275,12 @@ class EditClassification extends Component
                     ->first();
                     
                 if ($existingRide) {
+                    // Block deletion if ride is currently USED (is_active = 2)
+                    if ($existingRide->is_active === Ride::STATUS_USED) {
+                        session()->flash('error', "Cannot delete identifier '{$identifierToDelete}' while it is currently in use.");
+                        $this->closeDeleteModal();
+                        return;
+                    }
                     $existingRide->delete(); // Soft delete
                     session()->flash('success', "Identifier '{$identifierToDelete}' deleted successfully.");
                 }
@@ -310,7 +316,17 @@ class EditClassification extends Component
                            ->first();
                 
                 if ($ride) {
-                    $ride->update(['is_active' => $this->identifierStatus[$index]]);
+                    // Prevent deactivating if currently USED (2)
+                    if ($ride->is_active === Ride::STATUS_USED && $this->identifierStatus[$index] === false) {
+                        // Revert toggle
+                        $this->identifierStatus[$index] = true;
+                        session()->flash('error', "Cannot deactivate identifier '{$identifier}' while it is currently in use.");
+                        return;
+                    }
+
+                    // Map boolean to status codes: true => AVAILABLE(1), false => INACTIVE(0)
+                    $newStatus = $this->identifierStatus[$index] ? Ride::STATUS_AVAILABLE : Ride::STATUS_INACTIVE;
+                    $ride->update(['is_active' => $newStatus]);
                     
                     // Show success message
                     $status = $this->identifierStatus[$index] ? 'activated' : 'deactivated';

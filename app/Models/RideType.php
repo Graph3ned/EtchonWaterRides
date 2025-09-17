@@ -13,6 +13,7 @@ class RideType extends Model
 
     protected $fillable = [
         'name',
+        'image_path',
     ];
 
     /**

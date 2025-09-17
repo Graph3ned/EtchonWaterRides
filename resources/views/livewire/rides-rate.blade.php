@@ -32,21 +32,35 @@
               <div class="p-6">
 
                 <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-                  <h3 class="text-lg font-semibold text-gray-800">
-                    {{ $rideType->name }}
-                  </h3>
+                   <div class="flex items-center gap-3">
+                    @if(!empty($rideType->image_path))
+                       <img 
+                         src="{{ asset('storage/'.$rideType->image_path) }}" 
+                         alt="{{ $rideType->name }}" 
+                          class="object-cover rounded aspect-square w-[25px] h-[25px] sm:w-14 sm:h-14 md:w-16 md:h-16 min-w-[25px] min-h-[25px] max-w-[64px] max-h-[64px]" />
+                    @endif                    
+                  </div>
                   <!-- <div class="text-sm text-gray-500">Classifications: {{ $rideType->classifications_count }}</div> -->
-
-                  <button wire:navigate href="/admin/view-details/{{ $rideType->id }}" 
+                  <div class="grid grid-rows-2 gap-3">
+                     <div>
+                     <h3 class="text-lg font-semibold text-gray-800 leading-tight break-words">
+                      {{ $rideType->name }}
+                    </h3>
+                    </div>
+                    <div>
+                    <button wire:navigate href="/admin/view-details/{{ $rideType->id }}" 
                           class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 
                                  hover:from-cyan-600 hover:to-blue-700 rounded-lg transition-all duration-200 
                                  text-white text-sm font-medium shadow-md hover:shadow-lg max-w-[150px] md:max-w-none">
-                    <span>View Details</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" 
-                         fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
+                      <span>View Details</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" 
+                          fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                    </div>
+                  </div>
+                  
                 </div>
               </div>
             </div>
