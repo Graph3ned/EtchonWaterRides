@@ -23,6 +23,7 @@ class Rental extends Model
         'user_name_at_time',
         'ride_identifier_at_time',
         'classification_name_at_time',
+        'ride_type_name_at_time',
         'price_per_hour_at_time',
         'computed_total',
     ];

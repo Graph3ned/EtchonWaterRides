@@ -159,7 +159,7 @@ class AddRide extends Component
 
         // Get the selected ride and classification
         $ride = Ride::find($this->rideId);
-        $classification = Classification::find($this->classificationId);
+        $classification = Classification::with('rideType')->find($this->classificationId);
 
         if (!$ride || !$classification) {
             session()->flash('error', 'Selected ride or classification not found.');
@@ -184,6 +184,7 @@ class AddRide extends Component
             'user_name_at_time' => $user->name,
             'ride_identifier_at_time' => $ride->identifier,
             'classification_name_at_time' => $classification->name,
+            'ride_type_name_at_time' => optional($classification->rideType)->name ?? 'Unknown',
             'price_per_hour_at_time' => $this->pricePerHour,
             'computed_total' => $this->computedTotal,
         ]);

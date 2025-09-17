@@ -23,80 +23,111 @@ class Logs extends Component
         $details = [];
         $changes = [];
 
-        $formatTime = function ($timeValue) {
-            if (!$timeValue) return $timeValue;
+        $formatDateTime = function ($value) {
+            if (!$value) return $value;
             try {
-                return Carbon::createFromFormat('H:i:s', $timeValue)->format('h:i A');
+                return Carbon::parse($value)->timezone('Asia/Manila')->format('h:i A');
             } catch (\Exception $e) {
-                return $timeValue;
+                try {
+                    return Carbon::createFromFormat('H:i:s', $value)->format('h:i A');
+                } catch (\Exception $e2) {
+                    return $value;
+                }
             }
+        };
+
+        $resolve = function ($source, array $keys) {
+            foreach ($keys as $key) {
+                if (isset($source[$key]) && $source[$key] !== null && $source[$key] !== '') {
+                    return $source[$key];
+                }
+            }
+            return null;
         };
 
         if (!$newValues) {
             // Format details for delete operation
-            if (isset($oldValues['rideType'])) {
+            if ($resolve($oldValues, ['rideType', 'ride_type_name_at_time'])) {
                 $details[] = [
                     'label' => 'Ride Type',
-                    'value' => $oldValues['rideType']
+                    'value' => $resolve($oldValues, ['rideType', 'ride_type_name_at_time'])
                 ];
             }
-            if (isset($oldValues['classification'])) {
+            if ($resolve($oldValues, ['classification', 'classification_name_at_time'])) {
                 $details[] = [
                     'label' => 'Classification',
-                    'value' => $oldValues['classification']
+                    'value' => $resolve($oldValues, ['classification', 'classification_name_at_time'])
                 ];
             }
-            if (isset($oldValues['timeStart'])) {
+            if ($resolve($oldValues, ['identifier', 'ride_identifier_at_time'])) {
+                $details[] = [
+                    'label' => 'Identification',
+                    'value' => $resolve($oldValues, ['identifier', 'ride_identifier_at_time'])
+                ];
+            }
+            if (isset($oldValues['timeStart']) || isset($oldValues['start_at'])) {
                 $details[] = [
                     'label' => 'Time Start',
-                    'value' => $formatTime($oldValues['timeStart'])
+                    'value' => $formatDateTime($oldValues['timeStart'] ?? $oldValues['start_at'])
                 ];
             }
-            if (isset($oldValues['timeEnd'])) {
+            if (isset($oldValues['timeEnd']) || isset($oldValues['end_at'])) {
                 $details[] = [
                     'label' => 'Time End',
-                    'value' => $formatTime($oldValues['timeEnd'])
+                    'value' => $formatDateTime($oldValues['timeEnd'] ?? $oldValues['end_at'])
                 ];
             }
         } elseif (!$oldValues && $newValues) {
             // Format details for create operation
-            if (isset($newValues['rideType'])) {
+            if ($resolve($newValues, ['rideType', 'ride_type_name_at_time'])) {
                 $details[] = [
                     'label' => 'Ride Type',
-                    'value' => $newValues['rideType']
+                    'value' => $resolve($newValues, ['rideType', 'ride_type_name_at_time'])
                 ];
             }
-            if (isset($newValues['classification'])) {
+            if ($resolve($newValues, ['classification', 'classification_name_at_time'])) {
                 $details[] = [
                     'label' => 'Classification',
-                    'value' => $newValues['classification']
+                    'value' => $resolve($newValues, ['classification', 'classification_name_at_time'])
                 ];
             }
-            if (isset($newValues['timeStart'])) {
+            if ($resolve($newValues, ['identifier', 'ride_identifier_at_time'])) {
+                $details[] = [
+                    'label' => 'Identification',
+                    'value' => $resolve($newValues, ['identifier', 'ride_identifier_at_time'])
+                ];
+            }
+            if (isset($newValues['timeStart']) || isset($newValues['start_at'])) {
                 $details[] = [
                     'label' => 'Time Start',
-                    'value' => $formatTime($newValues['timeStart'])
+                    'value' => $formatDateTime($newValues['timeStart'] ?? $newValues['start_at'])
                 ];
             }
-            if (isset($newValues['timeEnd'])) {
+            if (isset($newValues['timeEnd']) || isset($newValues['end_at'])) {
                 $details[] = [
                     'label' => 'Time End',
-                    'value' => $formatTime($newValues['timeEnd'])
+                    'value' => $formatDateTime($newValues['timeEnd'] ?? $newValues['end_at'])
                 ];
             }
             // No field-by-field changes list needed for create
         } else {
             // Format details for edit operation
-            if (isset($oldValues['rideType'])) {
+            if ($resolve($oldValues, ['rideType', 'ride_type_name_at_time'])) {
                 $details[] = [
                     'label' => 'Ride Type',
-                    'value' => $oldValues['rideType']
+                    'value' => $resolve($oldValues, ['rideType', 'ride_type_name_at_time'])
                 ];
             }
-            if (isset($oldValues['classification'])) {
+            if ($resolve($oldValues, ['classification', 'classification_name_at_time'])) {
                 $details[] = [
                     'label' => 'Classification',
-                    'value' => $oldValues['classification']
+                    'value' => $resolve($oldValues, ['classification', 'classification_name_at_time'])
+                ];
+            }
+            if ($resolve($oldValues, ['identifier', 'ride_identifier_at_time'])) {
+                $details[] = [
+                    'label' => 'Identification',
+                    'value' => $resolve($oldValues, ['identifier', 'ride_identifier_at_time'])
                 ];
             }
 
@@ -113,10 +144,25 @@ class Logs extends Component
                         'label' => 'Status',
                         'value' => "Changed from {$oldStatus} to {$newStatus}"
                     ];
-                } elseif ($key === 'timeStart' || $key === 'timeEnd') {
+                } elseif (in_array($key, ['timeStart', 'timeEnd', 'start_at', 'end_at'])) {
                     $changes[] = [
-                        'label' => $key === 'timeStart' ? 'Time Start' : 'Time End',
-                        'value' => 'Changed from "' . $formatTime($oldValue) . '" to "' . $formatTime($newValue) . '"'
+                        'label' => in_array($key, ['timeStart', 'start_at']) ? 'Time Start' : 'Time End',
+                        'value' => 'Changed from "' . $formatDateTime($oldValue) . '" to "' . $formatDateTime($newValue) . '"'
+                    ];
+                } elseif (in_array($key, ['rideType', 'ride_type_name_at_time'])) {
+                    $changes[] = [
+                        'label' => 'Ride Type',
+                        'value' => 'Changed from "' . ($oldValue ?? 'Unknown') . '" to "' . ($newValue ?? 'Unknown') . '"'
+                    ];
+                } elseif (in_array($key, ['classification', 'classification_name_at_time'])) {
+                    $changes[] = [
+                        'label' => 'Classification',
+                        'value' => 'Changed from "' . ($oldValue ?? 'Unknown') . '" to "' . ($newValue ?? 'Unknown') . '"'
+                    ];
+                } elseif (in_array($key, ['identifier', 'ride_identifier_at_time'])) {
+                    $changes[] = [
+                        'label' => 'Identification',
+                        'value' => 'Changed from "' . ($oldValue ?? 'Unknown') . '" to "' . ($newValue ?? 'Unknown') . '"'
                     ];
                 } else {
                     $changes[] = [

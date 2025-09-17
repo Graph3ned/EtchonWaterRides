@@ -195,7 +195,7 @@ class EditRide extends Component
         $endDateTime = $today->copy()->setTimeFromTimeString($this->endAt);
 
         // Get current data for _at_time columns
-        $ride = Ride::with('classification')->find($this->rideId);
+        $ride = Ride::with('classification.rideType')->find($this->rideId);
         $user = Auth::user();
 
         $rental->update([
@@ -210,6 +210,7 @@ class EditRide extends Component
             'user_name_at_time' => $user->name,
             'ride_identifier_at_time' => $ride->identifier ?? 'Unknown',
             'classification_name_at_time' => $ride->classification->name ?? 'Unknown',
+            'ride_type_name_at_time' => optional($ride->classification->rideType)->name ?? 'Unknown',
             'price_per_hour_at_time' => $this->pricePerHour,
         ]);
 
@@ -223,16 +224,16 @@ class EditRide extends Component
         $rental = Rental::findOrFail($this->rentalId);
 
         // Get current data for _at_time columns
-        $ride = Ride::with('classification')->find($rental->ride_id);
+        $ride = Ride::with('classification.rideType')->find($rental->ride_id);
         $user = Auth::user();
 
         $rental->update([
             'status' => Rental::STATUS_COMPLETED,
-            'end_at' => now(),
             // Update _at_time columns with current data
             'user_name_at_time' => $user->name,
             'ride_identifier_at_time' => $ride->identifier ?? 'Unknown',
             'classification_name_at_time' => $ride->classification->name ?? 'Unknown',
+            'ride_type_name_at_time' => optional($ride->classification->rideType)->name ?? 'Unknown',
             'price_per_hour_at_time' => $rental->price_per_hour_at_time, // Keep original price
         ]);
 
