@@ -57,6 +57,7 @@ new class extends Component
                         </x-nav-link>
                     </div>
                 @endif
+                
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                         <x-nav-link :href="route('RideAvailability')" :active="request()->routeIs('RideAvailability')" wire:navigate>
                             {{ __('Ride Availability') }}
@@ -64,7 +65,8 @@ new class extends Component
                     </div>
             </div>
 
-            <!-- Settings Dropdown -->
+            <!-- Settings Dropdown (only when authenticated) -->
+            @if(auth()->check())
             <div class="hidden sm:flex sm:items-center sm:ms-6">
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
@@ -94,6 +96,7 @@ new class extends Component
                     </x-slot>
                 </x-dropdown>
             </div>
+            @endif
 
             <!-- Hamburger -->
             <div class="-me-2 flex items-center sm:hidden">
@@ -148,6 +151,7 @@ new class extends Component
             </x-responsive-nav-link>
         </div>
 
+        @if(auth()->check())
         <!-- Responsive Settings Options -->
         <div class="pt-4 pb-1 border-t border-gray-200 dark:border-gray-600">
             <div class="px-4">
@@ -168,5 +172,6 @@ new class extends Component
                 </button>
             </div>
         </div>
+        @endif
     </div>
 </nav>

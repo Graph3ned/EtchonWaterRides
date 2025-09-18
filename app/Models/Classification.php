@@ -16,6 +16,7 @@ class Classification extends Model
         'ride_type_id',
         'name',
         'price_per_hour',
+        'image_path',
     ];
 
     protected $casts = [

@@ -9,6 +9,9 @@ use App\Models\Rental;
 Route::get('/', function () {
     return redirect()->route('login');
 });
+Route::get('/guest', \App\Livewire\GuestRideAvailability::class)
+    ->middleware('guest')
+    ->name('guest');
 
 // Password reset routes
 Route::get('/forgot-password', \App\Livewire\ForgotPassword::class)

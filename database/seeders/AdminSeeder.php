@@ -21,8 +21,33 @@ class AdminSeeder extends Seeder
             'name' => 'Admin User',
             'email' => 'edbertetchon@gmail.com',
             'username' => 'admin',
-            'userType' => '1',
+            'userType' => '1', // 1 = Admin
             'password' => 'asdfasdf', // Laravel will hash this automatically
+        ]);
+
+        // Create staff users
+        User::create([
+            'name' => 'Rodrigo Sarang',
+            'email' => 'rodrigosarang@gmail.com',
+            'username' => 'rodrigo',
+            'userType' => '0', // Staff
+            'password' => 'asdfasdf',
+        ]);
+
+        User::create([
+            'name' => 'Jarvie Danao',
+            'email' => 'jarviedanao@gmail.com',
+            'username' => 'jarvie',
+            'userType' => '0', // Staff
+            'password' => 'asdfasdf',
+        ]);
+
+        User::create([
+            'name' => 'Edbert Etchon',
+            'email' => 'edbertetchon2@gmail.com',
+            'username' => 'edbert',
+            'userType' => '0', // Staff
+            'password' => 'asdfasdf',
         ]);
 
         // Create sample ride types

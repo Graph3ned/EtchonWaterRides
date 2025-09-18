@@ -20,6 +20,7 @@ class AddWaterRide extends Component
             'name' => '',
             'price_per_hour' => '',
             'identifiers' => [''],
+            'image' => null,
         ],
     ];
     public $isActive = true;
@@ -82,6 +83,7 @@ class AddWaterRide extends Component
                     }
                 }
             ],
+            'classificationsInput.*.image' => 'nullable|image|mimes:jpeg,jpg,png,gif,webp,svg|max:2048',
             'isActive' => 'boolean',
             
         ];
@@ -140,6 +142,7 @@ class AddWaterRide extends Component
                 'name' => '',
                 'price_per_hour' => '',
                 'identifiers' => [''],
+                'image' => null,
             ],
         ];
         $this->isActive = true;
@@ -200,6 +203,7 @@ class AddWaterRide extends Component
             'name' => '',
             'price_per_hour' => '',
             'identifiers' => [''],
+            'image' => null,
         ];
     }
 
@@ -262,18 +266,30 @@ class AddWaterRide extends Component
                         }
                         
                         // Update price if changed
+                        $updateData = [];
                         if ($existingClassification->price_per_hour != $c['price_per_hour']) {
-                            $existingClassification->update(['price_per_hour' => $c['price_per_hour']]);
+                            $updateData['price_per_hour'] = $c['price_per_hour'];
+                        }
+                        if (!empty($c['image'])) {
+                            $path = $c['image']->store('classification-images', 'public');
+                            $updateData['image_path'] = $path;
+                        }
+                        if (!empty($updateData)) {
+                            $existingClassification->update($updateData);
                         }
                         
                         $classification = $existingClassification;
                     } else {
                         // Create new classification
-                        $classification = Classification::create([
+                        $createData = [
                             'ride_type_id' => $rideType->id,
                             'name' => $classificationName,
                             'price_per_hour' => $c['price_per_hour'],
-                        ]);
+                        ];
+                        if (!empty($c['image'])) {
+                            $createData['image_path'] = $c['image']->store('classification-images', 'public');
+                        }
+                        $classification = Classification::create($createData);
                         $createdClassifications++;
                     }
                     
@@ -347,11 +363,15 @@ class AddWaterRide extends Component
                 
                 // Create classifications and their rides
                 foreach ($this->classificationsInput as $c) {
-                    $classification = Classification::create([
+                    $createData = [
                         'ride_type_id' => $rideType->id,
                         'name' => trim($c['name']),
                         'price_per_hour' => $c['price_per_hour'],
-                    ]);
+                    ];
+                    if (!empty($c['image'])) {
+                        $createData['image_path'] = $c['image']->store('classification-images', 'public');
+                    }
+                    $classification = Classification::create($createData);
 
                     foreach ($c['identifiers'] as $identifier) {
                         if (!empty(trim($identifier))) {

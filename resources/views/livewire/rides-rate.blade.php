@@ -39,6 +39,10 @@
                           src="{{ asset('storage/'.$rideType->image_path) }}" 
                           alt="{{ $rideType->name }}" 
                           class="object-cover rounded aspect-square w-24 h-24 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32" />
+                      @else
+                        <!-- <div class="w-24 h-24 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 rounded-lg border border-dashed border-gray-300 bg-gray-50 flex items-center justify-center text-[10px] text-gray-400">
+                          No image
+                        </div> -->
                       @endif                    
                     </div>
                     

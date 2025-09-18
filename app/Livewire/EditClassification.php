@@ -3,12 +3,14 @@
 namespace App\Livewire;
 
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use App\Models\RideType;
 use App\Models\Classification;
 use App\Models\Ride;
 
 class EditClassification extends Component
 {
+    use WithFileUploads;
     public $classificationId;
     public $classification;
     public $rideType;
@@ -21,6 +23,8 @@ class EditClassification extends Component
     public $identifierInDatabase = []; // Track which identifiers are in database
     public $showDeleteModal = false;
     public $identifierToDelete;
+    public $showImageModal = false;
+    public $classificationImage;
 
     protected function rules()
     {
@@ -300,6 +304,28 @@ class EditClassification extends Component
         }
         
         $this->closeDeleteModal();
+    }
+
+    public function saveClassificationImage()
+    {
+        try {
+            $this->validate([
+                'classificationImage' => 'required|image|mimes:jpeg,jpg,png,gif,webp,svg|max:2048',
+            ]);
+
+            $path = $this->classificationImage->store('classification-images', 'public');
+            $this->classification->update(['image_path' => $path]);
+            $this->classificationImage = null;
+            $this->showImageModal = false;
+
+            // Refresh classification model for UI
+            $this->classification = Classification::find($this->classificationId);
+            session()->flash('success', 'Classification image updated successfully.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            session()->flash('error', 'Please select a valid image (max 2MB).');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error saving image: ' . $e->getMessage());
+        }
     }
 
     public function toggleIdentifierStatus($index)

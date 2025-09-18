@@ -112,11 +112,27 @@
                                             </div>
                                         </div>
 
+                                            <div class="mt-2">
+                                                <label class="flex items-center text-gray-700 font-medium text-sm">Classification Image</label>
+                                                <input type="file"
+                                                       wire:model="classificationsInput.{{ $cIndex }}.image"
+                                                       accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/svg+xml"
+                                                       class="w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+                                                @error('classificationsInput.'.$cIndex.'.image')
+                                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                                @enderror
+                                                @if (isset($classificationsInput[$cIndex]['image']) && is_object($classificationsInput[$cIndex]['image']))
+                                                    <div class="mt-2">
+                                                        <img src="{{ $classificationsInput[$cIndex]['image']->temporaryUrl() }}" alt="Preview" class="h-20 w-20 object-cover rounded" />
+                                                    </div>
+                                                @endif
+                                            </div>
+
                                         <div class="mt-4 space-y-2">
                                             <label class="text-sm text-gray-700">Identifiers</label>
                                             @foreach($c['identifiers'] as $iIndex => $identifier)
                                                 <div class="flex items-center space-x-2 mb-2">
-                                                    <input type="text" wire:model="classificationsInput.{{ $cIndex }}.identifiers.{{ $iIndex }}" placeholder="e.g., Red, Blue, Yellow" oninput="validateIdentifierUniqueness(this, {{ $cIndex }})" class="flex-1 text-sm rounded-lg border-gray-200 bg-gray-50 focus:bg-white hover:bg-gray-50/80 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                                                    <input type="text" wire:model="classificationsInput.{{ $cIndex }}.identifiers.{{ $iIndex }}" placeholder="e.g., Red, Blue, Yellow" oninput="validateIdentifierUniqueness(this)" class="flex-1 text-sm rounded-lg border-gray-200 bg-gray-50 focus:bg-white hover:bg-gray-50/80 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
                                                     @if(count($c['identifiers']) > 1)
                                                         <button type="button" wire:click="removeIdentifier({{ $cIndex }}, {{ $iIndex }})" 
                                                                 class="p-2 text-red-500 hover:bg-red-50 hover:text-red-600 rounded-lg 
@@ -360,7 +376,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Function to validate identifier uniqueness within a classification
-    function validateIdentifierUniqueness(input, classificationIndex) {
+    function validateIdentifierUniqueness(input) {
         const currentValue = input.value.trim().toLowerCase();
         const classificationDiv = input.closest('.classification-item');
         const identifierInputs = classificationDiv.querySelectorAll('input[wire\\:model*="identifiers"]');

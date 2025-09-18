@@ -69,7 +69,7 @@
         
         <p><strong>Important:</strong></p>
         <ul>
-            <li>This link will expire in 1 hour for security reasons</li>
+            <li>This link will expire in 10 minutes for security reasons</li>
             <li>If you didn't request this password reset, please ignore this email</li>
             <li>Your password will remain unchanged until you create a new one</li>
         </ul>

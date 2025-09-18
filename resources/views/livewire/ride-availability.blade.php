@@ -69,9 +69,6 @@
                 <div class="p-6">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-lg font-semibold text-gray-800">Ride Type Statistics</h3>
-                        <div class="text-xs text-gray-500">
-                            Last updated: {{ now()->format('H:i:s') }}
-                        </div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                         @foreach($rideTypeStats as $stat)
@@ -106,11 +103,22 @@
                             @foreach($availableRides as $ride)
                                 <div class="bg-green-50 border border-green-200 rounded-lg p-4">
                                     <div class="flex justify-between items-start mb-2">
-                                        <h4 class="font-medium text-gray-800">{{ $ride->classification->rideType->name ?? 'Unknown Ride Type' }}</h4>
+                                    <h4 class="font-medium text-gray-800">{{ $ride->classification->rideType->name ?? 'Unknown Ride Type' }}</h4>
                                         <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Available</span>
                                     </div>
-                                    <p class="text-sm text-gray-600">{{ $ride->classification->name ?? 'Unknown Classification' }}</p>
-                                    <p class="text-sm text-gray-500">{{ $ride->identifier }}</p>
+                                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                                        <div class="w-50 h-50 sm:w-24 sm:h-24 md:w-28 md:h-28 order-2 sm:order-1">
+                                            @if(!empty($ride->classification->image_path))
+                                                <img src="{{ asset('storage/'.$ride->classification->image_path) }}" alt="{{ $ride->classification->name }}" class="w-full h-full rounded object-cover border" />
+                                            @else
+                                                <div class="w-50 h-50 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded border border-dashed border-gray-300 bg-white flex items-center justify-center text-[10px] text-gray-400">No image</div>
+                                            @endif
+                                        </div>
+                                        <div class="order-1 sm:order-2">                                        
+                                            <p class="text-sm text-gray-600">{{ $ride->classification->name ?? 'Unknown Classification' }}</p>
+                                            <p class="text-sm text-gray-500">{{ $ride->identifier }}</p>
+                                        </div>
+                                    </div>
                                 </div>
                             @endforeach
                         </div>
@@ -141,14 +149,27 @@
                                         <h4 class="font-medium text-gray-800">{{ $ride->classification->rideType->name ?? 'Unknown Ride Type' }}</h4>
                                         <span class="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">In Use</span>
                                     </div>
-                                    <p class="text-sm text-gray-600">{{ $ride->classification->name ?? 'Unknown Classification' }}</p>
-                                    <p class="text-sm text-gray-500">{{ $ride->identifier }}</p>
-                                    <p class="text-xs {{ $ride->is_overdue ?? false ? 'text-red-600 font-semibold' : 'text-gray-600' }}">
-                                        <strong>Time Left:</strong> {{ $ride->time_left_formatted ?? 'Unknown' }}
-                                    </p>
-                            
-                            
+                                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                                        <div class="w-50 h-50 sm:w-24 sm:h-24 md:w-28 md:h-28 order-2 sm:order-1">
+                                           @if(!empty($ride->classification->image_path))
+                                                <img src="{{ asset('storage/'.$ride->classification->image_path) }}" alt="{{ $ride->classification->name }}" class="w-full h-full rounded object-cover border" />
+                                            @else
+                                                <div class="w-50 h-50 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded border border-dashed border-gray-300 bg-white flex items-center justify-center text-[10px] text-gray-400">No image</div>
+                                            @endif
+                                        </div>
+                                        <div class="order-1 sm:order-2">
+                                            <p class="text-sm text-gray-600">{{ $ride->classification->name ?? 'Unknown Classification' }}</p>
+                                            <p class="text-sm text-gray-500">{{ $ride->identifier }}</p>
+                                            <p class="text-xs {{ $ride->is_overdue ?? false ? 'text-red-600 font-semibold' : 'text-gray-600' }}"><strong>Time Left:</strong> {{ $ride->time_left_formatted ?? 'Unknown' }}</p>
+                                            @if(($ride->is_overdue ?? false) && auth()->check() && auth()->user()->userType == 1 &&($ride->time_left_formatted ?? '') !== 'Unknown') 
+                                                <div class="mt-2">
+                                                    <button type="button" wire:click="endOverdueRental({{ $ride->id }})" class="px-3 py-1.5 text-xs rounded bg-red-600 hover:bg-red-700 text-white hidden md:inline-block">End Time</button>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
                                 </div>
+                                
                             @endforeach
                         </div>
                     @else
@@ -178,8 +199,19 @@
                                         <h4 class="font-medium text-gray-800">{{ $ride->classification->rideType->name ?? 'Unknown Ride Type' }}</h4>
                                         <span class="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">Inactive</span>
                                     </div>
-                                    <p class="text-sm text-gray-600">{{ $ride->classification->name ?? 'Unknown Classification' }}</p>
-                                    <p class="text-sm text-gray-500">{{ $ride->identifier }}</p>
+                                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                                        <div class="w-50 h-50 sm:w-24 sm:h-24 md:w-28 md:h-28 flex-shrink-0 order-2 sm:order-1">
+                                            @if(!empty($ride->classification->image_path))
+                                                <img src="{{ asset('storage/'.$ride->classification->image_path) }}" alt="{{ $ride->classification->name }}" class="w-full h-full rounded object-cover border" />
+                                            @else
+                                                <div class="w-24 h-24 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded border border-dashed border-gray-300 bg-white flex items-center justify-center text-[10px] text-gray-400">No image</div>
+                                            @endif
+                                        </div>
+                                        <div class="order-1 sm:order-2">
+                                            <p class="text-sm text-gray-600">{{ $ride->classification->name ?? 'Unknown Classification' }}</p>
+                                            <p class="text-sm text-gray-500">{{ $ride->identifier }}</p>
+                                        </div>
+                                    </div>
                                 </div>
                             @endforeach
                         </div>

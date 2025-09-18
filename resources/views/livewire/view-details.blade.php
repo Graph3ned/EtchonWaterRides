@@ -28,13 +28,19 @@
                         <div class="flex-shrink-0">
                             <img src="{{ asset('storage/'.$rideType->image_path) }}" alt="{{ $rideType->name }}" class="w-24 h-24 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 rounded-lg object-cover border-2 border-white/30" />
                         </div>
+                    @else
+                    <!-- <div class="w-24 h-24 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 rounded-lg border border border-dashed border-white/30 bg-white/10 flex items-center justify-center text-[10px] text-white/80">
+                        No image
+                    </div> -->
                     @endif
                     
                     <!-- Content Column -->
                     <div class="flex-1">
                         <h2 class="text-2xl sm:text-3xl font-bold text-white mb-3">{{ $rideType->name }}</h2>
                         <div class="flex flex-col gap-2">
-                            <button wire:click="$set('showImageModal', true)" class="px-3 py-1.5 sm:px-4 sm:py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-xs sm:text-sm font-medium w-fit">Change Picture</button>
+                            <button wire:click="$set('showImageModal', true)" class="px-3 py-1.5 sm:px-4 sm:py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-xs sm:text-sm font-medium w-fit">
+                                Change Picture
+                            </button>
                             @error('rideTypeImage')
                                 <p class="text-blue-200 text-xs rounded-lg p-1.5 inline-block">{{ $message }}</p>
                             @enderror
@@ -94,9 +100,20 @@
                     @forelse ($classifications as $classification)
                         <div class="border rounded-lg p-3 sm:p-4 bg-gray-50 hover:bg-gray-100 transition-colors duration-200">
                             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-3">
-                                <div class="flex-1">
-                                    <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-1">{{ $classification->name }}</h3>
-                                    <p class="text-sm text-gray-600">₱{{ number_format($classification->price_per_hour, 2) }} per hour</p>
+                                <div class="flex items-center gap-3 flex-1 min-w-0">
+                                    <div class="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 flex-shrink-0">
+                                        @if (!empty($classification->image_path))
+                                            <img src="{{ asset('storage/'.$classification->image_path) }}" alt="{{ $classification->name }}" class="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-lg object-cover border" />
+                                        @else
+                                            <!-- <div class="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-lg border border-dashed border-gray-300 bg-gray-50 flex items-center justify-center text-[10px] text-gray-400">
+                                                No image
+                                            </div> -->
+                                        @endif
+                                    </div>
+                                    <div class="min-w-0">
+                                        <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-1 truncate">{{ $classification->name }}</h3>
+                                        <p class="text-sm text-gray-600">₱{{ number_format($classification->price_per_hour, 2) }} per hour</p>
+                                    </div>
                                 </div>
                                 <div class="flex gap-2 w-full sm:w-auto">
                                     <button wire:navigate 

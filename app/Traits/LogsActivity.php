@@ -31,16 +31,16 @@ trait LogsActivity
             ]);
         });
 
-        static::deleted(function ($model) {
-            StaffLog::create([
-                'user_id' => Auth::id(),
-                'action' => 'delete',
-                'model_type' => get_class($model),
-                'model_id' => $model->getKey(),
-                'old_values' => $model->getOriginal(),
-                'new_values' => null
-            ]);
-        });
+        // static::deleted(function ($model) {
+        //     StaffLog::create([
+        //         'user_id' => Auth::id(),
+        //         'action' => 'delete',
+        //         'model_type' => get_class($model),
+        //         'model_id' => $model->getKey(),
+        //         'old_values' => $model->getOriginal(),
+        //         'new_values' => null
+        //     ]);
+        // });
     }
 }
 

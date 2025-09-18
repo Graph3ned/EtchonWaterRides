@@ -8,6 +8,7 @@ use App\Models\Classification;
 use App\Models\Ride;
 use App\Models\Rental;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class RideAvailability extends Component
 {
@@ -34,6 +35,43 @@ class RideAvailability extends Component
     {
         $this->selectedRideType = '';
         $this->selectedClassification = '';
+    }
+
+    public function endOverdueRental(int $rideId): void
+    {
+        if (!Auth::check()) {
+            return;
+        }
+
+        $activeRental = Rental::where('ride_id', $rideId)
+            ->where('status', Rental::STATUS_ACTIVE)
+            ->orderByDesc('start_at')
+            ->first();
+
+        if (!$activeRental) {
+            session()->flash('error', 'No active rental found for this ride.');
+            return;
+        }
+
+        $now = Carbon::now('Asia/Manila');
+        $startTime = Carbon::parse($activeRental->start_at, 'Asia/Manila');
+        $computedEnd = $startTime->copy()->addMinutes((int)($activeRental->duration_minutes ?? 0));
+        $diff = $now->diffInMinutes($computedEnd, false); // negative if overdue
+
+        if ($diff > -120) {
+            session()->flash('error', 'Ride is not overdue by at least 2 hours.');
+            return;
+        }
+
+        $activeRental->update([
+            'status' => Rental::STATUS_COMPLETED,
+        ]);
+
+        if ($activeRental->ride) {
+            $activeRental->ride->update(['is_active' => Ride::STATUS_AVAILABLE]);
+        }
+
+        session()->flash('success', 'Rental ended successfully.');
     }
 
     private function fixInconsistentRideStatuses()
@@ -113,6 +151,7 @@ class RideAvailability extends Component
             if ($ride->is_active === Ride::STATUS_USED) {
                 $activeRental = Rental::where('ride_id', $ride->id)
                     ->where('status', Rental::STATUS_ACTIVE)
+                    ->orderByDesc('start_at')
                     ->first();
                 
                 if ($activeRental) {
@@ -121,9 +160,10 @@ class RideAvailability extends Component
                     $ride->rental_staff = $activeRental->user_name_at_time;
                     $ride->rental_note = $activeRental->note;
                     
-                    // Calculate time left
+                    // Calculate time left based on start + duration for consistency
                     $now = Carbon::now('Asia/Manila');
-                    $endTime = Carbon::parse($activeRental->end_at);
+                    $startTime = Carbon::parse($activeRental->start_at, 'Asia/Manila');
+                    $endTime = $startTime->copy()->addMinutes((int)($activeRental->duration_minutes ?? 0));
                     $timeLeft = $now->diffInMinutes($endTime, false);
                     
                     if ($timeLeft > 0) {
@@ -131,9 +171,18 @@ class RideAvailability extends Component
                         $ride->time_left_formatted = $this->formatTimeLeft($timeLeft);
                         $ride->is_overdue = false;
                     } else {
+                        $overdueMinutes = abs($timeLeft);
+                        $hours = intval($overdueMinutes / 60);
+                        $remainingMinutes = $overdueMinutes % 60;
+                        $formatted = '';
+                        if ($hours > 0) {
+                            $formatted .= $hours . 'h ';
+                        }
+                        $formatted .= $remainingMinutes . 'm';
                         $ride->time_left_minutes = 0;
-                        $ride->time_left_formatted = 'Overdue';
+                        $ride->time_left_formatted = 'Overdue by ' . trim($formatted) . '';
                         $ride->is_overdue = true;
+                        $ride->overdue_minutes = $overdueMinutes;
                     }
                 } else {
                     // If ride is marked as used but has no active rental, fix the status

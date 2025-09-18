@@ -39,9 +39,28 @@
         <div class="max-w-4xl mx-auto">
             <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 transition-all duration-300 hover:shadow-xl">
                 <!-- Header -->
-                <div class="bg-gradient-to-r from-cyan-500 to-blue-600 p-6">
-                    <div class="flex justify-between items-center">
-                        <h2 class="text-2xl font-bold text-white">Edit Classification: {{ $classification->name }}</h2>
+                <div class="bg-gradient-to-r from-cyan-500 to-blue-600 p-4 sm:p-6">
+                    <div class="flex items-center gap-4">
+                        @if(!empty($classification->image_path))
+                            <div class="flex-shrink-0">
+                                <img src="{{ asset('storage/'.$classification->image_path) }}" alt="{{ $classification->name }}" class="w-24 h-24 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 rounded-lg object-cover border-2 border-white/30" />
+                            </div>
+                        @else
+                        <div class="w-24 h-24 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 rounded-lg border border-dashed border-white/30 bg-white/10 flex items-center justify-center text-[10px] text-white/80">
+                            No image
+                        </div>
+                        @endif
+                        <div class="flex-1">
+                            <h2 class="text-2xl sm:text-3xl font-bold text-white mb-3">Edit Classification: {{ $classification->name }}</h2>
+                            <div class="flex flex-col gap-2">
+                                <button wire:click="$set('showImageModal', true)" class="px-3 py-1.5 sm:px-4 sm:py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-xs sm:text-sm font-medium w-fit">
+                                    Change Picture
+                                </button>
+                                @error('classificationImage')
+                                    <p class="text-blue-200 text-xs rounded-lg p-1.5 inline-block">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -187,6 +206,73 @@
         </div>
     </div>
 
+    <!-- Image Upload Modal -->
+    @if ($showImageModal)
+    <div class="fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center z-50 p-4">
+        <div class="w-full max-w-md">
+            <div class="bg-white rounded-lg shadow-xl border border-gray-100">
+                <div class="p-4 sm:p-6">
+                    <div class="mb-4">
+                        <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2">Change Classification Image</h3>
+                        <p class="text-sm text-gray-600">Select a new image for {{ $classification->name }}</p>
+                    </div>
+
+                    <!-- Image Preview -->
+                    <div class="mb-4">
+                        @if($classificationImage && is_object($classificationImage))
+                            <div class="text-center">
+                                <img src="{{ $classificationImage->temporaryUrl() }}" alt="Preview" class="w-32 h-32 mx-auto rounded-lg object-cover border-2 border-gray-200" />
+                                <p class="text-xs text-gray-500 mt-2">Preview</p>
+                            </div>
+                        @elseif(!empty($classification->image_path))
+                            <div class="text-center">
+                                <img src="{{ asset('storage/'.$classification->image_path) }}" alt="Current" class="w-32 h-32 mx-auto rounded-lg object-cover border-2 border-gray-200" />
+                                <p class="text-xs text-gray-500 mt-2">Current Image</p>
+                            </div>
+                        @else
+                            <div class="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                                <svg class="w-12 h-12 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                <p class="text-sm text-gray-500">No image selected</p>
+                            </div>
+                        @endif
+                    </div>
+
+                    <!-- File Input -->
+                    <div class="mb-4">
+                        <input type="file" 
+                               wire:model="classificationImage" 
+                               accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/svg+xml" 
+                               onchange="validateImageFileModal(this)"
+                               class="w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+                        @error('classificationImage')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                        <div id="image-validation-error-modal" class="text-red-500 text-xs mt-1 hidden"></div>
+                    </div>
+
+                    <!-- Modal Buttons -->
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <button wire:click="saveClassificationImage" 
+                                class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium
+                                       transform transition-all duration-200 hover:-translate-y-0.5 
+                                       hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                                @if(!$classificationImage || !is_object($classificationImage)) disabled @endif>
+                            Save Image
+                        </button>
+                        <button wire:click="$set('showImageModal', false)" 
+                                class="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium
+                                       transform transition-all duration-200 hover:-translate-y-0.5 
+                                       hover:shadow-md hover:bg-gray-200">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
     <!-- Delete Identifier Modal -->
     @if ($showDeleteModal)
     <div id="deleteIdentifierModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 items-center justify-center z-50">

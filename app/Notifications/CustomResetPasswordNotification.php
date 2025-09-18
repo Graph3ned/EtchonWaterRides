@@ -45,7 +45,7 @@ class CustomResetPasswordNotification extends ResetPasswordNotification
             ->line('We received a request to reset your password for your Etchon Water Rides account.')
             ->action('Reset Password', $url)
             ->line('If you didn\'t request this password reset, please ignore this email. Your password will remain unchanged.')
-            ->line('This password reset link will expire in 60 minutes.')
+            ->line('This password reset link will expire in 10 minutes.')
             ->salutation('Best regards, Etchon Water Rides Team');
     }
 }

@@ -1,0 +1,3 @@
+@livewire('guest-ride-availability')
+
+

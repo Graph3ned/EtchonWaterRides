@@ -77,8 +77,7 @@
                                                 
                                             </div>
                                             <div class="flex flex-col min-w-[150px] text-sm">
-                                                <span class="text-indigo-600 font-medium">Remaining: <span class="text-gray-600 remaining-time font-bold" data-end="{{ \Carbon\Carbon::parse($ride->end_at)->format('Y-m-d H:i:s') }}"></span></span>
-                                                
+                                                <span class="text-indigo-600 font-medium">Remaining: <span class="text-gray-600 remaining-time font-bold" data-end="{{ \Carbon\Carbon::parse($ride->end_at)->format('Y-m-d H:i:s') }}"></span></span>                                                
                                             </div>
                                         </div>
                                         
