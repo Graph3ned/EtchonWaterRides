@@ -42,13 +42,14 @@ class AddWaterRide extends Component
                     }
                 }
             ],
-            'rideTypeImage' => 'nullable|image|max:2048',
+            'rideTypeImage' => 'required|image|max:2048',
             'classificationsInput' => 'required|array|min:1',
             'classificationsInput.*.name' => 'required|string|max:255',
             'classificationsInput.*.price_per_hour' => 'required|numeric|min:0.01|max:999999.99',
             'classificationsInput.*.identifiers' => 'required|array|min:1',
             'classificationsInput.*.identifiers.*' => 'required|string|max:255',
             'isActive' => 'boolean',
+            
         ];
     }
 
@@ -115,7 +116,7 @@ class AddWaterRide extends Component
                     }
                 }
             ],
-            'rideTypeImage' => 'nullable|image|max:2048',
+            'rideTypeImage' => 'required|image|max:2048',
         ]);
     }
 

@@ -1,7 +1,7 @@
 <div class="relative flex flex-col w-full h-full text-slate-300 shadow-md rounded-lg bg-clip-border">
     <div class="flex justify-between items-center p-6 pb-0">
         <div>
-            <a wire:navigate href="/admin/create">
+            <a wire:navigate href="/admin/add-ride">
                 <button class="rounded-md bg-gradient-to-tr from-slate-800 to-slate-700 py-2 px-4 border border-transparent text-center text-sm text-white transition-all shadow-md hover:shadow-lg focus:bg-slate-700 focus:shadow-none active:bg-slate-700 hover:bg-slate-100 active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none" type="button">
                     Add Ride Price
                 </button>

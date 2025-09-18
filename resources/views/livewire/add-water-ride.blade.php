@@ -14,7 +14,7 @@
         @endif
 
         <!-- Main Form Card -->
-        <div class="max-w-4xl mx-auto">
+        <div class="max-w-xl mx-auto">
             <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 transition-all duration-300 hover:shadow-xl">
                 <!-- Header with Progress -->
                 <div class="bg-gradient-to-r from-cyan-500 to-blue-600 p-6">
@@ -49,13 +49,13 @@
                                        class="w-full text-sm rounded-lg border-gray-200 bg-gray-50 focus:bg-white hover:bg-gray-50/80
                                               focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200">
                                 @error('newRideTypeName')
-                                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                                 @enderror
                                 <div class="mt-4">
-                                    <label class="flex items-center text-gray-700 font-medium text-sm">Ride Type Image (optional)</label>
-                                    <input type="file" wire:model="rideTypeImage" accept="image/*" class="w-full text-sm rounded-lg border-gray-200 bg-gray-50 focus:bg-white hover:bg-gray-50/80 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                                    <label class="flex items-center text-gray-700 font-medium text-sm">Ride Type Image</label>
+                                    <input type="file" wire:model="rideTypeImage" accept="image/*" class="w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
                                     @error('rideTypeImage')
-                                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                                     @enderror
                                     @if ($rideTypeImage)
                                         <div class="mt-2">
@@ -81,7 +81,12 @@
                                         <div class="flex justify-between items-center mb-3">
                                             <h4 class="font-semibold text-gray-800">Classification #{{ $cIndex + 1 }}</h4>
                                             @if(count($classificationsInput) > 1)
-                                                <button type="button" wire:click="removeClassification({{ $cIndex }})" class="text-red-500 hover:text-red-600 text-sm">Remove</button>
+                                                <button type="button" wire:click="removeClassification({{ $cIndex }})" 
+                                                        class="px-3 py-1.5 text-red-500 hover:text-red-600 hover:bg-red-50 
+                                                               rounded-lg text-sm font-medium transition-all duration-200 
+                                                               transform hover:-translate-y-0.5 hover:shadow-sm">
+                                                    Remove
+                                                </button>
                                             @endif
                                         </div>
 
@@ -108,8 +113,13 @@
                                                 <div class="flex items-center space-x-2 mb-2">
                                                     <input type="text" wire:model="classificationsInput.{{ $cIndex }}.identifiers.{{ $iIndex }}" placeholder="e.g., Red, Blue, Yellow" class="flex-1 text-sm rounded-lg border-gray-200 bg-gray-50 focus:bg-white hover:bg-gray-50/80 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
                                                     @if(count($c['identifiers']) > 1)
-                                                        <button type="button" wire:click="removeIdentifier({{ $cIndex }}, {{ $iIndex }})" class="p-2 text-red-500 hover:bg-red-50 rounded-lg">
-                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                                        <button type="button" wire:click="removeIdentifier({{ $cIndex }}, {{ $iIndex }})" 
+                                                                class="p-2 text-red-500 hover:bg-red-50 hover:text-red-600 rounded-lg 
+                                                                       transition-all duration-200 transform hover:-translate-y-0.5 
+                                                                       hover:shadow-md active:scale-95">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                            </svg>
                                                         </button>
                                                     @endif
                                                 </div>
@@ -118,16 +128,28 @@
                                                 @enderror
                                             @endforeach
 
-                                            <button type="button" wire:click="addIdentifier({{ $cIndex }})" class="w-full flex items-center justify-center px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-400 hover:text-blue-600">
-                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                                            <button type="button" wire:click="addIdentifier({{ $cIndex }})" 
+                                                    class="w-full flex items-center justify-center px-4 py-2 border-2 border-dashed border-gray-300 
+                                                           rounded-lg text-gray-600 hover:border-blue-400 hover:text-blue-600 
+                                                           hover:bg-blue-50 transition-all duration-200 font-medium 
+                                                           transform hover:-translate-y-0.5 hover:shadow-md active:scale-95">
+                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                                </svg>
                                                 Add Identifier
                                             </button>
                                         </div>
                                     </div>
                                 @endforeach
 
-                                <button type="button" wire:click="addClassification" class="w-full flex items-center justify-center px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-400 hover:text-blue-600">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                                <button type="button" wire:click="addClassification" 
+                                        class="w-full flex items-center justify-center px-4 py-2 border-2 border-dashed border-gray-300 
+                                               rounded-lg text-gray-600 hover:border-blue-400 hover:text-blue-600 
+                                               hover:bg-blue-50 transition-all duration-200 font-medium 
+                                               transform hover:-translate-y-0.5 hover:shadow-md active:scale-95">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                    </svg>
                                     Add Another Classification
                                 </button>
                             </div>
@@ -160,7 +182,9 @@
                                         @if(count($identifiers) > 1)
                                             <button type="button" 
                                                     wire:click="removeIdentifier({{ $index }})"
-                                                    class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                                                    class="p-2 text-red-500 hover:bg-red-50 hover:text-red-600 rounded-lg 
+                                                           transition-all duration-200 transform hover:-translate-y-0.5 
+                                                           hover:shadow-md active:scale-95">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                                 </svg>
@@ -177,7 +201,9 @@
                             <button type="button" 
                                     wire:click="addIdentifier"
                                     class="w-full flex items-center justify-center px-4 py-2 border-2 border-dashed border-gray-300 
-                                           rounded-lg text-gray-600 hover:border-blue-400 hover:text-blue-600 transition-colors">
+                                           rounded-lg text-gray-600 hover:border-blue-400 hover:text-blue-600 
+                                           hover:bg-blue-50 transition-all duration-200 font-medium 
+                                           transform hover:-translate-y-0.5 hover:shadow-md active:scale-95">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                                 </svg>
@@ -203,8 +229,14 @@
                                         wire:click="previousStep"
                                         class="px-6 py-2.5 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 
                                                rounded-lg transition-all duration-200 font-medium text-sm
-                                               focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+                                               focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2
+                                               transform hover:-translate-y-0.5 hover:shadow-md active:scale-95">
+                                    <div class="flex items-center gap-1">
+                                    <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                                    </svg>
                                     Previous
+                                    </div>
                                 </button>
                             @else
                                 <button type="button" 
@@ -212,8 +244,14 @@
                                         href="/admin/rides-rate"
                                         class="px-6 py-2.5 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 
                                                rounded-lg transition-all duration-200 font-medium text-sm
-                                               focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
-                                    Cancel
+                                               focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2
+                                               transform hover:-translate-y-0.5 hover:shadow-md active:scale-95">
+                                    <div class="flex items-center gap-1">
+                                        <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                        <span>Cancel</span>
+                                    </div>
                                 </button>
                             @endif
                         </div>
@@ -225,8 +263,14 @@
                                         class="px-6 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700
                                                text-white rounded-lg transition-all duration-200 font-medium text-sm
                                                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-                                               shadow-md hover:shadow-lg">
-                                    Next
+                                               shadow-md hover:shadow-lg transform hover:-translate-y-0.5 active:scale-95">
+                                    <div class="flex items-center gap-1">
+                                        <Span>Next</Span>
+                                        
+                                        <svg class="w-4 h-4 ml-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </div>
                                 </button>
                             @else
                                 <button type="button" 
@@ -234,8 +278,13 @@
                                         class="px-6 py-2.5 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700
                                                text-white rounded-lg transition-all duration-200 font-medium text-sm
                                                focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
-                                               shadow-md hover:shadow-lg">
-                                    Create Rides
+                                               shadow-md hover:shadow-lg transform hover:-translate-y-0.5 active:scale-95">
+                                    <div class="flex items-center gap-1">
+                                        <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                        </svg>
+                                        <span>Create Rides</span>
+                                    </div>
                                 </button>
                             @endif
                         </div>

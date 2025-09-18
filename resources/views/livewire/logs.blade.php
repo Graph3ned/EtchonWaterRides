@@ -4,7 +4,7 @@
         <h2 class="text-2xl font-bold text-center mb-6 text-[#00A3E0]">📝 Staff Activity Logs</h2>
 
         <div class="flex justify-between items-center mb-6 flex-col sm:flex-row space-y-4 sm:space-y-0">
-            <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-3">
                 <!-- Log Filter Dropdown -->
                 <select wire:model.live="logFilter" 
                         class="border border-blue-200 rounded-lg px-4 py-2.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300">
@@ -13,6 +13,40 @@
                     <option value="edit">Show Edited Records</option>
                     <option value="create">Show Created Records</option>
                 </select>
+
+                <!-- Sales-like Date Range beside the filter -->
+                <div class="flex items-center space-x-2">
+                    <select wire:model.live="dateRange" 
+                            class="border border-blue-200 rounded-lg px-3 py-2.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                        <option value="">All Time</option>
+                        <option value="today">Today</option>
+                        <option value="select_day">Select Day</option>
+                        <option value="select_month">Select Month</option>
+                        <option value="this_month">Current Month</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
+
+                    @if($dateRange === 'select_month')
+                        <input x-data x-init="flatpickr($el, { plugins: [new monthSelectPlugin({ shorthand: true, dateFormat: 'Y-m', altFormat: 'F Y', theme: 'material_blue' })], dateFormat: 'Y-m', altInput: true, altFormat: 'F Y' })"
+                               wire:model.live="selected_month" type="text" placeholder="Select month"
+                               class="border border-blue-200 rounded-lg px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300" />
+                    @endif
+
+                    @if($dateRange === 'select_day')
+                        <input x-data x-init="flatpickr($el, { dateFormat: 'Y-m-d', altInput: true, altFormat: 'F j, Y', theme: 'material_blue' })"
+                               wire:model.live="selected_day" type="text" placeholder="Select date"
+                               class="border border-blue-200 rounded-lg px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300" />
+                    @endif
+
+                    @if($dateRange === 'custom')
+                        <input x-data x-init="flatpickr($el, { dateFormat: 'Y-m-d', altInput: true, altFormat: 'F j, Y', theme: 'material_blue' })"
+                               wire:model.live="start_date" type="text" placeholder="From"
+                               class="border border-blue-200 rounded-lg px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300" />
+                        <input x-data x-init="flatpickr($el, { dateFormat: 'Y-m-d', altInput: true, altFormat: 'F j, Y', theme: 'material_blue' })"
+                               wire:model.live="end_date" type="text" placeholder="To"
+                               class="border border-blue-200 rounded-lg px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300" />
+                    @endif
+                </div>
             </div>
         </div>
 

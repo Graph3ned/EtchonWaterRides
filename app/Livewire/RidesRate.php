@@ -13,12 +13,11 @@ class RidesRate extends Component
     public $modalDetails;
     public $rideToDelete;
     public $showAddNewRide = false;
-
     public $viewDetailsModal = false;
 
     public $rideId;
     public function mount(){
-        $this->rideTypes = RideType::withCount('classifications')->orderBy('name')->get();
+        $this->rideTypes = RideType::with(['classifications.rides'])->orderBy('name')->get();
     }
     public function confirmDelete($ride_type)
     {
@@ -68,9 +67,26 @@ class RidesRate extends Component
     public function render()
     {
         // Refresh list each render to reflect changes
-        $this->rideTypes = RideType::withCount('classifications')->orderBy('name')->get();
+        $this->rideTypes = RideType::with(['classifications.rides'])->orderBy('name')->get();
         return view('livewire.rides-rate', [
             'rideTypes' => $this->rideTypes,
         ]);
+    }
+
+    public function getRideCounts($rideType)
+    {
+        $activeCount = 0;
+        $inactiveCount = 0;
+        
+        foreach ($rideType->classifications as $classification) {
+            $activeCount += $classification->rides->where('is_active', true)->count();
+            $inactiveCount += $classification->rides->where('is_active', false)->count();
+        }
+        
+        return [
+            'active' => $activeCount,
+            'inactive' => $inactiveCount,
+            'total' => $activeCount + $inactiveCount
+        ];
     }
 }

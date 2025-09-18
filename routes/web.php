@@ -43,7 +43,7 @@ Route::view('/admin/ride-availability', 'RideAvailability')
     ->middleware(['auth', 'verified'])
     ->name('RideAvailability');
 
-Route::view('/admin/create', 'AddWaterRide')
+Route::view('/admin/add-ride', 'AddWaterRide')
     ->middleware(['auth', 'verified', 'admin'])
     ->name('AddWaterRide');
 

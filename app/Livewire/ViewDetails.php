@@ -21,6 +21,7 @@ class ViewDetails extends Component
     public $modalDetails;
     public $rideTypeToDelete;
     public $rideTypeImage;
+    public $showImageModal = false;
     
     public function classificationConfirmDelete($id)
     {
@@ -69,6 +70,7 @@ class ViewDetails extends Component
         // Load ride type with its classifications and rides
         $this->rideType = RideType::with(['classifications.rides'])->findOrFail($rideTypeId);
         $this->classifications = $this->rideType->classifications;
+        $this->rideTypeImage = $this->rideType->image_path;
     }
 
     public function saveRideTypeImage()
@@ -82,6 +84,7 @@ class ViewDetails extends Component
 
         $this->rideTypeImage = null;
         $this->rideType = $this->rideType->fresh();
+        $this->showImageModal = false;
         session()->flash('success', 'Ride type picture updated.');
     }
 

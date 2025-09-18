@@ -12,8 +12,51 @@ class Logs extends Component
     use WithPagination;
 
     public $logFilter = 'all';
+    public $startDate = null; // YYYY-MM-DD (derived)
+    public $endDate = null;   // YYYY-MM-DD (derived)
+    // Sales-like date range controls
+    public $dateRange = '';
+    public $selected_month = null; // Y-m
+    public $selected_day = null;   // Y-m-d (alt input)
+    public $start_date = null;     // custom range start (Y-m-d)
+    public $end_date = null;       // custom range end (Y-m-d)
 
     public function updatedLogFilter()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedStartDate()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedEndDate()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedDateRange()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedSelectedMonth()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedSelectedDay()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedStartDateCustom()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedEndDateCustom()
     {
         $this->resetPage();
     }
@@ -187,10 +230,60 @@ class Logs extends Component
 
     public function render()
     {
+        // Derive startDate/endDate from sales-like controls
+        $this->startDate = null;
+        $this->endDate = null;
+
+        switch ($this->dateRange) {
+            case 'today':
+                $this->startDate = Carbon::today('Asia/Manila')->toDateString();
+                $this->endDate = Carbon::today('Asia/Manila')->toDateString();
+                break;
+            case 'select_day':
+                if (!empty($this->selected_day)) {
+                    // selected_day expected Y-m-d
+                    $this->startDate = Carbon::parse($this->selected_day)->toDateString();
+                    $this->endDate = Carbon::parse($this->selected_day)->toDateString();
+                }
+                break;
+            case 'select_month':
+                if (!empty($this->selected_month)) {
+                    // selected_month expected Y-m
+                    $start = Carbon::createFromFormat('Y-m', $this->selected_month)->startOfMonth();
+                    $end = Carbon::createFromFormat('Y-m', $this->selected_month)->endOfMonth();
+                    $this->startDate = $start->toDateString();
+                    $this->endDate = $end->toDateString();
+                }
+                break;
+            case 'this_month':
+                $this->startDate = Carbon::now('Asia/Manila')->startOfMonth()->toDateString();
+                $this->endDate = Carbon::now('Asia/Manila')->endOfMonth()->toDateString();
+                break;
+            case 'custom':
+                if (!empty($this->start_date)) {
+                    $this->startDate = Carbon::parse($this->start_date)->toDateString();
+                }
+                if (!empty($this->end_date)) {
+                    $this->endDate = Carbon::parse($this->end_date)->toDateString();
+                }
+                break;
+            default:
+                // All time - do nothing
+                break;
+        }
+
         $query = StaffLog::with('user')->latest();
 
         if ($this->logFilter !== 'all') {
             $query->where('action', $this->logFilter);
+        }
+
+        // Apply date filters if provided
+        if (!empty($this->startDate)) {
+            $query->whereDate('created_at', '>=', $this->startDate);
+        }
+        if (!empty($this->endDate)) {
+            $query->whereDate('created_at', '<=', $this->endDate);
         }
 
         $logs = $query->paginate(20);

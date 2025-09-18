@@ -10,7 +10,7 @@
                         class="bg-[#00A3E0] text-white py-2.5 px-6 rounded-lg font-medium 
                                transform transition-all duration-200 hover:-translate-y-1 
                                hover:shadow-lg hover:bg-[#0093CC]">
-                    Add Rides
+                    Add Rental
                 </button>
 
                 <!-- Ride Filter Dropdown -->
