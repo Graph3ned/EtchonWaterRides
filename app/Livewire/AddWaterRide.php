@@ -44,10 +44,43 @@ class AddWaterRide extends Component
             ],
             'rideTypeImage' => 'nullable|image|mimes:jpeg,jpg,png,gif,webp,svg|max:2048',
             'classificationsInput' => 'required|array|min:1',
-            'classificationsInput.*.name' => 'required|string|max:255',
+            'classificationsInput.*.name' => [
+                'required',
+                'string',
+                'max:255',
+                function ($attribute, $value, $fail) {
+                    // Check for duplicates within the same form submission
+                    $duplicates = array_filter($this->classificationsInput, function($classification) use ($value) {
+                        return strtolower(trim($classification['name'])) === strtolower(trim($value));
+                    });
+                    
+                    if (count($duplicates) > 1) {
+                        $fail('Duplicate classification names are not allowed.');
+                    }
+                }
+            ],
             'classificationsInput.*.price_per_hour' => 'required|numeric|min:0.01|max:999999.99',
             'classificationsInput.*.identifiers' => 'required|array|min:1',
-            'classificationsInput.*.identifiers.*' => 'required|string|max:255',
+            'classificationsInput.*.identifiers.*' => [
+                'required',
+                'string',
+                'max:255',
+                function ($attribute, $value, $fail) {
+                    // Get the classification index from the attribute path
+                    $pathParts = explode('.', $attribute);
+                    $classificationIndex = $pathParts[1];
+                    
+                    // Check for duplicates within the same classification
+                    $identifiers = $this->classificationsInput[$classificationIndex]['identifiers'];
+                    $duplicates = array_filter($identifiers, function($identifier) use ($value) {
+                        return strtolower(trim($identifier)) === strtolower(trim($value));
+                    });
+                    
+                    if (count($duplicates) > 1) {
+                        $fail('Duplicate identifiers are not allowed within the same classification.');
+                    }
+                }
+            ],
             'isActive' => 'boolean',
             
         ];
@@ -61,9 +94,11 @@ class AddWaterRide extends Component
         'rideTypeImage.max' => 'The image may not be greater than 2MB.',
         'classificationsInput.required' => 'Add at least one classification.',
         'classificationsInput.*.name.required' => 'Classification name is required.',
+        'classificationsInput.*.name.duplicate' => 'Duplicate classification names are not allowed.',
         'classificationsInput.*.price_per_hour.required' => 'Classification price is required.',
         'classificationsInput.*.identifiers.required' => 'Add at least one identifier per classification.',
         'classificationsInput.*.identifiers.*.required' => 'Identifier is required.',
+        'classificationsInput.*.identifiers.*.duplicate' => 'Duplicate identifiers are not allowed within the same classification.',
     ];
 
     public function mount()

@@ -82,7 +82,7 @@
 
                             <div class="space-y-6">
                                 @foreach($classificationsInput as $cIndex => $c)
-                                    <div class="border rounded-lg p-4">
+                                    <div class="classification-item border rounded-lg p-4">
                                         <div class="flex justify-between items-center mb-3">
                                             <h4 class="font-semibold text-gray-800">Classification #{{ $cIndex + 1 }}</h4>
                                             @if(count($classificationsInput) > 1)
@@ -98,7 +98,7 @@
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
                                                 <label class="text-sm text-gray-700">Name</label>
-                                                <input type="text" wire:model="classificationsInput.{{ $cIndex }}.name" placeholder="e.g., Small, Big, Double" class="w-full text-sm rounded-lg border-gray-200 bg-gray-50 focus:bg-white hover:bg-gray-50/80 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                                                <input type="text" wire:model="classificationsInput.{{ $cIndex }}.name" placeholder="e.g., Small, Big, Double" oninput="validateClassificationNameUniqueness(this)" class="w-full text-sm rounded-lg border-gray-200 bg-gray-50 focus:bg-white hover:bg-gray-50/80 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
                                                 @error('classificationsInput.'.$cIndex.'.name')
                                                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                                 @enderror
@@ -116,7 +116,7 @@
                                             <label class="text-sm text-gray-700">Identifiers</label>
                                             @foreach($c['identifiers'] as $iIndex => $identifier)
                                                 <div class="flex items-center space-x-2 mb-2">
-                                                    <input type="text" wire:model="classificationsInput.{{ $cIndex }}.identifiers.{{ $iIndex }}" placeholder="e.g., Red, Blue, Yellow" class="flex-1 text-sm rounded-lg border-gray-200 bg-gray-50 focus:bg-white hover:bg-gray-50/80 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                                                    <input type="text" wire:model="classificationsInput.{{ $cIndex }}.identifiers.{{ $iIndex }}" placeholder="e.g., Red, Blue, Yellow" oninput="validateIdentifierUniqueness(this, {{ $cIndex }})" class="flex-1 text-sm rounded-lg border-gray-200 bg-gray-50 focus:bg-white hover:bg-gray-50/80 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
                                                     @if(count($c['identifiers']) > 1)
                                                         <button type="button" wire:click="removeIdentifier({{ $cIndex }}, {{ $iIndex }})" 
                                                                 class="p-2 text-red-500 hover:bg-red-50 hover:text-red-600 rounded-lg 
@@ -228,15 +228,15 @@
 
                     <!-- Navigation Buttons -->
                     <div class="flex justify-between pt-6">
-                        <div>
+                        <div class="mr-2">
                             @if($currentStep > 1)
                                 <button type="button" 
                                         wire:click="previousStep"
-                                        class="px-6 py-2.5 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 
+                                        class="px-2 py-2.5 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 
                                                rounded-lg transition-all duration-200 font-medium text-sm
                                                focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2
                                                transform hover:-translate-y-0.5 hover:shadow-md active:scale-95">
-                                    <div class="flex items-center gap-1">
+                                    <div class="flex items-center">
                                     <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                                     </svg>
@@ -247,11 +247,11 @@
                                 <button type="button" 
                                         wire:navigate 
                                         href="/admin/rides-rate"
-                                        class="px-6 py-2.5 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 
+                                        class="px-2 py-2.5 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 
                                                rounded-lg transition-all duration-200 font-medium text-sm
                                                focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2
                                                transform hover:-translate-y-0.5 hover:shadow-md active:scale-95">
-                                    <div class="flex items-center gap-1">
+                                    <div class="flex items-center">
                                         <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                         </svg>
@@ -288,7 +288,7 @@
                                         <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                         </svg>
-                                        <span>Create Rides</span>
+                                        <span>Add</span>
                                     </div>
                                 </button>
                             @endif
@@ -357,6 +357,81 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         return true;
+    }
+
+    // Function to validate identifier uniqueness within a classification
+    function validateIdentifierUniqueness(input, classificationIndex) {
+        const currentValue = input.value.trim().toLowerCase();
+        const classificationDiv = input.closest('.classification-item');
+        const identifierInputs = classificationDiv.querySelectorAll('input[wire\\:model*="identifiers"]');
+        
+        let duplicates = 0;
+        identifierInputs.forEach(function(identifierInput) {
+            if (identifierInput.value.trim().toLowerCase() === currentValue && currentValue !== '') {
+                duplicates++;
+            }
+        });
+        
+        // Show error if there are duplicates
+        if (duplicates > 1) {
+            // Remove existing error message
+            const existingError = classificationDiv.querySelector('.identifier-duplicate-error');
+            if (existingError) {
+                existingError.remove();
+            }
+            
+            // Add error message
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'identifier-duplicate-error text-red-500 text-xs mt-1';
+            errorDiv.textContent = 'Duplicate identifiers are not allowed within the same classification.';
+            input.parentNode.appendChild(errorDiv);
+            
+            return false;
+        } else {
+            // Remove error message if no duplicates
+            const existingError = classificationDiv.querySelector('.identifier-duplicate-error');
+            if (existingError) {
+                existingError.remove();
+            }
+            return true;
+        }
+    }
+
+    // Function to validate classification name uniqueness across all classifications
+    function validateClassificationNameUniqueness(input) {
+        const currentValue = input.value.trim().toLowerCase();
+        const allClassificationNameInputs = document.querySelectorAll('input[wire\\:model*="classificationsInput"][wire\\:model*="name"]');
+        
+        let duplicates = 0;
+        allClassificationNameInputs.forEach(function(nameInput) {
+            if (nameInput.value.trim().toLowerCase() === currentValue && currentValue !== '') {
+                duplicates++;
+            }
+        });
+        
+        // Show error if there are duplicates
+        if (duplicates > 1) {
+            // Remove existing error message
+            const existingError = input.parentNode.querySelector('.classification-name-duplicate-error');
+            if (existingError) {
+                existingError.remove();
+            }
+            
+            // Add error message
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'classification-name-duplicate-error text-red-500 text-xs mt-1';
+            errorDiv.textContent = 'Duplicate classification names are not allowed.';
+            input.parentNode.appendChild(errorDiv);
+            
+            return false;
+        } else {
+            // Remove error message if no duplicates
+            const existingError = input.parentNode.querySelector('.classification-name-duplicate-error');
+            if (existingError) {
+                existingError.remove();
+            }
+            return true;
+        }
     }
 });
 </script>
