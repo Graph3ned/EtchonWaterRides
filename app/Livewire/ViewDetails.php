@@ -73,10 +73,39 @@ class ViewDetails extends Component
         $this->rideTypeImage = $this->rideType->image_path;
     }
 
+    public function updatedRideTypeImage()
+    {
+        if ($this->rideTypeImage) {
+            // Validate file type immediately
+            $allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+            $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
+            
+            $fileExtension = strtolower($this->rideTypeImage->getClientOriginalExtension());
+            
+            if (!in_array($this->rideTypeImage->getMimeType(), $allowedMimes) || !in_array($fileExtension, $allowedExtensions)) {
+                $this->rideTypeImage = null;
+                session()->flash('error', 'Please select a valid image file (JPEG, JPG, PNG, GIF, WebP, or SVG). DOCX and other document files are not allowed.');
+                return;
+            }
+            
+            // Validate file size
+            if ($this->rideTypeImage->getSize() > 2048 * 1024) { // 2MB
+                $this->rideTypeImage = null;
+                session()->flash('error', 'File size must be less than 2MB.');
+                return;
+            }
+        }
+    }
+
     public function saveRideTypeImage()
     {
         $this->validate([
-            'rideTypeImage' => 'required|image|max:2048',
+            'rideTypeImage' => 'nullable|image|mimes:jpeg,jpg,png,gif,webp,svg|max:2048',
+        ], [
+            // 'rideTypeImage.required' => 'Please select an image file.',
+            'rideTypeImage.image' => 'The file must be an image.',
+            'rideTypeImage.mimes' => 'The image must be a file of type: jpeg, jpg, png, gif, webp, svg.',
+            'rideTypeImage.max' => 'The image may not be greater than 2MB.',
         ]);
 
         $path = $this->rideTypeImage->store('ride-types', 'public');

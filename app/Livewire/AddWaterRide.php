@@ -42,7 +42,7 @@ class AddWaterRide extends Component
                     }
                 }
             ],
-            'rideTypeImage' => 'required|image|max:2048',
+            'rideTypeImage' => 'nullable|image|mimes:jpeg,jpg,png,gif,webp,svg|max:2048',
             'classificationsInput' => 'required|array|min:1',
             'classificationsInput.*.name' => 'required|string|max:255',
             'classificationsInput.*.price_per_hour' => 'required|numeric|min:0.01|max:999999.99',
@@ -56,6 +56,9 @@ class AddWaterRide extends Component
     protected $messages = [
         'newRideTypeName.required' => 'Ride type name is required.',
         'newRideTypeName.unique' => 'This ride type already exists.',
+        'rideTypeImage.image' => 'The file must be an image.',
+        'rideTypeImage.mimes' => 'The image must be a file of type: jpeg, jpg, png, gif, webp, svg.',
+        'rideTypeImage.max' => 'The image may not be greater than 2MB.',
         'classificationsInput.required' => 'Add at least one classification.',
         'classificationsInput.*.name.required' => 'Classification name is required.',
         'classificationsInput.*.price_per_hour.required' => 'Classification price is required.',
@@ -66,6 +69,30 @@ class AddWaterRide extends Component
     public function mount()
     {
         $this->loadRideTypes();
+    }
+
+    public function updatedRideTypeImage()
+    {
+        if ($this->rideTypeImage) {
+            // Validate file type immediately
+            $allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+            $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
+            
+            $fileExtension = strtolower($this->rideTypeImage->getClientOriginalExtension());
+            
+            if (!in_array($this->rideTypeImage->getMimeType(), $allowedMimes) || !in_array($fileExtension, $allowedExtensions)) {
+                $this->rideTypeImage = null;
+                session()->flash('error', 'Please select a valid image file (JPEG, JPG, PNG, GIF, WebP, or SVG). DOCX and other document files are not allowed.');
+                return;
+            }
+            
+            // Validate file size
+            if ($this->rideTypeImage->getSize() > 2048 * 1024) { // 2MB
+                $this->rideTypeImage = null;
+                session()->flash('error', 'File size must be less than 2MB.');
+                return;
+            }
+        }
     }
 
     public function loadRideTypes() {}
@@ -116,7 +143,7 @@ class AddWaterRide extends Component
                     }
                 }
             ],
-            'rideTypeImage' => 'required|image|max:2048',
+            'rideTypeImage' => 'nullable|image|max:2048',
         ]);
     }
 

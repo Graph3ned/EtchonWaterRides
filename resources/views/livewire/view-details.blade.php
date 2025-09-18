@@ -269,10 +269,15 @@
                     
                     <!-- File Input -->
                     <div class="mb-4">
-                        <input type="file" wire:model="rideTypeImage" accept="image/*" class="w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+                        <input type="file" 
+                               wire:model="rideTypeImage" 
+                               accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/svg+xml" 
+                               onchange="validateImageFileModal(this)"
+                               class="w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
                         @error('rideTypeImage')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
+                        <div id="image-validation-error-modal" class="text-red-500 text-xs mt-1 hidden"></div>
                     </div>
                     
                     <!-- Modal Buttons -->
@@ -318,5 +323,40 @@
                 }, 3000);
             }
         });
+
+        // Image file validation function for modal
+        function validateImageFileModal(input) {
+            const file = input.files[0];
+            const errorDiv = document.getElementById('image-validation-error-modal');
+            
+            if (file) {
+                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+                const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
+                const maxSize = 2 * 1024 * 1024; // 2MB
+                
+                // Check file extension
+                const fileName = file.name.toLowerCase();
+                const hasValidExtension = allowedExtensions.some(ext => fileName.endsWith(ext));
+                
+                if (!allowedTypes.includes(file.type) || !hasValidExtension) {
+                    errorDiv.textContent = 'Please select a valid image file (JPEG, JPG, PNG, GIF, WebP, or SVG). DOCX and other document files are not allowed.';
+                    errorDiv.classList.remove('hidden');
+                    input.value = ''; // Clear the input
+                    return false;
+                }
+                
+                if (file.size > maxSize) {
+                    errorDiv.textContent = 'File size must be less than 2MB.';
+                    errorDiv.classList.remove('hidden');
+                    input.value = ''; // Clear the input
+                    return false;
+                }
+                
+                // Hide error if validation passes
+                errorDiv.classList.add('hidden');
+            }
+            
+            return true;
+        }
     </script>
 </div>
