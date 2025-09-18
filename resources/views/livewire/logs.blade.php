@@ -8,10 +8,19 @@
                 <!-- Log Filter Dropdown -->
                 <select wire:model.live="logFilter" 
                         class="border border-blue-200 rounded-lg px-4 py-2.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300">
-                    <option value="all">Show All Logs</option>
-                    <option value="delete">Show Deleted Records</option>
-                    <option value="edit">Show Edited Records</option>
-                    <option value="create">Show Created Records</option>
+                    <option value="all">All Actions</option>
+                    <option value="delete">Deleted Records</option>
+                    <option value="edit">Edited Records</option>
+                    <option value="create">Created Records</option>
+                </select>
+
+                <!-- Staff Filter Dropdown -->
+                <select wire:model.live="staff"
+                        class="border border-blue-200 rounded-lg px-4 py-2.5 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                    <option value="">All Staff</option>
+                    @foreach($staffOptions as $s)
+                        <option value="{{ $s['id'] }}">{{ $s['name'] }}</option>
+                    @endforeach
                 </select>
 
                 <!-- Sales-like Date Range beside the filter -->
@@ -27,26 +36,70 @@
                     </select>
 
                     @if($dateRange === 'select_month')
-                        <input x-data x-init="flatpickr($el, { plugins: [new monthSelectPlugin({ shorthand: true, dateFormat: 'Y-m', altFormat: 'F Y', theme: 'material_blue' })], dateFormat: 'Y-m', altInput: true, altFormat: 'F Y' })"
-                               wire:model.live="selected_month" type="text" placeholder="Select month"
-                               class="border border-blue-200 rounded-lg px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300" />
+                        <div x-data="{ fp: null, open() { this.fp && this.fp.open() } }"
+                             x-init="fp = flatpickr($refs.monthInput, {
+                                 plugins: [new monthSelectPlugin({ shorthand: true, dateFormat: 'Y-m', altFormat: 'F Y', theme: 'material_blue' })],
+                                 dateFormat: 'Y-m',
+                                 positionElement: $refs.monthBtn,
+                                 onChange: function(selectedDates, dateStr){ $wire.set('selected_month', dateStr) }
+                             })">
+                            <input x-ref="monthInput" type="text" class="sr-only" />
+                            <button x-ref="monthBtn" type="button" @click="open()"
+                                    class="border border-blue-200 rounded-lg px-3 py-2 text-gray-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                                {{ $selected_month ? $selected_month : 'Select Month' }}
+                            </button>
+                        </div>
                     @endif
 
                     @if($dateRange === 'select_day')
-                        <input x-data x-init="flatpickr($el, { dateFormat: 'Y-m-d', altInput: true, altFormat: 'F j, Y', theme: 'material_blue' })"
-                               wire:model.live="selected_day" type="text" placeholder="Select date"
-                               class="border border-blue-200 rounded-lg px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300" />
+                        <div x-data="{ fp: null, open() { this.fp && this.fp.open() } }"
+                             x-init="fp = flatpickr($refs.dayInput, {
+                                 dateFormat: 'Y-m-d',
+                                 positionElement: $refs.dayBtn,
+                                 onChange: function(selectedDates, dateStr){ $wire.set('selected_day', dateStr) }
+                             })">
+                            <input x-ref="dayInput" type="text" class="sr-only" />
+                            <button x-ref="dayBtn" type="button" @click="open()"
+                                    class="border border-blue-200 rounded-lg px-3 py-2 text-gray-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                                {{ $selected_day ? $selected_day : 'Select Date' }}
+                            </button>
+                        </div>
                     @endif
 
                     @if($dateRange === 'custom')
-                        <input x-data x-init="flatpickr($el, { dateFormat: 'Y-m-d', altInput: true, altFormat: 'F j, Y', theme: 'material_blue' })"
-                               wire:model.live="start_date" type="text" placeholder="From"
-                               class="border border-blue-200 rounded-lg px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300" />
-                        <input x-data x-init="flatpickr($el, { dateFormat: 'Y-m-d', altInput: true, altFormat: 'F j, Y', theme: 'material_blue' })"
-                               wire:model.live="end_date" type="text" placeholder="To"
-                               class="border border-blue-200 rounded-lg px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300" />
+                        <div x-data="{ fp: null, open() { this.fp && this.fp.open() } }"
+                             x-init="fp = flatpickr($refs.startInput, {
+                                 dateFormat: 'Y-m-d',
+                                 positionElement: $refs.startBtn,
+                                 onChange: function(selectedDates, dateStr){ $wire.set('start_date', dateStr) }
+                             })">
+                            <input x-ref="startInput" type="text" class="sr-only" />
+                            <button x-ref="startBtn" type="button" @click="open()"
+                                    class="border border-blue-200 rounded-lg px-3 py-2 text-gray-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                                {{ $start_date ? $start_date : 'From' }}
+                            </button>
+                        </div>
+                        <div x-data="{ fp: null, open() { this.fp && this.fp.open() } }"
+                             x-init="fp = flatpickr($refs.endInput, {
+                                 dateFormat: 'Y-m-d',
+                                 positionElement: $refs.endBtn,
+                                 onChange: function(selectedDates, dateStr){ $wire.set('end_date', dateStr) }
+                             })">
+                            <input x-ref="endInput" type="text" class="sr-only" />
+                            <button x-ref="endBtn" type="button" @click="open()"
+                                    class="border border-blue-200 rounded-lg px-3 py-2 text-gray-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                                {{ $end_date ? $end_date : 'To' }}
+                            </button>
+                        </div>
                     @endif
                 </div>
+                
+                <!-- Clear Filters Button -->
+                <button type="button"
+                        wire:click="clearFilters"
+                        class="ml-2 border border-red-200 text-red-600 rounded-lg px-3 py-2 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-300">
+                    Clear Filters
+                </button>
             </div>
         </div>
 

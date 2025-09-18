@@ -26,10 +26,45 @@ class AddRideClassification extends Component
     {
         return [
             'classificationsInput' => 'required|array|min:1',
-            'classificationsInput.*.name' => 'required|string|max:255|unique:classifications,name,NULL,id,ride_type_id,' . $this->rideTypeId . ',deleted_at,NULL',
+            // 'classificationsInput.*.name' => 'required|string|max:255|unique:classifications,name,NULL,id,ride_type_id,' . $this->rideTypeId . ',deleted_at,NULL',
+            'classificationsInput.*.name' => [
+                'required',
+                'string',
+                'max:255',
+                'unique:classifications,name,NULL,id,ride_type_id,' . $this->rideTypeId . ',deleted_at,NULL',
+                function ($attribute, $value, $fail) {
+                    // Check for duplicates within the same form submission
+                    $duplicates = array_filter($this->classificationsInput, function($classification) use ($value) {
+                        return strtolower(trim($classification['name'])) === strtolower(trim($value));
+                    });
+                    
+                    if (count($duplicates) > 1) {
+                        $fail('Duplicate classification names are not allowed.');
+                    }
+                } 
+            ],
             'classificationsInput.*.price_per_hour' => 'required|numeric|min:0.01|max:999999.99',
             'classificationsInput.*.identifiers' => 'required|array|min:1',
-            'classificationsInput.*.identifiers.*' => 'required|string|max:255',
+            'classificationsInput.*.identifiers.*' => [
+                'required',
+                'string',
+                'max:255',
+                function ($attribute, $value, $fail) {
+                    // Get the classification index from the attribute path
+                    $pathParts = explode('.', $attribute);
+                    $classificationIndex = $pathParts[1];
+                    
+                    // Check for duplicates within the same classification
+                    $identifiers = $this->classificationsInput[$classificationIndex]['identifiers'];
+                    $duplicates = array_filter($identifiers, function($identifier) use ($value) {
+                        return strtolower(trim($identifier)) === strtolower(trim($value));
+                    });
+                    
+                    if (count($duplicates) > 1) {
+                        $fail('Duplicate identifiers are not allowed within the same classification.');
+                    }
+                }
+            ],
             'isActive' => 'boolean',
         ];
     }

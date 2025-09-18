@@ -44,6 +44,7 @@ class AddWaterRide extends Component
             ],
             'rideTypeImage' => 'nullable|image|mimes:jpeg,jpg,png,gif,webp,svg|max:2048',
             'classificationsInput' => 'required|array|min:1',
+            
             'classificationsInput.*.name' => [
                 'required',
                 'string',
@@ -57,7 +58,7 @@ class AddWaterRide extends Component
                     if (count($duplicates) > 1) {
                         $fail('Duplicate classification names are not allowed.');
                     }
-                }
+                } 
             ],
             'classificationsInput.*.price_per_hour' => 'required|numeric|min:0.01|max:999999.99',
             'classificationsInput.*.identifiers' => 'required|array|min:1',
