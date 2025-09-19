@@ -1,0 +1,11 @@
+[33mcommit e48bae99abd06d431c924689466fe80632dfec38[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mrecovery-branch[m[33m)[m
+Author: Graph3ned <edbertetchon2@gmail.com>
+Date:   Sun Sep 7 12:07:16 2025 +0800
+
+    Refactor: Update ride management system and remove deprecated components
+
+[33mcommit adc0c35a59a9a6322505ec52c205237472dd8c81[m
+Author: Graph3ned <edbertetchon2@gmail.com>
+Date:   Tue May 20 20:06:55 2025 +0800
+
+    Initial commit

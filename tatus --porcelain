@@ -1,0 +1,3 @@
+[33m52d649c[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m fixed the log in and log out bug, the console warning error
+[33me48bae9[m Refactor: Update ride management system and remove deprecated components
+[33madc0c35[m Initial commit

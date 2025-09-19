@@ -1,0 +1,107 @@
+BOGAC RIDES MANAGEMENT SYSTEM - CURRENT DATABASE STRUCTURE
+================================================================
+
+┌─────────────────────────────────────────────────────────────────┐
+│                           USERS TABLE                          │
+├─────────────────────────────────────────────────────────────────┤
+│  id (PK)           │ BIGINT UNSIGNED AUTO_INCREMENT            │
+│  name              │ VARCHAR(255) NOT NULL                     │
+│  email             │ VARCHAR(255) UNIQUE NOT NULL              │
+│  userType          │ VARCHAR(255) DEFAULT '0'                  │
+│  password          │ VARCHAR(255) NOT NULL                     │
+│  remember_token    │ VARCHAR(100) NULL                         │
+│  created_at        │ TIMESTAMP NULL                            │
+│  updated_at        │ TIMESTAMP NULL                            │
+└─────────────────────────────────────────────────────────────────┘
+                                │
+                                │ FK (ON DELETE SET NULL)
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                        SESSIONS TABLE                          │
+├─────────────────────────────────────────────────────────────────┤
+│  id (PK)           │ VARCHAR(255) PRIMARY KEY                  │
+│  user_id (FK)      │ BIGINT UNSIGNED NULL                      │
+│  ip_address        │ VARCHAR(45) NOT NULL                      │
+│  user_agent        │ TEXT NOT NULL                             │
+│  payload           │ LONGTEXT NOT NULL                         │
+│  last_activity     │ INT UNSIGNED NOT NULL                     │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                      RIDES_RENTAL_DBS TABLE                    │
+├─────────────────────────────────────────────────────────────────┤
+│  id (PK)           │ BIGINT UNSIGNED AUTO_INCREMENT            │
+│  user              │ VARCHAR(255) NOT NULL                     │
+│  rideType          │ VARCHAR(255) NOT NULL                     │
+│  classification    │ VARCHAR(255) NOT NULL                     │
+│  note              │ VARCHAR(255) NULL                         │
+│  duration          │ INTEGER NOT NULL                          │
+│  life_jacket_usage │ INTEGER NOT NULL                          │
+│  pricePerHour      │ DECIMAL(8,2) NOT NULL                     │
+│  totalPrice        │ DECIMAL(8,2) NOT NULL                     │
+│  status            │ INTEGER NOT NULL                          │
+│  timeStart         │ TIME NOT NULL                             │
+│  timeEnd           │ TIME NOT NULL                             │
+│  created_at        │ TIMESTAMP NULL                            │
+│  updated_at        │ TIMESTAMP NULL                            │
+└─────────────────────────────────────────────────────────────────┘
+                                │
+                                │ String-based relationship
+                                │ (user field → users.name)
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                           USERS TABLE                          │
+│                     (Same as above)                            │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                         PRICES TABLE                           │
+├─────────────────────────────────────────────────────────────────┤
+│  id (PK)           │ BIGINT UNSIGNED AUTO_INCREMENT            │
+│  ride_type         │ VARCHAR(255) NOT NULL                     │
+│  classification    │ VARCHAR(255) NOT NULL                     │
+│  price_per_hour    │ INTEGER NOT NULL                          │
+│  created_at        │ TIMESTAMP NULL                            │
+│  updated_at        │ TIMESTAMP NULL                            │
+└─────────────────────────────────────────────────────────────────┘
+                                │
+                                │ Implicit relationship
+                                │ (ride_type + classification)
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      RIDES_RENTAL_DBS TABLE                    │
+│                     (Same as above)                            │
+└─────────────────────────────────────────────────────────────────┘
+
+RELATIONSHIP SUMMARY:
+====================
+
+1. USERS → SESSIONS (One-to-Many)
+   - Foreign Key: sessions.user_id → users.id
+   - Cascade: SET NULL on user deletion
+
+2. USERS → RIDES (One-to-Many)
+   - String-based: rides_rental_dbs.user → users.name
+   - No foreign key constraint
+
+3. PRICES → RIDES (One-to-Many)
+   - Implicit: rides_rental_dbs.rideType + classification → prices.ride_type + classification
+   - No foreign key constraint
+
+DESIGN PATTERN: LOOSE COUPLING
+==============================
+
+✅ STRICT FK RELATIONSHIPS:
+   - sessions.user_id → users.id (for cleanup)
+
+✅ LOOSE COUPLING RELATIONSHIPS:
+   - rides_rental_dbs.user → users.name (for data preservation)
+   - rides_rental_dbs.rideType + classification → prices.ride_type + classification (for flexibility)
+
+BENEFITS:
+- Data preservation (historical rides never lost)
+- Flexibility (user names can change)
+- Performance (no FK constraint checks)
+- Simplicity (easier to maintain)

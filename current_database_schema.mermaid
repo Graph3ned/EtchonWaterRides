@@ -1,0 +1,86 @@
+erDiagram
+    USERS {
+        bigint id PK
+        varchar name
+        varchar email UK
+        varchar userType "0=Staff, 1=Admin"
+        varchar password
+        varchar remember_token
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    RENTALS {
+        bigint id PK
+        varchar user "Staff member name"
+        varchar rideType "Type of ride"
+        varchar classification "Classification within type"
+        varchar note "Additional notes"
+        int duration "Duration in minutes"
+        int life_jacket_usage "Number of life jackets"
+        decimal pricePerHour "Price per hour (8,2)"
+        decimal totalPrice "Total calculated price (8,2)"
+        int status "Ride status"
+        time timeStart "Start time"
+        time timeEnd "End time"
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    PRICES {
+        bigint id PK
+        varchar ride_type "Type of ride"
+        varchar classification "Classification within type"
+        int price_per_hour "Price per hour in PHP"
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    SESSIONS {
+        varchar id PK "Session ID"
+        bigint user_id FK "Foreign key to users"
+        varchar ip_address "User IP address"
+        text user_agent "Browser information"
+        longtext payload "Session data"
+        int last_activity "Last activity timestamp"
+    }
+    
+    STAFF_LOGS {
+        bigint id PK
+        bigint user_id FK "Foreign key to users"
+        varchar action "Action performed"
+        varchar model_type "Type of model affected"
+        bigint model_id "ID of affected model"
+        json old_values "Previous values"
+        json new_values "New values"
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    PROFILE_CHANGE_REQUESTS {
+        bigint id PK
+        bigint user_id FK "Foreign key to users"
+        varchar new_email "New email address"
+        varchar otp_code_hash "OTP verification hash"
+        json payload "Additional data"
+        timestamp expires_at "Expiration time"
+        timestamp consumed_at "When OTP was used"
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    PASSWORD_RESET_TOKENS {
+        varchar email PK "Email address"
+        varchar token "Reset token"
+        timestamp created_at "Token creation time"
+    }
+
+    %% Foreign Key Relationships
+    USERS ||--o{ SESSIONS : "has sessions"
+    USERS ||--o{ STAFF_LOGS : "performs actions"
+    USERS ||--o{ PROFILE_CHANGE_REQUESTS : "requests changes"
+    USERS ||--o{ PASSWORD_RESET_TOKENS : "requests reset"
+    
+    %% Loose Coupling Relationships (No FKs)
+    USERS }o--o{ RENTALS : "user field (string)"
+    PRICES }o--o{ RENTALS : "rideType + classification"
