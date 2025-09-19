@@ -57,12 +57,13 @@ new class extends Component
                         </x-nav-link>
                     </div>
                 @endif
-                
+                @if(auth()->check())
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                        <x-nav-link :href="route('RideAvailability')" :active="request()->routeIs('RideAvailability')" wire:navigate>
-                            {{ __('Ride Availability') }}
-                        </x-nav-link>
-                    </div>
+                    <x-nav-link :href="route('RideAvailability')" :active="request()->routeIs('RideAvailability')" wire:navigate>
+                        {{ __('Ride Availability') }}
+                    </x-nav-link>
+                </div>
+                @endif
             </div>
 
             <!-- Settings Dropdown (only when authenticated) -->
@@ -145,11 +146,13 @@ new class extends Component
             </x-responsive-nav-link>
         </div>
         @endif
+        @if(auth()->check())
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('RideAvailability')" :active="request()->routeIs('RideAvailability')" wire:navigate>
                 {{ __('Ride Availability') }}
             </x-responsive-nav-link>
         </div>
+        @endif
 
         @if(auth()->check())
         <!-- Responsive Settings Options -->
