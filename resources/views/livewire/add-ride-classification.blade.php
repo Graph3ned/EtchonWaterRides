@@ -58,24 +58,60 @@
                                         </div>
                                     </div>
 
-                                    <div class="mt-4 space-y-2">
-                                        <label class="text-sm text-gray-700">Identifiers</label>
+                                    <div class="mt-4 space-y-4">
+                                        <label class="text-sm text-gray-700 font-medium">Identifiers</label>
                                         @foreach($c['identifiers'] as $iIndex => $identifier)
-                                            <div class="flex items-center space-x-2 mb-2">
-                                                <input type="text" wire:model="classificationsInput.{{ $cIndex }}.identifiers.{{ $iIndex }}" placeholder="e.g., Red, Blue, Yellow" class="flex-1 text-sm rounded-lg border-gray-200 bg-gray-50 focus:bg-white hover:bg-gray-50/80 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
-                                                @if(count($c['identifiers']) > 1)
-                                                    <button type="button" wire:click="removeIdentifier({{ $cIndex }}, {{ $iIndex }})" class="p-2 text-red-500 hover:bg-red-50 rounded-lg">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                                                    </button>
-                                                @endif
+                                            <div class="border rounded-lg p-3 bg-gray-50">
+                                                <div class="flex items-center space-x-2 mb-3">
+                                                    <input type="text" 
+                                                           wire:model="classificationsInput.{{ $cIndex }}.identifiers.{{ $iIndex }}.name" 
+                                                           placeholder="e.g., Red, Blue, Yellow" 
+                                                           class="flex-1 text-sm rounded-lg border-gray-200 bg-white focus:bg-white hover:bg-gray-50/80 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                                                    @if(count($c['identifiers']) > 1)
+                                                        <button type="button" wire:click="removeIdentifier({{ $cIndex }}, {{ $iIndex }})" 
+                                                                class="p-2 text-red-500 hover:bg-red-50 hover:text-red-600 rounded-lg 
+                                                                       transition-all duration-200 transform hover:-translate-y-0.5 
+                                                                       hover:shadow-md active:scale-95">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                            </svg>
+                                                        </button>
+                                                    @endif
+                                                </div>
+                                                
+                                                <div class="space-y-2">
+                                                    <label class="flex items-center text-gray-600 font-medium text-xs">Identifier Image (Optional)</label>
+                                                    <input type="file" 
+                                                           wire:model="classificationsInput.{{ $cIndex }}.identifiers.{{ $iIndex }}.image"
+                                                           accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/svg+xml"
+                                                           onchange="validateImageFile(this)"
+                                                           class="w-full text-xs text-gray-700 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+                                                    @error('classificationsInput.'.$cIndex.'.identifiers.'.$iIndex.'.image')
+                                                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                                    @enderror
+                                                    @if (isset($classificationsInput[$cIndex]['identifiers'][$iIndex]['image']) && is_object($classificationsInput[$cIndex]['identifiers'][$iIndex]['image']))
+                                                        <div class="mt-2">
+                                                            <img src="{{ $classificationsInput[$cIndex]['identifiers'][$iIndex]['image']->temporaryUrl() }}" 
+                                                                 alt="Preview" 
+                                                                 class="h-16 w-16 object-cover rounded border" />
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                                
+                                                @error('classificationsInput.'.$cIndex.'.identifiers.'.$iIndex.'.name')
+                                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                                @enderror
                                             </div>
-                                            @error('classificationsInput.'.$cIndex.'.identifiers.'.$iIndex)
-                                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                                            @enderror
                                         @endforeach
 
-                                        <button type="button" wire:click="addIdentifier({{ $cIndex }})" class="w-full flex items-center justify-center px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-400 hover:text-blue-600">
-                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                                        <button type="button" wire:click="addIdentifier({{ $cIndex }})" 
+                                                class="w-full flex items-center justify-center px-4 py-2 border-2 border-dashed border-gray-300 
+                                                       rounded-lg text-gray-600 hover:border-blue-400 hover:text-blue-600 
+                                                       hover:bg-blue-50 transition-all duration-200 font-medium 
+                                                       transform hover:-translate-y-0.5 hover:shadow-md active:scale-95">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                            </svg>
                                             Add Identifier
                                         </button>
                                     </div>
@@ -121,3 +157,74 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-hide success messages after 5 seconds
+    const successMessage = document.querySelector('#success-message');
+    if (successMessage) {
+        setTimeout(function() {
+            successMessage.style.opacity = '0';
+            setTimeout(function() {
+                successMessage.style.display = 'none';
+            }, 500);
+        }, 5000);
+    }
+    
+    // Auto-hide error messages after 7 seconds (longer for errors)
+    const errorMessage = document.querySelector('#error-message');
+    if (errorMessage) {
+        setTimeout(function() {
+            errorMessage.style.opacity = '0';
+            setTimeout(function() {
+                errorMessage.style.display = 'none';
+            }, 500);
+        }, 7000);
+    }
+
+    // Image file validation function
+    function validateImageFile(input) {
+        const file = input.files[0];
+        const errorDiv = input.parentNode.querySelector('.image-validation-error') || 
+                        document.getElementById('image-validation-error');
+        
+        if (file) {
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+            const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
+            const maxSize = 2 * 1024 * 1024; // 2MB
+            
+            // Check file extension
+            const fileName = file.name.toLowerCase();
+            const hasValidExtension = allowedExtensions.some(ext => fileName.endsWith(ext));
+            
+            if (!allowedTypes.includes(file.type) || !hasValidExtension) {
+                if (errorDiv) {
+                    errorDiv.textContent = 'Please select a valid image file (JPEG, JPG, PNG, GIF, WebP, or SVG). DOCX and other document files are not allowed.';
+                    errorDiv.classList.remove('hidden');
+                }
+                input.value = ''; // Clear the input
+                return false;
+            }
+            
+            if (file.size > maxSize) {
+                if (errorDiv) {
+                    errorDiv.textContent = 'File size must be less than 2MB.';
+                    errorDiv.classList.remove('hidden');
+                }
+                input.value = ''; // Clear the input
+                return false;
+            }
+            
+            // Hide error if validation passes
+            if (errorDiv) {
+                errorDiv.classList.add('hidden');
+            }
+        }
+        
+        return true;
+    }
+
+    // Make validateImageFile globally available
+    window.validateImageFile = validateImageFile;
+});
+</script>

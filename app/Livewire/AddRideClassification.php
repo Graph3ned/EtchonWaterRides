@@ -6,9 +6,13 @@ use Livewire\Component;
 use App\Models\RideType;
 use App\Models\Classification;
 use App\Models\Ride;
+use Livewire\WithFileUploads;
+use Illuminate\Support\Facades\Storage;
 
 class AddRideClassification extends Component
 {
+    use WithFileUploads;
+    
     public $rideTypeId;
     public $rideType;
     
@@ -17,7 +21,7 @@ class AddRideClassification extends Component
         [
             'name' => '',
             'price_per_hour' => '',
-            'identifiers' => [''],
+            'identifiers' => [['name' => '', 'image' => null]],
         ],
     ];
     public $isActive = true;
@@ -45,7 +49,7 @@ class AddRideClassification extends Component
             ],
             'classificationsInput.*.price_per_hour' => 'required|numeric|min:0.01|max:999999.99',
             'classificationsInput.*.identifiers' => 'required|array|min:1',
-            'classificationsInput.*.identifiers.*' => [
+            'classificationsInput.*.identifiers.*.name' => [
                 'required',
                 'string',
                 'max:255',
@@ -57,7 +61,7 @@ class AddRideClassification extends Component
                     // Check for duplicates within the same classification
                     $identifiers = $this->classificationsInput[$classificationIndex]['identifiers'];
                     $duplicates = array_filter($identifiers, function($identifier) use ($value) {
-                        return strtolower(trim($identifier)) === strtolower(trim($value));
+                        return strtolower(trim($identifier['name'])) === strtolower(trim($value));
                     });
                     
                     if (count($duplicates) > 1) {
@@ -65,6 +69,7 @@ class AddRideClassification extends Component
                     }
                 }
             ],
+            'classificationsInput.*.identifiers.*.image' => 'nullable|image|mimes:jpeg,jpg,png,gif,webp,svg|max:2048',
             'isActive' => 'boolean',
         ];
     }
@@ -75,7 +80,10 @@ class AddRideClassification extends Component
         'classificationsInput.*.name.unique' => 'This classification name already exists for this ride type.',
         'classificationsInput.*.price_per_hour.required' => 'Classification price is required.',
         'classificationsInput.*.identifiers.required' => 'Add at least one identifier per classification.',
-        'classificationsInput.*.identifiers.*.required' => 'Identifier is required.',
+        'classificationsInput.*.identifiers.*.name.required' => 'Identifier is required.',
+        'classificationsInput.*.identifiers.*.image.image' => 'The file must be an image.',
+        'classificationsInput.*.identifiers.*.image.mimes' => 'The image must be a file of type: jpeg, jpg, png, gif, webp, svg.',
+        'classificationsInput.*.identifiers.*.image.max' => 'The image may not be greater than 2MB.',
     ];
 
     public function mount($rideTypeId)
@@ -89,7 +97,7 @@ class AddRideClassification extends Component
         $this->classificationsInput[] = [
             'name' => '',
             'price_per_hour' => '',
-            'identifiers' => [''],
+            'identifiers' => [['name' => '', 'image' => null]],
         ];
     }
 
@@ -101,7 +109,7 @@ class AddRideClassification extends Component
 
     public function addIdentifier($classificationIndex)
     {
-        $this->classificationsInput[$classificationIndex]['identifiers'][] = '';
+        $this->classificationsInput[$classificationIndex]['identifiers'][] = ['name' => '', 'image' => null];
     }
 
     public function removeIdentifier($classificationIndex, $identifierIndex)
@@ -157,20 +165,33 @@ class AddRideClassification extends Component
                 }
 
                 // Process identifiers for this classification
-                $newIdentifiers = array_filter(array_map('trim', $c['identifiers']));
+                $newIdentifiers = array_filter($c['identifiers'], function($identifier) {
+                    return !empty(trim($identifier['name']));
+                });
                 $classificationRides = $allRides->where('classification_id', $classification->id);
                 $existingIdentifiers = $classificationRides->pluck('identifier')->toArray();
                 
                 // Soft delete rides that are no longer in the form
+                $newIdentifierNames = array_map(function($identifier) {
+                    return trim($identifier['name']);
+                }, $newIdentifiers);
+                
                 foreach ($classificationRides as $existingRide) {
-                    if (!in_array($existingRide->identifier, $newIdentifiers)) {
+                    if (!in_array($existingRide->identifier, $newIdentifierNames)) {
                         $existingRide->delete();
                     }
                 }
                 
                 // Create or restore rides
                 foreach ($newIdentifiers as $identifier) {
-                    $existingRide = $classificationRides->where('identifier', $identifier)->first();
+                    $identifierName = trim($identifier['name']);
+                    $existingRide = $classificationRides->where('identifier', $identifierName)->first();
+                    
+                    // Handle image upload
+                    $imagePath = null;
+                    if (isset($identifier['image']) && $identifier['image']) {
+                        $imagePath = $identifier['image']->store('ride-identifiers', 'public');
+                    }
                     
                     if ($existingRide) {
                         // Ride exists, restore if soft deleted and update status
@@ -179,16 +200,23 @@ class AddRideClassification extends Component
                             $restoredRides++;
                         }
                         
-                        // Update active status if changed
-                        if ($existingRide->is_active != $this->isActive) {
-                            $existingRide->update(['is_active' => $this->isActive]);
+                        // Update active status and image if changed
+                        $updateData = ['is_active' => $this->isActive];
+                        if ($imagePath) {
+                            // Delete old image if exists
+                            if ($existingRide->image_path) {
+                                Storage::disk('public')->delete($existingRide->image_path);
+                            }
+                            $updateData['image_path'] = $imagePath;
                         }
+                        $existingRide->update($updateData);
                     } else {
                         // Create new ride
                         Ride::create([
                             'classification_id' => $classification->id,
-                            'identifier' => $identifier,
+                            'identifier' => $identifierName,
                             'is_active' => $this->isActive,
+                            'image_path' => $imagePath,
                         ]);
                         $createdRides++;
                     }
