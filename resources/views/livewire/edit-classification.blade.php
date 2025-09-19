@@ -109,50 +109,57 @@
                             <div class="space-y-4">
                                 @foreach($identifiers as $iIndex => $identifier)
                                     <div class="border rounded-lg p-3 bg-gray-50">
-                                        <div class="flex items-center space-x-2 mb-3">
+                                        <!-- Input field and buttons container -->
+                                        <div class="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 mb-3">
+                                            <!-- Input field -->
                                             <input type="text" 
                                                    wire:model="identifiers.{{ $iIndex }}" 
                                                    placeholder="e.g., Red, Blue, Yellow" 
                                                    class="flex-1 text-sm rounded-lg border-gray-200 bg-white focus:bg-white hover:bg-gray-50/80 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
                                             
-                                            <!-- Action buttons on the left side -->
-                                            <div class="flex space-x-1">
-                                                <!-- Add button only for empty inputs -->
-                                                @if(empty(trim($identifier)))
-                                                    <button type="button" wire:click="addIdentifierToDatabase({{ $iIndex }})" class="px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium transition-all duration-200 shadow hover:shadow-md transform hover:-translate-y-0.5">
-                                                        Add
-                                                    </button>
-                                                @endif
-                                                
-                                                @if(!empty(trim($identifier)) && ($identifierInDatabase[$iIndex] ?? false))
-                                                    <button type="button" 
-                                                            wire:click="toggleIdentifierStatus({{ $iIndex }})"
-                                                            class="inline-flex items-center px-2 py-1 sm:px-3 sm:py-2 {{ ($identifierStatus[$iIndex] ?? true) ? 'bg-blue-500 hover:bg-blue-600' : 'bg-gray-500 hover:bg-gray-600' }} 
-                                                                   text-white rounded-lg transition-all duration-200 text-xs sm:text-sm font-medium sm:w-auto sm:text-xs
-                                                                   shadow hover:shadow-md transform hover:-translate-y-0.5">
-                                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                @if($identifierStatus[$iIndex] ?? true)
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                                                @else
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                                                @endif
-                                                            </svg>
-                                                            {{ ($identifierStatus[$iIndex] ?? true) ? 'Active' : 'Inactive' }}
-                                                    </button>
-                                                @endif
-                                                
-                                                @if(!empty(trim($identifier)) && ($identifierInDatabase[$iIndex] ?? false))
-                                                    <button type="button" 
-                                                            wire:click="confirmDeleteIdentifier({{ $iIndex }})"
-                                                            class="inline-flex items-center px-3 py-2 bg-red-500 hover:bg-red-600 text-xs sm:text-sm
-                                                                   text-white rounded-lg transition-all duration-200 text-xs sm:text-sm font-medium sm:w-auto sm:text-xs
-                                                                   shadow hover:shadow-md transform hover:-translate-y-0.5">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            <!-- Action buttons container -->
+                                            <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                                            <!-- Add button only for empty inputs -->
+                                            @if(empty(trim($identifier)))
+                                                <button type="button" wire:click="addIdentifierToDatabase({{ $iIndex }})" class="w-full sm:w-auto px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium transition-all duration-200 shadow hover:shadow-md transform hover:-translate-y-0.5">
+                                                    <span class="flex items-center justify-center">
+                                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                                         </svg>
-                                                        <span class="hidden sm:inline">Delete</span>
-                                                    </button>
-                                                @endif
+                                                        Add
+                                                    </span>
+                                                </button>
+                                            @endif
+                                            
+                                            @if(!empty(trim($identifier)) && ($identifierInDatabase[$iIndex] ?? false))
+                                                <button type="button" 
+                                                        wire:click="toggleIdentifierStatus({{ $iIndex }})"
+                                                        class="w-full sm:w-auto inline-flex items-center justify-center px-3 py-2 {{ ($identifierStatus[$iIndex] ?? true) ? 'bg-blue-500 hover:bg-blue-600' : 'bg-gray-500 hover:bg-gray-600' }} 
+                                                               text-white rounded-lg transition-all duration-200 text-sm font-medium
+                                                               shadow hover:shadow-md transform hover:-translate-y-0.5">
+                                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            @if($identifierStatus[$iIndex] ?? true)
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                                            @else
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                            @endif
+                                                        </svg>
+                                                        {{ ($identifierStatus[$iIndex] ?? true) ? 'Active' : 'Inactive' }}
+                                                </button>
+                                            @endif
+                                            
+                                            @if(!empty(trim($identifier)) && ($identifierInDatabase[$iIndex] ?? false))
+                                                <button type="button" 
+                                                        wire:click="confirmDeleteIdentifier({{ $iIndex }})"
+                                                        class="w-full sm:w-auto inline-flex items-center justify-center px-3 py-2 bg-red-500 hover:bg-red-600 
+                                                               text-white rounded-lg transition-all duration-200 text-sm font-medium
+                                                               shadow hover:shadow-md transform hover:-translate-y-0.5">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                    Delete
+                                                </button>
+                                            @endif
                                             </div>
                                         </div>
                                         
