@@ -6,6 +6,7 @@ use App\Models\RideType;
 use App\Models\Classification;
 use App\Models\Ride;
 use Livewire\WithFileUploads;
+use Illuminate\Support\Facades\Storage;
 
 class AddWaterRide extends Component
 {
@@ -19,7 +20,7 @@ class AddWaterRide extends Component
         [
             'name' => '',
             'price_per_hour' => '',
-            'identifiers' => [''],
+            'identifiers' => [['name' => '', 'image' => null]],
             'image' => null,
         ],
     ];
@@ -63,7 +64,7 @@ class AddWaterRide extends Component
             ],
             'classificationsInput.*.price_per_hour' => 'required|numeric|min:0.01|max:999999.99',
             'classificationsInput.*.identifiers' => 'required|array|min:1',
-            'classificationsInput.*.identifiers.*' => [
+            'classificationsInput.*.identifiers.*.name' => [
                 'required',
                 'string',
                 'max:255',
@@ -75,7 +76,7 @@ class AddWaterRide extends Component
                     // Check for duplicates within the same classification
                     $identifiers = $this->classificationsInput[$classificationIndex]['identifiers'];
                     $duplicates = array_filter($identifiers, function($identifier) use ($value) {
-                        return strtolower(trim($identifier)) === strtolower(trim($value));
+                        return strtolower(trim($identifier['name'])) === strtolower(trim($value));
                     });
                     
                     if (count($duplicates) > 1) {
@@ -83,7 +84,7 @@ class AddWaterRide extends Component
                     }
                 }
             ],
-            'classificationsInput.*.image' => 'nullable|image|mimes:jpeg,jpg,png,gif,webp,svg|max:2048',
+            'classificationsInput.*.identifiers.*.image' => 'nullable|image|mimes:jpeg,jpg,png,gif,webp,svg|max:2048',
             'isActive' => 'boolean',
             
         ];
@@ -100,8 +101,11 @@ class AddWaterRide extends Component
         'classificationsInput.*.name.duplicate' => 'Duplicate classification names are not allowed.',
         'classificationsInput.*.price_per_hour.required' => 'Classification price is required.',
         'classificationsInput.*.identifiers.required' => 'Add at least one identifier per classification.',
-        'classificationsInput.*.identifiers.*.required' => 'Identifier is required.',
-        'classificationsInput.*.identifiers.*.duplicate' => 'Duplicate identifiers are not allowed within the same classification.',
+        'classificationsInput.*.identifiers.*.name.required' => 'Identifier is required.',
+        'classificationsInput.*.identifiers.*.name.duplicate' => 'Duplicate identifiers are not allowed within the same classification.',
+        'classificationsInput.*.identifiers.*.image.image' => 'The file must be an image.',
+        'classificationsInput.*.identifiers.*.image.mimes' => 'The image must be a file of type: jpeg, jpg, png, gif, webp, svg.',
+        'classificationsInput.*.identifiers.*.image.max' => 'The image may not be greater than 2MB.',
     ];
 
     public function mount()
@@ -135,13 +139,57 @@ class AddWaterRide extends Component
 
     public function loadRideTypes() {}
 
+    /**
+     * Generate a unique image name based on the ride type name
+     */
+    private function generateRideTypeImageName($rideTypeName, $extension)
+    {
+        $cleanName = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $rideTypeName));
+        return $cleanName . '_' . time() . '.' . $extension;
+    }
+
+    /**
+     * Generate a unique image name based on the identifier name
+     */
+    private function generateIdentifierImageName($identifierName, $extension)
+    {
+        $cleanName = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $identifierName));
+        return $cleanName . '_' . time() . '.' . $extension;
+    }
+
+    /**
+     * Store image with custom naming
+     */
+    private function storeImageWithCustomName($file, $baseName, $directory = 'public')
+    {
+        $extension = $file->getClientOriginalExtension();
+        $customName = $this->generateIdentifierImageName($baseName, $extension);
+        return $file->storeAs($directory, $customName, 'public');
+    }
+
+    /**
+     * Store ride type image with custom naming and handle overwrite
+     */
+    private function storeRideTypeImageWithOverwrite($file, $rideTypeName, $existingImagePath = null)
+    {
+        $extension = $file->getClientOriginalExtension();
+        $customName = $this->generateRideTypeImageName($rideTypeName, $extension);
+        
+        // If there's an existing image, delete it first
+        if ($existingImagePath && Storage::disk('public')->exists($existingImagePath)) {
+            Storage::disk('public')->delete($existingImagePath);
+        }
+        
+        return $file->storeAs('ride-types', $customName, 'public');
+    }
+
     public function resetClassificationFields()
     {
         $this->classificationsInput = [
             [
                 'name' => '',
                 'price_per_hour' => '',
-                'identifiers' => [''],
+                'identifiers' => [['name' => '', 'image' => null]],
                 'image' => null,
             ],
         ];
@@ -193,7 +241,7 @@ class AddWaterRide extends Component
             'classificationsInput.*.name' => 'required|string|max:255',
             'classificationsInput.*.price_per_hour' => 'required|numeric|min:0.01|max:999999.99',
             'classificationsInput.*.identifiers' => 'required|array|min:1',
-            'classificationsInput.*.identifiers.*' => 'required|string|max:255',
+            'classificationsInput.*.identifiers.*.name' => 'required|string|max:255',
         ]);
     }
 
@@ -202,7 +250,7 @@ class AddWaterRide extends Component
         $this->classificationsInput[] = [
             'name' => '',
             'price_per_hour' => '',
-            'identifiers' => [''],
+            'identifiers' => [['name' => '', 'image' => null]],
             'image' => null,
         ];
     }
@@ -215,7 +263,7 @@ class AddWaterRide extends Component
 
     public function addIdentifier($classificationIndex)
     {
-        $this->classificationsInput[$classificationIndex]['identifiers'][] = '';
+        $this->classificationsInput[$classificationIndex]['identifiers'][] = ['name' => '', 'image' => null];
     }
 
     public function removeIdentifier($classificationIndex, $identifierIndex)
@@ -238,7 +286,8 @@ class AddWaterRide extends Component
                 $rideType = $existingRideType;
                 // Optionally update image if a new one is uploaded
                 if ($this->rideTypeImage) {
-                    $imagePath = $this->rideTypeImage->store('ride-types', 'public');
+                    $existingImagePath = $rideType->image_path;
+                    $imagePath = $this->storeRideTypeImageWithOverwrite($this->rideTypeImage, $this->newRideTypeName, $existingImagePath);
                     $rideType->update(['image_path' => $imagePath]);
                 }
                 
@@ -270,10 +319,6 @@ class AddWaterRide extends Component
                         if ($existingClassification->price_per_hour != $c['price_per_hour']) {
                             $updateData['price_per_hour'] = $c['price_per_hour'];
                         }
-                        if (!empty($c['image'])) {
-                            $path = $c['image']->store('classification-images', 'public');
-                            $updateData['image_path'] = $path;
-                        }
                         if (!empty($updateData)) {
                             $existingClassification->update($updateData);
                         }
@@ -286,21 +331,33 @@ class AddWaterRide extends Component
                             'name' => $classificationName,
                             'price_per_hour' => $c['price_per_hour'],
                         ];
-                        if (!empty($c['image'])) {
-                            $createData['image_path'] = $c['image']->store('classification-images', 'public');
-                        }
                         $classification = Classification::create($createData);
                         $createdClassifications++;
                     }
                     
                     // Process identifiers for this classification
-                    $newIdentifiers = array_filter(array_map('trim', $c['identifiers']));
+                    $newIdentifiers = array_filter($c['identifiers'], function($identifier) {
+                        return !empty(trim($identifier['name']));
+                    });
                     $classificationRides = $allRides->where('classification_id', $classification->id);
                     $existingIdentifiers = $classificationRides->pluck('identifier')->toArray();
                     
                     // Process each identifier
-                    foreach ($newIdentifiers as $identifier) {
+                    foreach ($newIdentifiers as $identifierData) {
+                        $identifier = trim($identifierData['name']);
                         $existingRide = $classificationRides->where('identifier', $identifier)->first();
+                        
+                        $rideData = [
+                            'classification_id' => $classification->id,
+                            'identifier' => $identifier,
+                            'is_active' => $this->isActive,
+                        ];
+                        
+                        // Handle image upload
+                        if (!empty($identifierData['image'])) {
+                            $imagePath = $this->storeImageWithCustomName($identifierData['image'], $identifier, 'ride-images');
+                            $rideData['image_path'] = $imagePath;
+                        }
                         
                         if ($existingRide) {
                             // Ride exists, restore if soft deleted and update status
@@ -309,24 +366,31 @@ class AddWaterRide extends Component
                                 $restoredRides++;
                             }
                             
-                            // Update active status if changed
+                            // Update data if changed
+                            $updateData = [];
                             if ($existingRide->is_active != $this->isActive) {
-                                $existingRide->update(['is_active' => $this->isActive]);
+                                $updateData['is_active'] = $this->isActive;
+                            }
+                            if (isset($rideData['image_path'])) {
+                                $updateData['image_path'] = $rideData['image_path'];
+                            }
+                            if (!empty($updateData)) {
+                                $existingRide->update($updateData);
                             }
                         } else {
                             // Create new ride
-                            Ride::create([
-                                'classification_id' => $classification->id,
-                                'identifier' => $identifier,
-                                'is_active' => $this->isActive,
-                            ]);
+                            Ride::create($rideData);
                             $createdRides++;
                         }
                     }
                     
                     // Soft delete rides that are no longer in the identifiers list
+                    $newIdentifierNames = array_map(function($identifier) {
+                        return trim($identifier['name']);
+                    }, $newIdentifiers);
+                    
                     foreach ($classificationRides as $ride) {
-                        if (!in_array($ride->identifier, $newIdentifiers) && !$ride->trashed()) {
+                        if (!in_array($ride->identifier, $newIdentifierNames) && !$ride->trashed()) {
                             $ride->delete();
                             $softDeletedRides++;
                         }
@@ -355,7 +419,7 @@ class AddWaterRide extends Component
                 // Create new ride type
                 $imagePath = null;
                 if ($this->rideTypeImage) {
-                    $imagePath = $this->rideTypeImage->store('ride-types', 'public');
+                    $imagePath = $this->storeRideTypeImageWithOverwrite($this->rideTypeImage, $this->newRideTypeName);
                 }
                 $rideType = RideType::create(['name' => $this->newRideTypeName, 'image_path' => $imagePath]);
                 
@@ -368,18 +432,23 @@ class AddWaterRide extends Component
                         'name' => trim($c['name']),
                         'price_per_hour' => $c['price_per_hour'],
                     ];
-                    if (!empty($c['image'])) {
-                        $createData['image_path'] = $c['image']->store('classification-images', 'public');
-                    }
                     $classification = Classification::create($createData);
 
-                    foreach ($c['identifiers'] as $identifier) {
-                        if (!empty(trim($identifier))) {
-                            Ride::create([
+                    foreach ($c['identifiers'] as $identifierData) {
+                        if (!empty(trim($identifierData['name']))) {
+                            $rideData = [
                                 'classification_id' => $classification->id,
-                                'identifier' => trim($identifier),
+                                'identifier' => trim($identifierData['name']),
                                 'is_active' => $this->isActive,
-                            ]);
+                            ];
+                            
+                            // Handle image upload
+                            if (!empty($identifierData['image'])) {
+                                $imagePath = $this->storeImageWithCustomName($identifierData['image'], trim($identifierData['name']), 'ride-images');
+                                $rideData['image_path'] = $imagePath;
+                            }
+                            
+                            Ride::create($rideData);
                             $createdRides++;
                         }
                     }

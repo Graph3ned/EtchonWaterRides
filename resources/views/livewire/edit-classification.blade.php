@@ -41,25 +41,8 @@
                 <!-- Header -->
                 <div class="bg-gradient-to-r from-cyan-500 to-blue-600 p-4 sm:p-6">
                     <div class="flex items-center gap-4">
-                        @if(!empty($classification->image_path))
-                            <div class="flex-shrink-0">
-                                <img src="{{ asset('storage/'.$classification->image_path) }}" alt="{{ $classification->name }}" class="w-24 h-24 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 rounded-lg object-cover border-2 border-white/30" />
-                            </div>
-                        @else
-                        <div class="w-24 h-24 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 rounded-lg border border-dashed border-white/30 bg-white/10 flex items-center justify-center text-[10px] text-white/80">
-                            No image
-                        </div>
-                        @endif
                         <div class="flex-1">
                             <h2 class="text-2xl sm:text-3xl font-bold text-white mb-3">Edit Classification: {{ $classification->name }}</h2>
-                            <div class="flex flex-col gap-2">
-                                <button wire:click="$set('showImageModal', true)" class="px-3 py-1.5 sm:px-4 sm:py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-xs sm:text-sm font-medium w-fit">
-                                    Change Picture
-                                </button>
-                                @error('classificationImage')
-                                    <p class="text-blue-200 text-xs rounded-lg p-1.5 inline-block">{{ $message }}</p>
-                                @enderror
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -86,7 +69,7 @@
                         </div>
 
                         <!-- Classification Details -->
-                        <div class="border rounded-lg p-4">
+                        <div class="border rounded-lg p-4 mb-6">
                             <h4 class="font-semibold text-gray-800 mb-4">Classification Details</h4>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -106,25 +89,37 @@
                                 </div>
                             </div>
 
-                            <div class="mt-4 space-y-2">
-                                <label class="text-sm text-gray-700">Identifiers</label>
-                                
-                                <!-- Existing Identifiers -->
-                                
-                                
-                                <!-- Form Inputs for New/Edit Identifiers -->
-                                <!-- <h5 class="text-sm font-medium text-gray-600 mb-2">Add/Edit Identifiers:</h5> -->
-                                <div class="space-y-2">
-                                    @foreach($identifiers as $iIndex => $identifier)
-                                        <div class="flex items-center mb-2">
-                                            <div class="flex-1 mr-4">
-                                                <input type="text" wire:model="identifiers.{{ $iIndex }}" placeholder="e.g., Red, Blue, Yellow" class="w-full text-sm rounded-lg border-gray-200 bg-gray-50 focus:bg-white hover:bg-gray-50/80 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
-                                            </div>
+                            <!-- Save Classification Details Button -->
+                            <div class="mt-4 pt-4 border-t border-gray-200 flex justify-end">
+                                <button type="button" 
+                                        wire:click="saveClassificationDetails" 
+                                        class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-all duration-200 shadow hover:shadow-md transform hover:-translate-y-0.5">
+                                    <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    Save Classification Details
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Identifiers Section -->
+                        <div class="border rounded-lg p-4">
+                            <h4 class="font-semibold text-gray-800 mb-4">Identifiers</h4>
+                            
+                            <div class="space-y-4">
+                                @foreach($identifiers as $iIndex => $identifier)
+                                    <div class="border rounded-lg p-3 bg-gray-50">
+                                        <div class="flex items-center space-x-2 mb-3">
+                                            <input type="text" 
+                                                   wire:model="identifiers.{{ $iIndex }}" 
+                                                   placeholder="e.g., Red, Blue, Yellow" 
+                                                   class="flex-1 text-sm rounded-lg border-gray-200 bg-white focus:bg-white hover:bg-gray-50/80 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
                                             
+                                            <!-- Action buttons on the left side -->
                                             <div class="flex space-x-1">
                                                 <!-- Add button only for empty inputs -->
                                                 @if(empty(trim($identifier)))
-                                                    <button type="button" wire:click="addIdentifierToDatabase({{ $iIndex }})" class="px-3 py-2 text-green-500 hover:bg-green-50 rounded-lg text-sm font-medium">
+                                                    <button type="button" wire:click="addIdentifierToDatabase({{ $iIndex }})" class="px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium transition-all duration-200 shadow hover:shadow-md transform hover:-translate-y-0.5">
                                                         Add
                                                     </button>
                                                 @endif
@@ -135,13 +130,14 @@
                                                             class="inline-flex items-center px-2 py-1 sm:px-3 sm:py-2 {{ ($identifierStatus[$iIndex] ?? true) ? 'bg-blue-500 hover:bg-blue-600' : 'bg-gray-500 hover:bg-gray-600' }} 
                                                                    text-white rounded-lg transition-all duration-200 text-xs sm:text-sm font-medium sm:w-auto sm:text-xs
                                                                    shadow hover:shadow-md transform hover:-translate-y-0.5">
-                                                            @if($identifierStatus[$iIndex] ?? true)
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                                            @else
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                                            @endif
-                                                        </svg>
-                                                        {{ ($identifierStatus[$iIndex] ?? true) ? 'Active' : 'Inactive' }}
+                                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                @if($identifierStatus[$iIndex] ?? true)
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                                                @else
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                                @endif
+                                                            </svg>
+                                                            {{ ($identifierStatus[$iIndex] ?? true) ? 'Active' : 'Inactive' }}
                                                     </button>
                                                 @endif
                                                 
@@ -156,48 +152,70 @@
                                                         </svg>
                                                         <span class="hidden sm:inline">Delete</span>
                                                     </button>
-                                                @elseif(empty(trim($identifier)) || !($identifierInDatabase[$iIndex] ?? false))
-                                                    <button type="button" wire:click="removeIdentifier({{ $iIndex }})" class="p-2 text-red-500 hover:bg-red-50 rounded-lg">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                                        </svg>
-                                                    </button>
                                                 @endif
                                             </div>
                                         </div>
+                                        
+                                        <!-- Identifier Image Section - Below the input -->
+                                        <div class="space-y-2">
+                                            <label class="flex items-center text-gray-600 font-medium text-xs">Identifier Image</label>
+                                            
+                                            <!-- Current Image Display -->
+                                            @if (!empty($identifierImages[$iIndex]) && is_string($identifierImages[$iIndex]))
+                                                <div class="mt-2">
+                                                    <img src="{{ asset('storage/'.$identifierImages[$iIndex]) }}" 
+                                                         alt="Current" 
+                                                         class="h-16 w-16 object-cover rounded border" />
+                                                </div>
+                                            @else
+                                                <div class="mt-2">
+                                                    <div class="h-16 w-16 rounded border border-dashed border-gray-300 bg-gray-50 flex items-center justify-center">
+                                                        <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                        </svg>
+                                                    </div>
+                                                </div>
+                                            @endif
+                                            
+                                            <!-- Change Picture / Upload Image Button -->
+                                            <button type="button" 
+                                                    wire:click="openIdentifierImageModal({{ $iIndex }})" 
+                                                    class="px-2 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded transition-all duration-200">
+                                                @if(($identifierInDatabase[$iIndex] ?? false))
+                                                    Change Picture
+                                                @else
+                                                    Upload Image
+                                                @endif
+                                            </button>
+                                        </div>
+                                        
                                         @error('identifiers.'.$iIndex)
                                             <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                         @enderror
-                                    @endforeach
-                                </div>
-
-                                <button type="button" wire:click="addIdentifier" class="w-full flex items-center justify-center px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-400 hover:text-blue-600">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-                                    Add Identifier
-                                </button>
+                                    </div>
+                                @endforeach
                             </div>
+
+                            <button type="button" wire:click="addIdentifier" class="w-full flex items-center justify-center px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-400 hover:text-blue-600 mt-4">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                                Add Identifier
+                            </button>
                         </div>
 
 
                         <!-- Action Buttons -->
-                        <div class="flex space-x-4 pt-4">
+                        <div class="flex justify-end">
                             <button type="button" 
                                     wire:navigate 
                                     href="/admin/view-details/{{ $rideType->id }}"
-                                    class="w-full inline-flex justify-center items-center px-6 py-2.5 border border-transparent
+                                    class="inline-flex justify-center items-center px-6 py-2.5 border border-transparent
                                            text-white bg-gray-600 hover:bg-gray-700 focus:ring-gray-500
                                            rounded-lg transition-all duration-200 font-medium text-sm
                                            focus:outline-none focus:ring-2 focus:ring-offset-2">
-                                Cancel
-                            </button>
-
-                            <button type="submit"
-                                    class="w-full inline-flex justify-center items-center px-6 py-2.5
-                                           bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700
-                                           text-white rounded-lg transition-all duration-200 font-medium text-sm
-                                           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-                                           shadow-md hover:shadow-lg">
-                                Update Classification
+                                           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                                Back to Classification List
                             </button>
                         </div>
                     </form>
@@ -206,73 +224,6 @@
         </div>
     </div>
 
-    <!-- Image Upload Modal -->
-    @if ($showImageModal)
-    <div class="fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center z-50 p-4">
-        <div class="w-full max-w-md">
-            <div class="bg-white rounded-lg shadow-xl border border-gray-100">
-                <div class="p-4 sm:p-6">
-                    <div class="mb-4">
-                        <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2">Change Classification Image</h3>
-                        <p class="text-sm text-gray-600">Select a new image for {{ $classification->name }}</p>
-                    </div>
-
-                    <!-- Image Preview -->
-                    <div class="mb-4">
-                        @if($classificationImage && is_object($classificationImage))
-                            <div class="text-center">
-                                <img src="{{ $classificationImage->temporaryUrl() }}" alt="Preview" class="w-32 h-32 mx-auto rounded-lg object-cover border-2 border-gray-200" />
-                                <p class="text-xs text-gray-500 mt-2">Preview</p>
-                            </div>
-                        @elseif(!empty($classification->image_path))
-                            <div class="text-center">
-                                <img src="{{ asset('storage/'.$classification->image_path) }}" alt="Current" class="w-32 h-32 mx-auto rounded-lg object-cover border-2 border-gray-200" />
-                                <p class="text-xs text-gray-500 mt-2">Current Image</p>
-                            </div>
-                        @else
-                            <div class="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                                <svg class="w-12 h-12 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                                <p class="text-sm text-gray-500">No image selected</p>
-                            </div>
-                        @endif
-                    </div>
-
-                    <!-- File Input -->
-                    <div class="mb-4">
-                        <input type="file" 
-                               wire:model="classificationImage" 
-                               accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/svg+xml" 
-                               onchange="validateImageFileModal(this)"
-                               class="w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
-                        @error('classificationImage')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
-                        <div id="image-validation-error-modal" class="text-red-500 text-xs mt-1 hidden"></div>
-                    </div>
-
-                    <!-- Modal Buttons -->
-                    <div class="flex flex-col sm:flex-row gap-3">
-                        <button wire:click="saveClassificationImage" 
-                                class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium
-                                       transform transition-all duration-200 hover:-translate-y-0.5 
-                                       hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-                                @if(!$classificationImage || !is_object($classificationImage)) disabled @endif>
-                            Save Image
-                        </button>
-                        <button wire:click="$set('showImageModal', false)" 
-                                class="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium
-                                       transform transition-all duration-200 hover:-translate-y-0.5 
-                                       hover:shadow-md hover:bg-gray-200">
-                            Cancel
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    @endif
     <!-- Delete Identifier Modal -->
     @if ($showDeleteModal)
     <div id="deleteIdentifierModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 items-center justify-center z-50">
@@ -304,6 +255,74 @@
         </div>
     </div>
     @endif
+
+    <!-- Identifier Image Upload Modal -->
+    @if ($showIdentifierImageModal)
+    <div class="fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center z-50 p-4">
+        <div class="w-full max-w-md">
+            <div class="bg-white rounded-lg shadow-xl border border-gray-100">
+                <div class="p-4 sm:p-6">
+                    <div class="mb-4">
+                        <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2">Change Identifier Image</h3>
+                        <p class="text-sm text-gray-600">Select a new image for this identifier</p>
+                    </div>
+                    
+                    <!-- Image Preview -->
+                    <div class="mb-4">
+                        @if($currentIdentifierImage && is_object($currentIdentifierImage))
+                            <div class="text-center">
+                                <img src="{{ $currentIdentifierImage->temporaryUrl() }}" alt="Preview" class="w-32 h-32 mx-auto rounded-lg object-cover border-2 border-gray-200" />
+                                <p class="text-xs text-gray-500 mt-2">Preview</p>
+                            </div>
+                        @elseif(!empty($currentIdentifierImagePath))
+                            <div class="text-center">
+                                <img src="{{ asset('storage/'.$currentIdentifierImagePath) }}" alt="Current" class="w-32 h-32 mx-auto rounded-lg object-cover border-2 border-gray-200" />
+                                <p class="text-xs text-gray-500 mt-2">Current Image</p>
+                            </div>
+                        @else
+                            <div class="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                                <svg class="w-12 h-12 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                <p class="text-sm text-gray-500">No image selected</p>
+                            </div>
+                        @endif
+                    </div>
+                    
+                    <!-- File Input -->
+                    <div class="mb-4">
+                        <input type="file" 
+                               wire:model="currentIdentifierImage" 
+                               accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/svg+xml" 
+                               onchange="validateImageFileModal(this)"
+                               class="w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+                        @error('currentIdentifierImage')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                        <div id="image-validation-error-identifier-modal" class="text-red-500 text-xs mt-1 hidden"></div>
+                    </div>
+                    
+                    <!-- Modal Buttons -->
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <button wire:click="saveIdentifierImage" 
+                                class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium
+                                       transform transition-all duration-200 hover:-translate-y-0.5 
+                                       hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                                @if(!$currentIdentifierImage || !is_object($currentIdentifierImage)) disabled @endif>
+                            Save Image
+                        </button>
+                        <button wire:click="closeIdentifierImageModal" 
+                                class="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium
+                                       transform transition-all duration-200 hover:-translate-y-0.5 
+                                       hover:shadow-md hover:bg-gray-200">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 </div>
 
 <script>
@@ -316,6 +335,82 @@
                 message.style.display = 'none';
             }, 500);
         }
+    }
+
+    // Image file validation function
+    function validateImageFile(input) {
+        const file = input.files[0];
+        const errorDiv = input.parentNode.querySelector('.image-validation-error');
+        
+        if (file) {
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+            const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
+            const maxSize = 2 * 1024 * 1024; // 2MB
+            
+            // Check file extension
+            const fileName = file.name.toLowerCase();
+            const hasValidExtension = allowedExtensions.some(ext => fileName.endsWith(ext));
+            
+            if (!allowedTypes.includes(file.type) || !hasValidExtension) {
+                if (errorDiv) {
+                    errorDiv.textContent = 'Please select a valid image file (JPEG, JPG, PNG, GIF, WebP, or SVG).';
+                    errorDiv.classList.remove('hidden');
+                }
+                input.value = ''; // Clear the input
+                return false;
+            }
+            
+            if (file.size > maxSize) {
+                if (errorDiv) {
+                    errorDiv.textContent = 'File size must be less than 2MB.';
+                    errorDiv.classList.remove('hidden');
+                }
+                input.value = ''; // Clear the input
+                return false;
+            }
+            
+            // Hide error if validation passes
+            if (errorDiv) {
+                errorDiv.classList.add('hidden');
+            }
+        }
+        
+        return true;
+    }
+
+    // Image file validation function for identifier modal
+    function validateImageFileModal(input) {
+        const file = input.files[0];
+        const errorDiv = document.getElementById('image-validation-error-identifier-modal');
+        
+        if (file) {
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+            const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
+            const maxSize = 2 * 1024 * 1024; // 2MB
+            
+            // Check file extension
+            const fileName = file.name.toLowerCase();
+            const hasValidExtension = allowedExtensions.some(ext => fileName.endsWith(ext));
+            
+            if (!allowedTypes.includes(file.type) || !hasValidExtension) {
+                errorDiv.textContent = 'Please select a valid image file (JPEG, JPG, PNG, GIF, WebP, or SVG). DOCX and other document files are not allowed.';
+                errorDiv.classList.remove('hidden');
+                input.value = ''; // Clear the input
+                return false;
+            }
+            
+            if (file.size > maxSize) {
+                errorDiv.textContent = 'File size must be less than 2MB.';
+                errorDiv.classList.remove('hidden');
+                input.value = ''; // Clear the input
+                return false;
+            }
+            
+            // Hide error if validation passes
+            errorDiv.classList.add('hidden');
+        }
+        
+        return true;
     }
 
     document.addEventListener('DOMContentLoaded', function() {

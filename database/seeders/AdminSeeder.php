@@ -51,10 +51,22 @@ class AdminSeeder extends Seeder
         ]);
 
         // Create sample ride types
-        $paddleBoard = RideType::create(['name' => 'Paddle Board']);
-        $boat = RideType::create(['name' => 'Boat']);
-        $waterBike = RideType::create(['name' => 'Water Bike']);
-        $clearKayak = RideType::create(['name' => 'Clear Kayak']);
+        $paddleBoard = RideType::create([
+            'name' => 'Paddle Board',
+            'image_path' => 'ride-types/paddle_board_1758257830.jpg'
+        ]);
+        $boat = RideType::create([
+            'name' => 'Boat',
+            'image_path' => 'ride-types/boat_1758257801.jpg'
+        ]);
+        $waterBike = RideType::create([
+            'name' => 'Water Bike',
+            'image_path' => 'ride-types/water_bike_1758257844.jpg'
+        ]);
+        $clearKayak = RideType::create([
+            'name' => 'Clear Kayak',
+            'image_path' => 'ride-types/clear_kayak_1758257818.jpg'
+        ]);
 
         // Create Paddle Board classifications
         $paddleBoardSmall = Classification::create([
@@ -110,36 +122,106 @@ class AdminSeeder extends Seeder
 
         // Create Paddle Board rides
         // Small: yellow, blue, gray
-        Ride::create(['classification_id' => $paddleBoardSmall->id, 'identifier' => 'Yellow']);
-        Ride::create(['classification_id' => $paddleBoardSmall->id, 'identifier' => 'Blue']);
-        Ride::create(['classification_id' => $paddleBoardSmall->id, 'identifier' => 'Gray']);
+        Ride::create([
+            'classification_id' => $paddleBoardSmall->id, 
+            'identifier' => 'Yellow',
+            'image_path' => 'ride-images/yellow_1758256871.jpg',
+            'is_active' => 1
+        ]);
+        Ride::create([
+            'classification_id' => $paddleBoardSmall->id, 
+            'identifier' => 'Blue',
+            'image_path' => 'ride-images/blue_1758256831.webp',
+            'is_active' => 1
+        ]);
+        Ride::create([
+            'classification_id' => $paddleBoardSmall->id, 
+            'identifier' => 'Gray',
+            'image_path' => 'ride-images/gray_1758256863.jpg',
+            'is_active' => 1
+        ]);
 
         // Big: Yellow
-        Ride::create(['classification_id' => $paddleBoardBig->id, 'identifier' => 'Yellow']);
+        Ride::create([
+            'classification_id' => $paddleBoardBig->id, 
+            'identifier' => 'Yellow',
+            'image_path' => 'ride-images/yellow_1758256899.jpg',
+            'is_active' => 1
+        ]);
 
         // Rubber: Blue
-        Ride::create(['classification_id' => $paddleBoardRubber->id, 'identifier' => 'Blue']);
+        Ride::create([
+            'classification_id' => $paddleBoardRubber->id, 
+            'identifier' => 'Blue',
+            'image_path' => 'ride-images/blue_1758256934.jpg',
+            'is_active' => 1
+        ]);
 
         // Create Boat rides
         // Big: Blue
-        Ride::create(['classification_id' => $boatBig->id, 'identifier' => 'Blue']);
+        Ride::create([
+            'classification_id' => $boatBig->id, 
+            'identifier' => 'Blue',
+            'image_path' => 'ride-images/blue_1758256615.jpg',
+            'is_active' => 1
+        ]);
 
         // Small: Pink
-        Ride::create(['classification_id' => $boatSmall->id, 'identifier' => 'Pink']);
+        Ride::create([
+            'classification_id' => $boatSmall->id, 
+            'identifier' => 'Pink',
+            'image_path' => 'ride-images/pink_1758256649.jpg',
+            'is_active' => 1
+        ]);
 
         // Create Water Bike rides
         // With Propeller: yellow, blue, red
-        Ride::create(['classification_id' => $waterBikeWithPropeller->id, 'identifier' => 'Yellow']);
-        Ride::create(['classification_id' => $waterBikeWithPropeller->id, 'identifier' => 'Blue']);
-        Ride::create(['classification_id' => $waterBikeWithPropeller->id, 'identifier' => 'Red']);
+        Ride::create([
+            'classification_id' => $waterBikeWithPropeller->id, 
+            'identifier' => 'Yellow',
+            'image_path' => 'ride-images/yellow_1758257010.jpg',
+            'is_active' => 1
+        ]);
+        Ride::create([
+            'classification_id' => $waterBikeWithPropeller->id, 
+            'identifier' => 'Blue',
+            'image_path' => 'ride-images/blue_1758257072.jpg',
+            'is_active' => 1
+        ]);
+        Ride::create([
+            'classification_id' => $waterBikeWithPropeller->id, 
+            'identifier' => 'Red',
+            'image_path' => 'ride-images/red_1758257046.jpg',
+            'is_active' => 1
+        ]);
 
         // Without Propeller: orange, green
-        Ride::create(['classification_id' => $waterBikeWithoutPropeller->id, 'identifier' => 'Orange']);
-        Ride::create(['classification_id' => $waterBikeWithoutPropeller->id, 'identifier' => 'Green']);
+        Ride::create([
+            'classification_id' => $waterBikeWithoutPropeller->id, 
+            'identifier' => 'Orange',
+            'image_path' => 'ride-images/orange_1758257177.jpg',
+            'is_active' => 1
+        ]);
+        Ride::create([
+            'classification_id' => $waterBikeWithoutPropeller->id, 
+            'identifier' => 'Green',
+            'image_path' => 'ride-images/green_1758257260.jpg',
+            'is_active' => 1
+        ]);
 
         // Create Clear Kayak rides
         // Double: Orange Paddle, Black Paddle
-        Ride::create(['classification_id' => $clearKayakDouble->id, 'identifier' => 'Orange Paddle']);
-        Ride::create(['classification_id' => $clearKayakDouble->id, 'identifier' => 'Black Paddle']);
+        Ride::create([
+            'classification_id' => $clearKayakDouble->id, 
+            'identifier' => 'Orange Paddle',
+            'image_path' => 'ride-images/orange_paddle_1758256718.jpg',
+            'is_active' => 1
+        ]);
+        Ride::create([
+            'classification_id' => $clearKayakDouble->id, 
+            'identifier' => 'Black Paddle',
+            'image_path' => 'ride-images/black_paddle_1758256708.webp',
+            'is_active' => 1
+        ]);
     }
 } 

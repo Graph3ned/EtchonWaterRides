@@ -7,6 +7,7 @@ use Livewire\WithFileUploads;
 use App\Models\RideType;
 use App\Models\Classification;
 use App\Models\Ride;
+use Illuminate\Support\Facades\Storage;
 
 class EditClassification extends Component
 {
@@ -19,12 +20,15 @@ class EditClassification extends Component
     public $name;
     public $price_per_hour;
     public $identifiers = [];
+    public $identifierImages = []; // Track identifier images
     public $identifierStatus = []; // Track individual identifier status
     public $identifierInDatabase = []; // Track which identifiers are in database
     public $showDeleteModal = false;
     public $identifierToDelete;
-    public $showImageModal = false;
-    public $classificationImage;
+    public $showIdentifierImageModal = false;
+    public $currentIdentifierImage;
+    public $currentIdentifierImagePath;
+    public $currentIdentifierIndex;
 
     protected function rules()
     {
@@ -38,6 +42,7 @@ class EditClassification extends Component
             'price_per_hour' => 'required|numeric|min:0.01|max:999999.99',
             'identifiers' => 'required|array|min:1',
             'identifiers.*' => 'required|string|max:255',
+            'identifierImages.*' => 'nullable',
         ];
     }
 
@@ -57,6 +62,41 @@ class EditClassification extends Component
         ];
     }
 
+    /**
+     * Generate a unique image name based on the identifier name
+     */
+    private function generateIdentifierImageName($identifierName, $extension)
+    {
+        $cleanName = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $identifierName));
+        return $cleanName . '_' . time() . '.' . $extension;
+    }
+
+    /**
+     * Store image with custom naming
+     */
+    private function storeImageWithCustomName($file, $identifierName, $directory = 'ride-images')
+    {
+        $extension = $file->getClientOriginalExtension();
+        $customName = $this->generateIdentifierImageName($identifierName, $extension);
+        return $file->storeAs($directory, $customName, 'public');
+    }
+
+    /**
+     * Store image with custom naming and handle overwrite
+     */
+    private function storeImageWithOverwrite($file, $identifierName, $existingImagePath = null, $directory = 'ride-images')
+    {
+        $extension = $file->getClientOriginalExtension();
+        $customName = $this->generateIdentifierImageName($identifierName, $extension);
+        
+        // If there's an existing image, delete it first
+        if ($existingImagePath && Storage::disk('public')->exists($existingImagePath)) {
+            Storage::disk('public')->delete($existingImagePath);
+        }
+        
+        return $file->storeAs($directory, $customName, 'public');
+    }
+
     public function mount($classificationId)
     {
         $this->classificationId = $classificationId;
@@ -71,13 +111,15 @@ class EditClassification extends Component
         $this->price_per_hour = $this->classification->price_per_hour;
         $this->identifiers = $activeRides->pluck('identifier')->toArray();
         
-        // Load individual ride statuses and track which are in database
+        // Load individual ride statuses, images, and track which are in database
         $this->identifierStatus = [];
+        $this->identifierImages = [];
         $this->identifierInDatabase = [];
         foreach ($activeRides as $ride) {
             $index = array_search($ride->identifier, $this->identifiers);
             if ($index !== false) {
                 $this->identifierStatus[$index] = $ride->is_active;
+                $this->identifierImages[$index] = $ride->image_path;
                 $this->identifierInDatabase[$index] = true;
             }
         }
@@ -85,7 +127,22 @@ class EditClassification extends Component
 
     public function addIdentifier()
     {
+        // Check if there's already an empty identifier that hasn't been added to database
+        $hasEmptyIdentifier = false;
+        foreach ($this->identifiers as $index => $identifier) {
+            if (empty(trim($identifier)) && !($this->identifierInDatabase[$index] ?? false)) {
+                $hasEmptyIdentifier = true;
+                break;
+            }
+        }
+        
+        if ($hasEmptyIdentifier) {
+            session()->flash('error', 'Please add the current identifier before adding a new one.');
+            return;
+        }
+        
         $this->identifiers[] = '';
+        $this->identifierImages[] = null; // Default to no image for new identifiers
         $this->identifierStatus[] = true; // Default to active for new identifiers
         $this->identifierInDatabase[] = false; // Mark as not in database
     }
@@ -103,13 +160,15 @@ class EditClassification extends Component
         // Update form arrays with fresh data
         $this->identifiers = $activeRides->pluck('identifier')->toArray();
         
-        // Update identifier statuses and database tracking
+        // Update identifier statuses, images, and database tracking
         $this->identifierStatus = [];
+        $this->identifierImages = [];
         $this->identifierInDatabase = [];
         foreach ($activeRides as $ride) {
             $index = array_search($ride->identifier, $this->identifiers);
             if ($index !== false) {
                 $this->identifierStatus[$index] = $ride->is_active;
+                $this->identifierImages[$index] = $ride->image_path;
                 $this->identifierInDatabase[$index] = true;
             }
         }
@@ -178,11 +237,19 @@ class EditClassification extends Component
         } else {
             // Create new identifier
             try {
-                Ride::create([
+                $rideData = [
                     'classification_id' => $this->classification->id,
                     'identifier' => $identifier,
                     'is_active' => $this->identifierStatus[$index] ?? true,
-                ]);
+                ];
+                
+                // Handle image upload
+                if (!empty($this->identifierImages[$index])) {
+                    $imagePath = $this->storeImageWithCustomName($this->identifierImages[$index], $identifier, 'ride-images');
+                    $rideData['image_path'] = $imagePath;
+                }
+                
+                Ride::create($rideData);
                 
                 session()->flash('success', "Identifier '{$identifier}' added successfully.");
                 
@@ -216,8 +283,10 @@ class EditClassification extends Component
     public function removeIdentifier($index)
     {
         unset($this->identifiers[$index]);
+        unset($this->identifierImages[$index]);
         unset($this->identifierStatus[$index]);
         $this->identifiers = array_values($this->identifiers);
+        $this->identifierImages = array_values($this->identifierImages);
         $this->identifierStatus = array_values($this->identifierStatus);
     }
 
@@ -292,8 +361,10 @@ class EditClassification extends Component
             
             // Remove from form arrays
             unset($this->identifiers[$this->identifierToDelete]);
+            unset($this->identifierImages[$this->identifierToDelete]);
             unset($this->identifierStatus[$this->identifierToDelete]);
             $this->identifiers = array_values($this->identifiers);
+            $this->identifierImages = array_values($this->identifierImages);
             $this->identifierStatus = array_values($this->identifierStatus);
             
             // If no identifiers left, add an empty one
@@ -306,21 +377,60 @@ class EditClassification extends Component
         $this->closeDeleteModal();
     }
 
-    public function saveClassificationImage()
+
+    public function openIdentifierImageModal($index)
+    {
+        $this->currentIdentifierIndex = $index;
+        $this->currentIdentifierImagePath = $this->identifierImages[$index] ?? null;
+        $this->currentIdentifierImage = null;
+        $this->showIdentifierImageModal = true;
+    }
+
+    public function closeIdentifierImageModal()
+    {
+        $this->showIdentifierImageModal = false;
+        $this->currentIdentifierImage = null;
+        $this->currentIdentifierImagePath = null;
+        $this->currentIdentifierIndex = null;
+    }
+
+    public function saveIdentifierImage()
     {
         try {
             $this->validate([
-                'classificationImage' => 'required|image|mimes:jpeg,jpg,png,gif,webp,svg|max:2048',
+                'currentIdentifierImage' => 'required|image|mimes:jpeg,jpg,png,gif,webp,svg|max:2048',
             ]);
 
-            $path = $this->classificationImage->store('classification-images', 'public');
-            $this->classification->update(['image_path' => $path]);
-            $this->classificationImage = null;
-            $this->showImageModal = false;
-
-            // Refresh classification model for UI
-            $this->classification = Classification::find($this->classificationId);
-            session()->flash('success', 'Classification image updated successfully.');
+            $identifier = trim($this->identifiers[$this->currentIdentifierIndex]);
+            $existingImagePath = $this->identifierImages[$this->currentIdentifierIndex] ?? null;
+            
+            // Use overwrite logic to handle existing images
+            $path = $this->storeImageWithOverwrite(
+                $this->currentIdentifierImage, 
+                $identifier, 
+                $existingImagePath, 
+                'ride-images'
+            );
+            
+            // Update the identifier image in the array
+            $this->identifierImages[$this->currentIdentifierIndex] = $path;
+            
+            // If this identifier is in the database, update it immediately
+            if (isset($this->identifierInDatabase[$this->currentIdentifierIndex]) && $this->identifierInDatabase[$this->currentIdentifierIndex]) {
+                if (!empty($identifier)) {
+                    $ride = Ride::where('classification_id', $this->classificationId)
+                               ->where('identifier', $identifier)
+                               ->first();
+                    
+                    if ($ride) {
+                        $ride->update(['image_path' => $path]);
+                    }
+                }
+            }
+            
+            $this->currentIdentifierImage = null;
+            $this->showIdentifierImageModal = false;
+            session()->flash('success', 'Identifier image updated successfully.');
         } catch (\Illuminate\Validation\ValidationException $e) {
             session()->flash('error', 'Please select a valid image (max 2MB).');
         } catch (\Exception $e) {
@@ -366,6 +476,16 @@ class EditClassification extends Component
     {
         try {
             $this->validate();
+            
+            // Custom validation for identifier images (only validate file uploads, not existing paths)
+            foreach ($this->identifierImages as $index => $image) {
+                if ($image && is_object($image)) {
+                    // This is a file upload, validate it
+                    $this->validate([
+                        "identifierImages.{$index}" => 'image|mimes:jpeg,jpg,png,gif,webp,svg|max:2048',
+                    ]);
+                }
+            }
         } catch (\Illuminate\Validation\ValidationException $e) {
             session()->flash('error', 'Please fix the validation errors below.');
             return;
@@ -421,11 +541,19 @@ class EditClassification extends Component
                         }
                     } else {
                         // Create new ride
-                        Ride::create([
+                        $rideData = [
                             'classification_id' => $this->classification->id,
                             'identifier' => $identifier,
                             'is_active' => $isActive,
-                        ]);
+                        ];
+                        
+                        // Handle image upload
+                        if (!empty($this->identifierImages[$index])) {
+                            $imagePath = $this->storeImageWithCustomName($this->identifierImages[$index], $identifier, 'ride-images');
+                            $rideData['image_path'] = $imagePath;
+                        }
+                        
+                        Ride::create($rideData);
                         $createdRides++;
                     }
                 } catch (\Illuminate\Database\QueryException $e) {
@@ -485,6 +613,29 @@ class EditClassification extends Component
             }
         } catch (\Exception $e) {
             session()->flash('error', 'An unexpected error occurred: ' . $e->getMessage());
+        }
+    }
+
+    public function saveClassificationDetails()
+    {
+        $this->validate([
+            'name' => 'required|string|max:255',
+            'price_per_hour' => 'required|numeric|min:0.01',
+        ]);
+
+        try {
+            $this->classification->update([
+                'name' => $this->name,
+                'price_per_hour' => $this->price_per_hour,
+            ]);
+
+            session()->flash('success', 'Classification details updated successfully!');
+            
+            // Reload form data to reflect changes
+            $this->reloadFormData();
+
+        } catch (\Exception $e) {
+            session()->flash('error', 'Failed to update classification details: ' . $e->getMessage());
         }
     }
 

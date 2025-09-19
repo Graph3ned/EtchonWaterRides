@@ -21,6 +21,7 @@ class Ride extends Model
         'classification_id',
         'identifier',
         'is_active',
+        'image_path',
     ];
 
     protected $casts = [

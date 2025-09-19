@@ -6,6 +6,7 @@ use App\Models\RideType;
 use App\Models\Classification;
 use App\Models\Ride;
 use Livewire\WithFileUploads;
+use Illuminate\Support\Facades\Storage;
 
 class ViewDetails extends Component
 {
@@ -73,6 +74,31 @@ class ViewDetails extends Component
         $this->rideTypeImage = $this->rideType->image_path;
     }
 
+    /**
+     * Generate a unique image name based on the ride type name
+     */
+    private function generateRideTypeImageName($rideTypeName, $extension)
+    {
+        $cleanName = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $rideTypeName));
+        return $cleanName . '_' . time() . '.' . $extension;
+    }
+
+    /**
+     * Store ride type image with custom naming and handle overwrite
+     */
+    private function storeRideTypeImageWithOverwrite($file, $rideTypeName, $existingImagePath = null)
+    {
+        $extension = $file->getClientOriginalExtension();
+        $customName = $this->generateRideTypeImageName($rideTypeName, $extension);
+        
+        // If there's an existing image, delete it first
+        if ($existingImagePath && Storage::disk('public')->exists($existingImagePath)) {
+            Storage::disk('public')->delete($existingImagePath);
+        }
+        
+        return $file->storeAs('ride-types', $customName, 'public');
+    }
+
     public function updatedRideTypeImage()
     {
         if ($this->rideTypeImage) {
@@ -108,7 +134,8 @@ class ViewDetails extends Component
             'rideTypeImage.max' => 'The image may not be greater than 2MB.',
         ]);
 
-        $path = $this->rideTypeImage->store('ride-types', 'public');
+        $existingImagePath = $this->rideType->image_path;
+        $path = $this->storeRideTypeImageWithOverwrite($this->rideTypeImage, $this->rideType->name, $existingImagePath);
         $this->rideType->update(['image_path' => $path]);
 
         $this->rideTypeImage = null;

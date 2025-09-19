@@ -55,8 +55,8 @@
                                     </div>
                                     <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                                         <div class="w-50 h-50 sm:w-24 sm:h-24 md:w-28 md:h-28 order-2 sm:order-1">
-                                            @if(!empty($ride->classification->image_path))
-                                                <img src="{{ asset('storage/'.$ride->classification->image_path) }}" alt="{{ $ride->classification->name }}" class="w-full h-full rounded object-cover border" />
+                                            @if(!empty($ride->image_path))
+                                                <img src="{{ asset('storage/'.$ride->image_path) }}" alt="{{ $ride->identifier }}" class="w-full h-full rounded object-cover border" />
                                             @else
                                                 <div class="w-50 h-50 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded border border-dashed border-gray-300 bg-white flex items-center justify-center text-[10px] text-gray-400">No image</div>
                                             @endif
@@ -93,8 +93,8 @@
                                     </div>
                                     <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                                         <div class="w-50 h-50 sm:w-24 sm:h-24 md:w-28 md:h-28 flex-shrink-0 order-2 sm:order-1">
-                                            @if(!empty($ride->classification->image_path))
-                                                <img src="{{ asset('storage/'.$ride->classification->image_path) }}" alt="{{ $ride->classification->name }}" class="w-full h-full rounded object-cover border" />
+                                            @if(!empty($ride->image_path))
+                                                <img src="{{ asset('storage/'.$ride->image_path) }}" alt="{{ $ride->identifier }}" class="w-full h-full rounded object-cover border" />
                                             @else
                                                 <div class="w-50 h-50 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded border border-dashed border-gray-300 bg-white flex items-center justify-center text-[10px] text-gray-400">No image</div>
                                             @endif
