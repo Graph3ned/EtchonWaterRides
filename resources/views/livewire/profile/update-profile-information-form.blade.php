@@ -42,7 +42,7 @@ new class extends Component
 
         if ($user->userType == 1) {
             $validated = $this->validate([
-                'name' => ['required', 'string', 'max:255'],
+                'name' => ['required', 'string', 'max:255', Rule::unique(User::class)->ignore($user->id)],
                 'username' => ['required', 'string', 'max:255', Rule::unique(User::class)->ignore($user->id)],
                 'email' => ['nullable', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class, 'email')->ignore($user->id)],
                 'current_password' => ['nullable', 'string', 'min:8'],

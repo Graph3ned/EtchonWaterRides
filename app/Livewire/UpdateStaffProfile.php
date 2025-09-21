@@ -69,7 +69,7 @@ class UpdateStaffProfile extends Component
     {
         // Validate the data
         $validatedData = $this->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|unique:users,name,' . $this->userId,
             'email' => 'required|string|email|max:255|unique:users,email,' . $this->userId,
             'username' => 'required|string|max:255|unique:users,username,' . $this->userId,
             'userType' => 'required|integer',

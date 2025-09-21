@@ -27,7 +27,7 @@ class StaffEdit extends Component
     public function updateStaff()
     {
         $validationRules = [
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|unique:users,name,' . $this->staffId,
             'email' => 'required|email|unique:users,email,' . $this->staffId,
             'username' => 'required|string|max:255|unique:users,username,' . $this->staffId,
         ];
