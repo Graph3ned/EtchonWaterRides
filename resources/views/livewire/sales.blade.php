@@ -125,115 +125,66 @@
               </select>
 
               @if($dateRange === 'select_month')
-                <div class="mt-4 space-y-4 bg-gradient-to-br from-blue-50 to-cyan-50 p-4 rounded-lg border border-blue-100 shadow-sm">
-                    <div class="space-y-2">
-                        <label class="flex items-center text-gray-700 font-medium text-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            Select Month
-                        </label>
-                        <input x-data
-                               x-init="flatpickr($el, {
-                                   plugins: [new monthSelectPlugin({
-                                       shorthand: true,
-                                       dateFormat: 'Y-m',
-                                       altFormat: 'F Y',
-                                       theme: 'material_blue'
-                                   })],
-                                   dateFormat: 'Y-m',
-                                   altInput: true,
-                                   altFormat: 'F Y',
-                               })"
-                               wire:model.live="selected_month" 
-                               type="text"
-                               placeholder="Select a month..."
-                               class="w-full text-sm rounded-lg border-blue-200/50 bg-white/70 
-                                      focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
-                                      hover:border-blue-300 hover:bg-white
-                                      transition-all duration-200 cursor-pointer">
-                    </div>
+                <div class="mt-2">
+                  <div x-data="{ fp: null, open() { this.fp && this.fp.open() } }"
+                       x-init="fp = flatpickr($refs.monthInput, {
+                           plugins: [new monthSelectPlugin({ shorthand: true, dateFormat: 'Y-m', altFormat: 'F Y', theme: 'material_blue' })],
+                           dateFormat: 'Y-m',
+                           positionElement: $refs.monthBtn,
+                           onChange: function(selectedDates, dateStr){ $wire.set('selected_month', dateStr) }
+                       })">
+                    <input x-ref="monthInput" type="text" class="sr-only" />
+                    <button x-ref="monthBtn" type="button" @click="open()"
+                            class="w-full border border-blue-200 rounded-lg px-3 py-2.5 text-gray-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300 text-sm">
+                      {{ $selected_month ? $selected_month : 'Select Month' }}
+                    </button>
+                  </div>
                 </div>
               @endif
 
               @if($dateRange === 'select_day')
-                <div class="mt-4 space-y-4 bg-gradient-to-br from-blue-50 to-cyan-50 p-4 rounded-lg border border-blue-100 shadow-sm">
-                    <div class="space-y-2">
-                        <label class="flex items-center text-gray-700 font-medium text-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            Select Date
-                        </label>
-                        <input x-data
-                               x-init="flatpickr($el, {
-                                   dateFormat: 'Y-m-d',
-                                   altInput: true,
-                                   altFormat: 'F j, Y',
-                                   theme: 'material_blue'
-                               })"
-                               wire:model.live="selected_day" 
-                               type="text"
-                               placeholder="Select a date..."
-                               class="w-full text-sm rounded-lg border-blue-200/50 bg-white/70 
-                                      focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
-                                      hover:border-blue-300 hover:bg-white
-                                      transition-all duration-200 cursor-pointer">
-                    </div>
+                <div class="mt-2">
+                  <div x-data="{ fp: null, open() { this.fp && this.fp.open() } }"
+                       x-init="fp = flatpickr($refs.dayInput, {
+                           dateFormat: 'Y-m-d',
+                           positionElement: $refs.dayBtn,
+                           onChange: function(selectedDates, dateStr){ $wire.set('selected_day', dateStr) }
+                       })">
+                    <input x-ref="dayInput" type="text" class="sr-only" />
+                    <button x-ref="dayBtn" type="button" @click="open()"
+                            class="w-full border border-blue-200 rounded-lg px-3 py-2.5 text-gray-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300 text-sm">
+                      {{ $selected_day ? $selected_day : 'Select Date' }}
+                    </button>
+                  </div>
                 </div>
               @endif
 
               @if($dateRange === 'custom')
-                <div class="mt-4 space-y-4 bg-gradient-to-br from-blue-50 to-cyan-50 p-4 rounded-lg border border-blue-100 shadow-sm">
-                    <div class="space-y-4">
-                        <!-- From Date -->
-                        <div class="space-y-2">
-                            <label class="flex items-center text-gray-700 font-medium text-sm">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                                From
-                            </label>
-                            <input x-data
-                                   x-init="flatpickr($el, {
-                                       dateFormat: 'Y-m-d',
-                                       altInput: true,
-                                       altFormat: 'F j, Y',
-                                       theme: 'material_blue'
-                                   })"
-                                   wire:model.live="start_date" 
-                                   type="text"
-                                   placeholder="Select start date..."
-                                   class="w-full text-sm rounded-lg border-blue-200/50 bg-white/70 
-                                          focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
-                                          hover:border-blue-300 hover:bg-white
-                                          transition-all duration-200 cursor-pointer">
-                        </div>
-
-                        <!-- To Date -->
-                        <div class="space-y-2">
-                            <label class="flex items-center text-gray-700 font-medium text-sm">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                                To
-                            </label>
-                            <input x-data
-                                   x-init="flatpickr($el, {
-                                       dateFormat: 'Y-m-d',
-                                       altInput: true,
-                                       altFormat: 'F j, Y',
-                                       theme: 'material_blue'
-                                   })"
-                                   wire:model.live="end_date" 
-                                   type="text"
-                                   placeholder="Select end date..."
-                                   class="w-full text-sm rounded-lg border-blue-200/50 bg-white/70 
-                                          focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
-                                          hover:border-blue-300 hover:bg-white
-                                          transition-all duration-200 cursor-pointer">
-                        </div>
-                    </div>
+                <div class="mt-2 space-y-2">
+                  <div x-data="{ fp: null, open() { this.fp && this.fp.open() } }"
+                       x-init="fp = flatpickr($refs.startInput, {
+                           dateFormat: 'Y-m-d',
+                           positionElement: $refs.startBtn,
+                           onChange: function(selectedDates, dateStr){ $wire.set('start_date', dateStr) }
+                       })">
+                    <input x-ref="startInput" type="text" class="sr-only" />
+                    <button x-ref="startBtn" type="button" @click="open()"
+                            class="w-full border border-blue-200 rounded-lg px-3 py-2.5 text-gray-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300 text-sm">
+                      {{ $start_date ? $start_date : 'From Date' }}
+                    </button>
+                  </div>
+                  <div x-data="{ fp: null, open() { this.fp && this.fp.open() } }"
+                       x-init="fp = flatpickr($refs.endInput, {
+                           dateFormat: 'Y-m-d',
+                           positionElement: $refs.endBtn,
+                           onChange: function(selectedDates, dateStr){ $wire.set('end_date', dateStr) }
+                       })">
+                    <input x-ref="endInput" type="text" class="sr-only" />
+                    <button x-ref="endBtn" type="button" @click="open()"
+                            class="w-full border border-blue-200 rounded-lg px-3 py-2.5 text-gray-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300 text-sm">
+                      {{ $end_date ? $end_date : 'To Date' }}
+                    </button>
+                  </div>
                 </div>
               @endif
             </div>
