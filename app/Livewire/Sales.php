@@ -19,6 +19,7 @@ class Sales extends Component
     public $selectedUser = '';
     public $selectedRideType = '';
     public $classification = '';
+    public $selectedIdentifier = '';
     public $start_date = ''; 
     public $end_date = ''; 
     public $load = [];
@@ -38,6 +39,7 @@ class Sales extends Component
         $this->selectedUser = session('selected_staff', '');
         $this->selectedRideType = session('selected_ride_type', '');
         $this->classification = session('selected_classification', '');
+        $this->selectedIdentifier = session('selected_identifier', '');
         $this->dateRange = session('date_range', 'this_month'); // Changed default to 'this_month'
         $this->start_date = session('start_date', '');
         $this->end_date = session('end_date', '');
@@ -55,6 +57,7 @@ class Sales extends Component
             'selected_staff',
             'selected_ride_type',
             'selected_classification',
+            'selected_identifier',
             'date_range',
             'start_date',
             'end_date',
@@ -66,6 +69,7 @@ class Sales extends Component
         $this->selectedUser = '';
         $this->selectedRideType = '';
         $this->classification = '';
+        $this->selectedIdentifier = '';
         $this->dateRange = 'this_month'; 
         $this->start_date = null;
         $this->end_date = null;
@@ -87,6 +91,7 @@ class Sales extends Component
         session(['selected_staff' => $this->selectedUser]);
         session(['selected_ride_type' => $this->selectedRideType]);
         session(['selected_classification' => $this->classification]);
+        session(['selected_identifier' => $this->selectedIdentifier]);
         
         // Get current URL and remove any page parameter
         $url = preg_replace('/\?page=\d+/', '', request()->header('Referer'));
@@ -104,6 +109,7 @@ class Sales extends Component
         session(['selected_staff' => $this->selectedUser]);
         session(['selected_ride_type' => $this->selectedRideType]);
         session(['selected_classification' => $this->classification]);
+        session(['selected_identifier' => $this->selectedIdentifier]);
         
         // Clean URL and redirect
         $url = preg_replace('/\?page=\d+/', '', request()->header('Referer'));
@@ -119,6 +125,23 @@ class Sales extends Component
         session(['selected_staff' => $this->selectedUser]);
         session(['selected_ride_type' => $this->selectedRideType]);
         session(['selected_classification' => $this->classification]);
+        session(['selected_identifier' => $this->selectedIdentifier]);
+        
+        // Clean URL and redirect
+        $url = preg_replace('/\?page=\d+/', '', request()->header('Referer'));
+        $url = preg_replace('/&page=\d+/', '', $url);
+        return redirect($url);
+    }
+
+    public function updatedSelectedIdentifier()
+    {
+        $this->resetPage();
+        
+        // Store the selected values in session
+        session(['selected_staff' => $this->selectedUser]);
+        session(['selected_ride_type' => $this->selectedRideType]);
+        session(['selected_classification' => $this->classification]);
+        session(['selected_identifier' => $this->selectedIdentifier]);
         
         // Clean URL and redirect
         $url = preg_replace('/\?page=\d+/', '', request()->header('Referer'));
@@ -254,6 +277,33 @@ class Sales extends Component
             ->distinct()
             ->pluck('classification_name_at_time');
 
+        // Get identifiers from both snapshot and current ride data
+        $identifiers = Rental::query()
+            ->when($this->selectedUser !== '', fn($q) => $q->where('user_name_at_time', $this->selectedUser))
+            ->when($this->selectedRideType !== '', function ($q) {
+                $q->whereIn('rentals.ride_id', function ($sub) {
+                    $sub->select('rides.id')
+                        ->from('rides')
+                        ->join('classifications', 'rides.classification_id', '=', 'classifications.id')
+                        ->join('ride_types', 'classifications.ride_type_id', '=', 'ride_types.id')
+                        ->where('ride_types.name', $this->selectedRideType);
+                });
+            })
+            ->when($this->classification !== '', fn($q) => $q->where('classification_name_at_time', $this->classification))
+            ->leftJoin('rides', 'rentals.ride_id', '=', 'rides.id')
+            ->selectRaw('DISTINCT CASE 
+                WHEN ride_identifier_at_time IS NOT NULL THEN ride_identifier_at_time 
+                ELSE rides.identifier 
+            END as identifier')
+            ->where(function($query) {
+                $query->whereNotNull('ride_identifier_at_time')
+                      ->orWhereNotNull('rides.identifier');
+            })
+            ->pluck('identifier')
+            ->filter()
+            ->sort()
+            ->values();
+
         // Dispatch chart update after render
         $this->dispatch('updateChart');
 
@@ -262,6 +312,7 @@ class Sales extends Component
             'users' => $users,
             'rideTypes' => $rideTypes,
             'classifications' => $classifications,
+            'identifiers' => $identifiers,
         ]);
     }
     
@@ -312,7 +363,16 @@ class Sales extends Component
                 });
             })
             // filter by snapshot classification name
-            ->when($this->classification !== '', fn($q) => $q->where('classification_name_at_time', $this->classification));
+            ->when($this->classification !== '', fn($q) => $q->where('classification_name_at_time', $this->classification))
+            // filter by identifier (from snapshot or current ride)
+            ->when($this->selectedIdentifier !== '', function ($q) {
+                $q->where(function ($query) {
+                    $query->where('ride_identifier_at_time', $this->selectedIdentifier)
+                          ->orWhereHas('ride', function ($subQuery) {
+                              $subQuery->where('identifier', $this->selectedIdentifier);
+                          });
+                });
+            });
 
         return $this->applyDateRangeFilter($query);
     }
@@ -338,6 +398,15 @@ class Sales extends Component
 
         if ($this->classification) {
             $query->where('classification_name_at_time', $this->classification);
+        }
+
+        if ($this->selectedIdentifier) {
+            $query->where(function ($q) {
+                $q->where('ride_identifier_at_time', $this->selectedIdentifier)
+                  ->orWhereHas('ride', function ($subQuery) {
+                      $subQuery->where('identifier', $this->selectedIdentifier);
+                  });
+            });
         }
 
         // Apply date filters
