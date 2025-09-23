@@ -156,14 +156,15 @@
                                             @else
                                                 <div class="w-50 h-50 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded border border-dashed border-gray-300 bg-white flex items-center justify-center text-[10px] text-gray-400">No image</div>
                                             @endif
+                                            
                                         </div>
                                         <div class="order-1 sm:order-2">
                                             <p class="text-sm text-gray-600">{{ $ride->classification->name ?? 'Unknown Classification' }}</p>
                                             <p class="text-sm text-gray-500">{{ $ride->identifier }}</p>
                                             <p class="text-xs {{ $ride->is_overdue ?? false ? 'text-red-600 font-semibold' : 'text-gray-600' }}"><strong>Time Left:</strong> {{ $ride->time_left_formatted ?? 'Unknown' }}</p>
-                                            @if(($ride->is_overdue ?? false) && ($ride->overdue_minutes ?? 0) >= 120 && auth()->check() && auth()->user()->userType == 1 &&($ride->time_left_formatted ?? '') !== 'Unknown') 
+                                            @if(($ride->overdue_minutes ?? 0) >= 120 && auth()->check() && auth()->user()->userType == 1) 
                                                 <div class="mt-2">
-                                                    <button type="button" wire:click="endOverdueRental({{ $ride->id }})" class="px-3 py-1.5 text-xs rounded bg-red-600 hover:bg-red-700 text-white hidden md:inline-block">End Time</button>
+                                                    <button type="button" wire:click="endOverdueRental({{ $ride->id }})" class="px-3 py-1.5 text-xs rounded bg-red-600 hover:bg-red-700 text-white md:inline-block">End Time</button>
                                                 </div>
                                             @endif
                                         </div>
