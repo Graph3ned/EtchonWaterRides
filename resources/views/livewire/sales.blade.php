@@ -10,9 +10,9 @@
   
 
     <div class="flex flex-col lg:flex-row lg:space-x-4">
-      <!-- Sidebar Section -->
-      <div class="w-full lg:w-1/4">
-        <div class="bg-white rounded-xl shadow-lg overflow-hidden mt-4 ml-4 border border-gray-100 transition-all duration-300 hover:shadow-xl">
+      <!-- Filter options section -->
+      <div class="w-full lg:w-1/4 py-4">
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 transition-all duration-300 hover:shadow-xl">
           <!-- Card Header -->
           <div class="bg-gradient-to-r from-cyan-500 to-blue-600 px-6 py-4">
             <div class="flex justify-between items-center">
@@ -192,8 +192,8 @@
         </div>
       </div>
 
-      <!-- Main Content Section -->
-      <div class="w-full lg:w-3/4 p-4">
+      <!-- Sales Info Section -->
+      <div class="w-full lg:w-3/4 py-4">
         <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 transition-all duration-300 hover:shadow-xl">
           <!-- Card Header with gradient background -->
           <div class="bg-gradient-to-r from-cyan-500 to-blue-600 p-6">
@@ -220,7 +220,7 @@
 
     <!-- ----------------table-------------------- -->
      
-    <div class="w-full p-4 mb-4">
+    <div class="w-full py-4 mb-4">
       <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
         <div class="flex items-center space-x-2">
           <label class="flex items-center text-gray-700 font-medium text-sm">
