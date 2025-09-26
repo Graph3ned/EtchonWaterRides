@@ -116,17 +116,39 @@
               <select wire:model.live="dateRange" 
                       class="w-full text-sm rounded-lg border-gray-200 bg-gray-50 focus:bg-white hover:bg-gray-50/80
                              focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200">
-                <option value="">All Time</option>
                 <option value="today">Today</option>
+                <option value="yesterday">Yesterday</option>
                 <option value="select_day">Select Day</option>
+                <option value="this_week">This Week</option>
+                <option value="last_week">Last Week</option>
+                <option value="this_month" selected>This Month</option>
+                <option value="last_month">Last Month</option>
                 <option value="select_month">Select Month</option>
-                <option value="this_month" selected>Current Month</option>
-                <option value="custom">Custom Date Range</option>
+                <option value="this_year">This Year</option>
+                <option value="last_year">Last Year</option>
+                <option value="select_year">Select Year</option>
+                <option value="custom">Custom Range</option>
               </select>
 
               @if($dateRange === 'select_month')
                 <div class="mt-2">
-                  <div x-data="{ fp: null, open() { this.fp && this.fp.open() } }"
+                  <!-- Mobile/Phone View: Select Dropdown -->
+                  <select wire:model.live="selected_month" class="w-full px-2 sm:px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:hidden">
+                    <option value="">Select Month</option>
+                    @php
+                        $monthNames = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                    @endphp
+                    @for($month = 1; $month <= 12; $month++)
+                        @php
+                            $value = sprintf('%02d', $month);
+                            $label = $monthNames[$month];
+                        @endphp
+                        <option value="{{ $value }}">{{ $label }}</option>
+                    @endfor
+                  </select>
+                  
+                  <!-- Desktop View: Button with Flatpickr -->
+                  <div class="hidden sm:block" x-data="{ fp: null, open() { this.fp && this.fp.open() } }"
                        x-init="fp = flatpickr($refs.monthInput, {
                            plugins: [new monthSelectPlugin({ shorthand: true, dateFormat: 'Y-m', altFormat: 'F Y', theme: 'material_blue' })],
                            dateFormat: 'Y-m',
@@ -136,7 +158,7 @@
                     <input x-ref="monthInput" type="text" class="sr-only" />
                     <button x-ref="monthBtn" type="button" @click="open()"
                             class="w-full border border-blue-200 rounded-lg px-3 py-2.5 text-gray-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300 text-sm">
-                      {{ $selected_month ? $selected_month : 'Select Month' }}
+                      {{ $this->getSelectedMonthName() }}
                     </button>
                   </div>
                 </div>
@@ -144,7 +166,12 @@
 
               @if($dateRange === 'select_day')
                 <div class="mt-2">
-                  <div x-data="{ fp: null, open() { this.fp && this.fp.open() } }"
+                  <!-- Mobile/Phone View: Native Date Input -->
+                  <input type="date" wire:model.live="selected_day" 
+                         class="w-full px-2 sm:px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:hidden">
+                  
+                  <!-- Desktop View: Button with Flatpickr -->
+                  <div class="hidden sm:block" x-data="{ fp: null, open() { this.fp && this.fp.open() } }"
                        x-init="fp = flatpickr($refs.dayInput, {
                            dateFormat: 'Y-m-d',
                            positionElement: $refs.dayBtn,
@@ -156,6 +183,17 @@
                       {{ $selected_day ? $selected_day : 'Select Date' }}
                     </button>
                   </div>
+                </div>
+              @endif
+
+              @if($dateRange === 'select_year')
+                <div class="mt-2">
+                  <select wire:model.live="selected_year" class="w-full text-sm rounded-lg border-gray-200 bg-gray-50 focus:bg-white hover:bg-gray-50/80 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200">
+                    <option value="">Select Year</option>
+                    @for($year = date('Y'); $year >= 2020; $year--)
+                      <option value="{{ $year }}" class="py-2">{{ $year }}</option>
+                    @endfor
+                  </select>
                 </div>
               @endif
 
@@ -241,17 +279,6 @@
             <option value="200">200</option>
           </select>
           <span class="text-sm text-gray-600">entries</span>
-        </div>
-        <div class="flex justify-center sm:justify-end">
-          <a href="{{ route('admin.generate-report') }}" 
-             class="inline-flex items-center justify-center bg-[#00A3E0] text-white py-2.5 px-6 rounded-lg font-medium 
-                    transform transition-all duration-200 hover:-translate-y-1 
-                    hover:shadow-lg hover:bg-[#0093CC] max-w-[200px] sm:max-w-none">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            Export CSV
-          </a>
         </div>
       </div>
 

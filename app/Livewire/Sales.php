@@ -27,6 +27,7 @@ class Sales extends Component
     public $percentageChange;
     public $selected_day = '';
     public $selected_month = '';
+    public $selected_year = '';
     
     protected $listeners = [
         'closeModal' => 'closeEditModal',
@@ -47,6 +48,7 @@ class Sales extends Component
         $this->load = Rental::all();
         $this->selected_day = session('selected_day', '');
         $this->selected_month = session('selected_month', '');
+        $this->selected_year = session('selected_year', '');
     }
 
 
@@ -62,7 +64,9 @@ class Sales extends Component
             'start_date',
             'end_date',
             'paginate',
-            'selected_month'
+            'selected_day',
+            'selected_month',
+            'selected_year'
         ]);
         
         // Reset all properties
@@ -74,7 +78,9 @@ class Sales extends Component
         $this->start_date = null;
         $this->end_date = null;
         $this->paginate = '10';
+        $this->selected_day = '';
         $this->selected_month = '';
+        $this->selected_year = '';
         
         $this->resetPage();
         
@@ -231,8 +237,6 @@ class Sales extends Component
     {
         if (in_array($property, ['timeRange', 'selectedUser', 'selectedRideType', 'classification', 'dateRange', 'start_date', 'end_date'])) {
             // $this->dispatch('updateChart', $this->getChartData());
-            // Sync filters with ReportGenerator when they change
-            $this->syncReportFilters();
         }
     }
     
@@ -330,20 +334,32 @@ class Sales extends Component
             'last_week' => $query->whereBetween('created_at', [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()]),
             'this_month' => $query->whereMonth('created_at', Carbon::now()->month),
             'last_month' => $query->whereMonth('created_at', Carbon::now()->subMonth()->month),
+            'select_month' => $query->when($this->selected_month, function($query) {
+                // Handle both formats: "12" (from dropdown) and "2024-12" (from flatpickr)
+                $month = $this->selected_month;
+                $year = Carbon::now()->year; // Use current year by default
+                
+                if (strlen($month) > 2) {
+                    // Format: "2024-12" from flatpickr - extract month and year
+                    $parts = explode('-', $month);
+                    $year = (int) $parts[0];
+                    $month = (int) $parts[1];
+                } else {
+                    // Format: "12" from dropdown - convert to int, use current year
+                    $month = (int) $month;
+                }
+                
+                return $query->whereMonth('created_at', $month)
+                            ->whereYear('created_at', $year);
+            }),
             'this_year' => $query->whereYear('created_at', Carbon::now()->year),
             'last_year' => $query->whereYear('created_at', Carbon::now()->subYear()->year),
+            'select_year' => $query->when($this->selected_year, function($query) {
+                return $query->whereYear('created_at', $this->selected_year);
+            }),
             'custom' => $query->when($this->start_date && $this->end_date, function ($query) {
                 return $query->whereDate('created_at', '>=', $this->start_date)
                              ->whereDate('created_at', '<=', $this->end_date);
-            }),
-            'select_month' => $query->when($this->selected_month, function($query) {
-                try {
-                    $date = Carbon::parse($this->selected_month . '-01');
-                    return $query->whereYear('created_at', $date->year)
-                                ->whereMonth('created_at', $date->month);
-                } catch (\Exception $e) {
-                    return $query;
-                }
             }),
             default => $query
         };
@@ -411,46 +427,8 @@ class Sales extends Component
             });
         }
 
-        // Apply date filters
-        if ($this->dateRange) {
-            switch ($this->dateRange) {
-                case 'select_day':
-                    $query->whereDate('created_at', $this->selected_day);
-                    break;
-                case 'today':
-                    $query->whereDate('created_at', Carbon::today());
-                    break;
-                case 'yesterday':
-                    $query->whereDate('created_at', Carbon::yesterday());
-                    break;
-                case 'this_week':
-                    $query->whereBetween('created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
-                    break;
-                case 'last_week':
-                    $query->whereBetween('created_at', [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()]);
-                    break;
-                case 'this_month':
-                    $query->whereMonth('created_at', Carbon::now()->month);
-                    break;
-                case 'last_month':
-                    $query->whereMonth('created_at', Carbon::now()->subMonth()->month);
-                    break;
-                case 'this_year':
-                    $query->whereYear('created_at', Carbon::now()->year);
-                    break;
-                case 'last_year':
-                    $query->whereYear('created_at', Carbon::now()->subYear()->year);
-                    break;
-                case 'custom':
-                    $query->whereBetween('created_at', [$this->start_date, $this->end_date]);
-                    break;
-                case 'select_month':
-                    $date = Carbon::parse($this->selected_month . '-01');
-                    $query->whereYear('created_at', $date->year)
-                            ->whereMonth('created_at', $date->month);
-                    break;
-            }
-        }
+        // Apply date filters using the same logic as applyDateRangeFilter
+        $query = $this->applyDateRangeFilter($query);
 
         return $query->get();
     }
@@ -463,6 +441,22 @@ class Sales extends Component
     //     // Force a refresh of the data
     //     $this->render();
     // }
+
+    public function getSelectedMonthName()
+    {
+        if (!$this->selected_month) {
+            return 'Select Month';
+        }
+        
+        // Handle both formats: "12" (from dropdown) and "2024-12" (from flatpickr)
+        if (strlen($this->selected_month) > 2) {
+            // Format: "2024-12" from flatpickr
+            return Carbon::parse($this->selected_month . '-01')->format('F');
+        } else {
+            // Format: "12" from dropdown
+            return Carbon::createFromDate(null, $this->selected_month, 1)->format('F');
+        }
+    }
 
     public function refreshPage()
     {
@@ -501,18 +495,5 @@ class Sales extends Component
         })->values()->toArray();
     }
 
-    // Report Generation Integration Methods
-    public function syncReportFilters()
-    {
-        // Sync current filter values with ReportGenerator component
-        $this->dispatch('sync-filters', [
-            'selectedUser' => $this->selectedUser,
-            'selectedRideType' => $this->selectedRideType,
-            'classification' => $this->classification,
-            'dateRange' => $this->dateRange,
-            'start_date' => $this->start_date,
-            'end_date' => $this->end_date
-        ]);
-    }
 
 }

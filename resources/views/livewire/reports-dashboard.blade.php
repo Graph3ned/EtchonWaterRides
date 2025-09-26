@@ -36,25 +36,98 @@
                     <select wire:model.live="dateRange" class="w-full px-2 sm:px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         <option value="today">Today</option>
                         <option value="yesterday">Yesterday</option>
+                        <option value="select_day">Select Day</option>
                         <option value="this_week">This Week</option>
                         <option value="last_week">Last Week</option>
                         <option value="this_month">This Month</option>
                         <option value="last_month">Last Month</option>
+                        <option value="select_month">Select Month</option>
                         <option value="this_year">This Year</option>
                         <option value="last_year">Last Year</option>
+                        <option value="select_year">Select Year</option>
                         <option value="custom">Custom Range</option>
                     </select>
                 </div>
+
+                <!-- Select Day -->
+                @if($dateRange === 'select_day')
+                <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Select Day</label>
+                    <div x-data="{ fp: null, open() { this.fp && this.fp.open() } }"
+                         x-init="fp = flatpickr($refs.dayInput, {
+                             dateFormat: 'Y-m-d',
+                             positionElement: $refs.dayBtn,
+                             onChange: function(selectedDates, dateStr){ $wire.set('selectedDay', dateStr) }
+                         })">
+                        <input x-ref="dayInput" type="text" class="sr-only" />
+                        <button x-ref="dayBtn" type="button" @click="open()"
+                                class="w-full border border-blue-200 rounded-lg px-3 py-2.5 text-gray-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300 text-sm">
+                            {{ $selectedDay ? $selectedDay : 'Select Date' }}
+                        </button>
+                    </div>
+                </div>
+                @endif
+
+                <!-- Select Month -->
+                @if($dateRange === 'select_month')
+                <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Select Month</label>
+                    <!-- Mobile/Phone View: Select Dropdown -->
+                    <select wire:model.live="selectedMonth" class="w-full px-2 sm:px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:hidden">
+                        <option value="">Select Month</option>
+                        @php
+                            $monthNames = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                        @endphp
+                        @for($month = 1; $month <= 12; $month++)
+                            @php
+                                $value = sprintf('%02d', $month);
+                                $label = $monthNames[$month];
+                            @endphp
+                            <option value="{{ $value }}">{{ $label }}</option>
+                        @endfor
+                    </select>
+                    
+                    <!-- Desktop View: Button with Flatpickr -->
+                    <div class="hidden sm:block" x-data="{ fp: null, open() { this.fp && this.fp.open() } }"
+                         x-init="fp = flatpickr($refs.monthInput, {
+                             plugins: [new monthSelectPlugin({ shorthand: true, dateFormat: 'Y-m', altFormat: 'F Y', theme: 'material_blue' })],
+                             dateFormat: 'Y-m',
+                             positionElement: $refs.monthBtn,
+                             onChange: function(selectedDates, dateStr){ $wire.set('selectedMonth', dateStr) }
+                         })">
+                        <input x-ref="monthInput" type="text" class="sr-only" />
+                        <button x-ref="monthBtn" type="button" @click="open()"
+                                class="w-full border border-blue-200 rounded-lg px-3 py-2.5 text-gray-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-300 text-sm">
+                            {{ $this->getSelectedMonthName() }}
+                        </button>
+                    </div>
+                </div>
+                @endif
+
+                <!-- Select Year -->
+                @if($dateRange === 'select_year')
+                <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Select Year</label>
+                    <select wire:model.live="selectedYear" class="w-full px-2 sm:px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Select Year</option>
+                        @for($year = date('Y'); $year >= 2020; $year--)
+                            <option value="{{ $year }}">{{ $year }}</option>
+                        @endfor
+                    </select>
+                </div>
+                @endif
 
                 <!-- Custom Date Range -->
                 @if($dateRange === 'custom')
                 <div>
                     <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Start Date</label>
-                    <input type="date" wire:model.live="startDate" class="w-full px-2 sm:px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <input type="date" wire:model.live="startDate" 
+                           class="w-full px-2 sm:px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
                 <div>
                     <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">End Date</label>
-                    <input type="date" wire:model.live="endDate" class="w-full px-2 sm:px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <input type="date" wire:model.live="endDate" 
+                           class="w-full px-2 sm:px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
                 @endif
 
@@ -168,3 +241,7 @@
 
 
 </div>
+
+<!-- Flatpickr Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>

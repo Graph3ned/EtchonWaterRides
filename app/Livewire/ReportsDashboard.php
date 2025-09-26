@@ -13,6 +13,9 @@ class ReportsDashboard extends Component
     public $dateRange = 'this_month';
     public $startDate = '';
     public $endDate = '';
+    public $selectedDay = '';
+    public $selectedMonth = '';
+    public $selectedYear = '';
     public $selectedUser = '';
     public $selectedRideType = '';
     public $classification = '';
@@ -30,6 +33,9 @@ class ReportsDashboard extends Component
         $this->dateRange = session('date_range', 'this_month');
         $this->startDate = session('start_date', '');
         $this->endDate = session('end_date', '');
+        $this->selectedDay = session('selected_day', '');
+        $this->selectedMonth = session('selected_month', '');
+        $this->selectedYear = session('selected_year', '');
         
         // Auto-generate report on mount
         $this->generateReport();
@@ -95,12 +101,36 @@ class ReportsDashboard extends Component
         return match($this->dateRange) {
             'today' => $query->whereDate('created_at', Carbon::today()),
             'yesterday' => $query->whereDate('created_at', Carbon::yesterday()),
+            'select_day' => $query->when($this->selectedDay, function($query) {
+                return $query->whereDate('created_at', $this->selectedDay);
+            }),
             'this_week' => $query->whereBetween('created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]),
             'last_week' => $query->whereBetween('created_at', [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()]),
             'this_month' => $query->whereMonth('created_at', Carbon::now()->month),
             'last_month' => $query->whereMonth('created_at', Carbon::now()->subMonth()->month),
+            'select_month' => $query->when($this->selectedMonth, function($query) {
+                // Handle both formats: "12" (from dropdown) and "2024-12" (from flatpickr)
+                $month = $this->selectedMonth;
+                $year = Carbon::now()->year; // Use current year by default
+                
+                if (strlen($month) > 2) {
+                    // Format: "2024-12" from flatpickr - extract month and year
+                    $parts = explode('-', $month);
+                    $year = (int) $parts[0];
+                    $month = (int) $parts[1];
+                } else {
+                    // Format: "12" from dropdown - convert to int, use current year
+                    $month = (int) $month;
+                }
+                
+                return $query->whereMonth('created_at', $month)
+                            ->whereYear('created_at', $year);
+            }),
             'this_year' => $query->whereYear('created_at', Carbon::now()->year),
             'last_year' => $query->whereYear('created_at', Carbon::now()->subYear()->year),
+            'select_year' => $query->when($this->selectedYear, function($query) {
+                return $query->whereYear('created_at', $this->selectedYear);
+            }),
             'custom' => $query->when($this->startDate && $this->endDate, function ($query) {
                 return $query->whereDate('created_at', '>=', $this->startDate)
                              ->whereDate('created_at', '<=', $this->endDate);
@@ -146,7 +176,7 @@ class ReportsDashboard extends Component
             'Total Revenue' => '₱' . number_format($totalRevenue, 2),
             'Total Rentals' => $totalRentals,
             'Average Transaction' => '₱' . number_format($averageTransaction, 2),
-            'Revenue Growth' => $revenueGrowth . '%'
+            'Revenue Growth' => $revenueGrowth !== null ? $revenueGrowth . '%' : 'No comparison data'
         ];
     }
 
@@ -254,12 +284,44 @@ class ReportsDashboard extends Component
         $previousQuery = match($this->dateRange) {
             'today' => $query->whereDate('created_at', Carbon::yesterday()),
             'yesterday' => $query->whereDate('created_at', Carbon::now()->subDays(2)),
+            'select_day' => $query->when($this->selectedDay, function($query) {
+                return $query->whereDate('created_at', Carbon::parse($this->selectedDay)->subDay());
+            }),
             'this_week' => $query->whereBetween('created_at', [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()]),
             'last_week' => $query->whereBetween('created_at', [Carbon::now()->subWeeks(2)->startOfWeek(), Carbon::now()->subWeeks(2)->endOfWeek()]),
             'this_month' => $query->whereMonth('created_at', Carbon::now()->subMonth()->month),
             'last_month' => $query->whereMonth('created_at', Carbon::now()->subMonths(2)->month),
+            'select_month' => $query->when($this->selectedMonth, function($query) {
+                // Handle both formats: "12" (from dropdown) and "2024-12" (from flatpickr)
+                $month = $this->selectedMonth;
+                $year = Carbon::now()->year; // Use current year
+                
+                if (strlen($month) > 2) {
+                    // Format: "2024-12" from flatpickr - extract month and year
+                    $parts = explode('-', $month);
+                    $year = (int) $parts[0];
+                    $month = (int) $parts[1];
+                } else {
+                    // Format: "12" from dropdown - convert to int, use current year
+                    $month = (int) $month;
+                }
+                
+                // Get previous month (same year)
+                $previousMonth = $month - 1;
+                if ($previousMonth <= 0) {
+                    $previousMonth = 12;
+                    $year = $year - 1; // If going to previous month, go to previous year
+                }
+                
+                return $query->whereMonth('created_at', $previousMonth)
+                            ->whereYear('created_at', $year);
+            }),
             'this_year' => $query->whereYear('created_at', Carbon::now()->subYear()->year),
             'last_year' => $query->whereYear('created_at', Carbon::now()->subYears(2)->year),
+            'select_year' => $query->when($this->selectedYear, function($query) {
+                return $query->whereYear('created_at', $this->selectedYear - 1);
+            }),
+            'custom' => $this->getCustomPreviousPeriod($query),
             default => $query->whereDate('created_at', '<', $this->startDate)
         };
 
@@ -271,10 +333,29 @@ class ReportsDashboard extends Component
         ];
     }
 
+    protected function getCustomPreviousPeriod($query)
+    {
+        if (!$this->startDate || !$this->endDate) {
+            return $query->whereRaw('1 = 0'); // Return empty result
+        }
+        
+        $startDate = Carbon::parse($this->startDate);
+        $endDate = Carbon::parse($this->endDate);
+        $periodLength = $startDate->diffInDays($endDate);
+        
+        // Calculate previous period with same length
+        $previousStartDate = $startDate->copy()->subDays($periodLength + 1);
+        $previousEndDate = $startDate->copy()->subDay();
+        
+        return $query->whereBetween('created_at', [$previousStartDate, $previousEndDate]);
+    }
+
     protected function calculateGrowthRate($current, $previous)
     {
         if ($previous == 0) {
-            return $current > 0 ? 100 : 0;
+            // If previous period has no data, don't show 100% growth
+            // Instead, show a neutral indicator or skip growth calculation
+            return null; // This will indicate no comparison available
         }
         
         return round((($current - $previous) / $previous) * 100, 1);
@@ -319,9 +400,12 @@ class ReportsDashboard extends Component
         $this->dateRange = 'this_month';
         $this->startDate = '';
         $this->endDate = '';
+        $this->selectedDay = '';
+        $this->selectedMonth = '';
+        $this->selectedYear = '';
         
         // Clear session values
-        session()->forget(['selected_staff', 'selected_ride_type', 'selected_classification', 'selected_ride_identifier', 'date_range', 'start_date', 'end_date']);
+        session()->forget(['selected_staff', 'selected_ride_type', 'selected_classification', 'selected_ride_identifier', 'date_range', 'start_date', 'end_date', 'selected_day', 'selected_month', 'selected_year']);
         
         // Regenerate report with cleared filters
         $this->generateReport();
@@ -330,7 +414,7 @@ class ReportsDashboard extends Component
     // Auto-generate report when filters change
     public function updated($property)
     {
-        if (in_array($property, ['reportType', 'dateRange', 'startDate', 'endDate', 'selectedUser', 'selectedRideType', 'classification', 'selectedRideIdentifier'])) {
+        if (in_array($property, ['reportType', 'dateRange', 'startDate', 'endDate', 'selectedDay', 'selectedMonth', 'selectedYear', 'selectedUser', 'selectedRideType', 'classification', 'selectedRideIdentifier'])) {
             $this->generateReport();
         }
     }
@@ -426,17 +510,36 @@ class ReportsDashboard extends Component
             ->values();
     }
 
+    public function getSelectedMonthName()
+    {
+        if (!$this->selectedMonth) {
+            return 'Select Month';
+        }
+        
+        // Handle both formats: "12" (from dropdown) and "2024-12" (from flatpickr)
+        if (strlen($this->selectedMonth) > 2) {
+            // Format: "2024-12" from flatpickr
+            return Carbon::parse($this->selectedMonth . '-01')->format('F');
+        } else {
+            // Format: "12" from dropdown
+            return Carbon::createFromDate(null, $this->selectedMonth, 1)->format('F');
+        }
+    }
+
     public function getPeriodDescription()
     {
         return match($this->dateRange) {
             'today' => 'Today (' . Carbon::today()->format('M d, Y') . ')',
             'yesterday' => 'Yesterday (' . Carbon::yesterday()->format('M d, Y') . ')',
+            'select_day' => 'Selected Day (' . ($this->selectedDay ? Carbon::parse($this->selectedDay)->format('M d, Y') : 'No date selected') . ')',
             'this_week' => 'This Week (' . Carbon::now()->startOfWeek()->format('M d') . ' - ' . Carbon::now()->endOfWeek()->format('M d, Y') . ')',
             'last_week' => 'Last Week (' . Carbon::now()->subWeek()->startOfWeek()->format('M d') . ' - ' . Carbon::now()->subWeek()->endOfWeek()->format('M d, Y') . ')',
             'this_month' => 'This Month (' . Carbon::now()->format('F Y') . ')',
             'last_month' => 'Last Month (' . Carbon::now()->subMonth()->format('F Y') . ')',
+            'select_month' => 'Selected Month (' . ($this->selectedMonth ? $this->getSelectedMonthName() : 'No month selected') . ')',
             'this_year' => 'This Year (' . Carbon::now()->format('Y') . ')',
             'last_year' => 'Last Year (' . Carbon::now()->subYear()->format('Y') . ')',
+            'select_year' => 'Selected Year (' . ($this->selectedYear ?: 'No year selected') . ')',
             'custom' => 'Custom Range (' . ($this->startDate ?: '') . ' to ' . ($this->endDate ?: '') . ')',
             default => 'Unknown Period'
         };

@@ -43,7 +43,7 @@
                 <div>
                     <p class="text-orange-100 text-sm">Growth Rate</p>
                     <p class="text-2xl font-bold">
-                        @if(isset($reportData['revenueGrowth']))
+                        @if(isset($reportData['revenueGrowth']) && $reportData['revenueGrowth'] !== null)
                             @if($reportData['revenueGrowth'] > 0)
                                 <span class="text-green-200">+{{ $reportData['revenueGrowth'] }}%</span>
                             @elseif($reportData['revenueGrowth'] < 0)
@@ -52,7 +52,7 @@
                                 <span class="text-orange-200">0%</span>
                             @endif
                         @else
-                            <span class="text-orange-200">N/A</span>
+                            <span class="text-orange-200">No comparison data</span>
                         @endif
                     </p>
                 </div>
