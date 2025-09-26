@@ -111,6 +111,16 @@ class Sales extends Component
     {
         $this->resetPage();
         
+        // When ride type changes, clear dependent filters
+        if ($this->selectedRideType === '' || $this->selectedRideType === null) {
+            $this->classification = '';
+            $this->selectedIdentifier = '';
+        } else {
+            // Changing ride type should also reset deeper selections
+            $this->classification = '';
+            $this->selectedIdentifier = '';
+        }
+
         // Store the selected values in session
         session(['selected_staff' => $this->selectedUser]);
         session(['selected_ride_type' => $this->selectedRideType]);
@@ -127,6 +137,13 @@ class Sales extends Component
     {
         $this->resetPage();
         
+        // When classification changes, clear identifier
+        if ($this->classification === '' || $this->classification === null) {
+            $this->selectedIdentifier = '';
+        } else {
+            $this->selectedIdentifier = '';
+        }
+
         // Store the selected values in session
         session(['selected_staff' => $this->selectedUser]);
         session(['selected_ride_type' => $this->selectedRideType]);
@@ -269,46 +286,53 @@ class Sales extends Component
             ->when($this->selectedUser !== '', fn($q) => $q->where('rentals.user_name_at_time', $this->selectedUser))
             ->pluck('ride_types.name');
 
-        $classifications = Rental::query()
-            ->when($this->selectedUser !== '', fn($q) => $q->where('user_name_at_time', $this->selectedUser))
-            ->when($this->selectedRideType !== '', function ($q) {
-                $q->whereIn('rentals.ride_id', function ($sub) {
-                    $sub->select('rides.id')
-                        ->from('rides')
-                        ->join('classifications', 'rides.classification_id', '=', 'classifications.id')
-                        ->join('ride_types', 'classifications.ride_type_id', '=', 'ride_types.id')
-                        ->where('ride_types.name', $this->selectedRideType);
-                });
-            })
-            ->distinct()
-            ->pluck('classification_name_at_time');
+        // Dependent classifications: only populate when a ride type is selected
+        $classifications = collect();
+        if ($this->selectedRideType !== '') {
+            $classifications = Rental::query()
+                ->when($this->selectedUser !== '', fn($q) => $q->where('user_name_at_time', $this->selectedUser))
+                ->when($this->selectedRideType !== '', function ($q) {
+                    $q->whereIn('rentals.ride_id', function ($sub) {
+                        $sub->select('rides.id')
+                            ->from('rides')
+                            ->join('classifications', 'rides.classification_id', '=', 'classifications.id')
+                            ->join('ride_types', 'classifications.ride_type_id', '=', 'ride_types.id')
+                            ->where('ride_types.name', $this->selectedRideType);
+                    });
+                })
+                ->distinct()
+                ->pluck('classification_name_at_time');
+        }
 
-        // Get identifiers from both snapshot and current ride data
-        $identifiers = Rental::query()
-            ->when($this->selectedUser !== '', fn($q) => $q->where('user_name_at_time', $this->selectedUser))
-            ->when($this->selectedRideType !== '', function ($q) {
-                $q->whereIn('rentals.ride_id', function ($sub) {
-                    $sub->select('rides.id')
-                        ->from('rides')
-                        ->join('classifications', 'rides.classification_id', '=', 'classifications.id')
-                        ->join('ride_types', 'classifications.ride_type_id', '=', 'ride_types.id')
-                        ->where('ride_types.name', $this->selectedRideType);
-                });
-            })
-            ->when($this->classification !== '', fn($q) => $q->where('classification_name_at_time', $this->classification))
-            ->leftJoin('rides', 'rentals.ride_id', '=', 'rides.id')
-            ->selectRaw('DISTINCT CASE 
-                WHEN ride_identifier_at_time IS NOT NULL THEN ride_identifier_at_time 
-                ELSE rides.identifier 
-            END as identifier')
-            ->where(function($query) {
-                $query->whereNotNull('ride_identifier_at_time')
-                      ->orWhereNotNull('rides.identifier');
-            })
-            ->pluck('identifier')
-            ->filter()
-            ->sort()
-            ->values();
+        // Dependent identifiers: only populate when a classification is selected
+        $identifiers = collect();
+        if ($this->classification !== '') {
+            $identifiers = Rental::query()
+                ->when($this->selectedUser !== '', fn($q) => $q->where('user_name_at_time', $this->selectedUser))
+                ->when($this->selectedRideType !== '', function ($q) {
+                    $q->whereIn('rentals.ride_id', function ($sub) {
+                        $sub->select('rides.id')
+                            ->from('rides')
+                            ->join('classifications', 'rides.classification_id', '=', 'classifications.id')
+                            ->join('ride_types', 'classifications.ride_type_id', '=', 'ride_types.id')
+                            ->where('ride_types.name', $this->selectedRideType);
+                    });
+                })
+                ->when($this->classification !== '', fn($q) => $q->where('classification_name_at_time', $this->classification))
+                ->leftJoin('rides', 'rentals.ride_id', '=', 'rides.id')
+                ->selectRaw('DISTINCT CASE 
+                    WHEN ride_identifier_at_time IS NOT NULL THEN ride_identifier_at_time 
+                    ELSE rides.identifier 
+                END as identifier')
+                ->where(function($query) {
+                    $query->whereNotNull('ride_identifier_at_time')
+                          ->orWhereNotNull('rides.identifier');
+                })
+                ->pluck('identifier')
+                ->filter()
+                ->sort()
+                ->values();
+        }
 
         // Dispatch chart update after render
         $this->dispatch('updateChart');
@@ -325,6 +349,7 @@ class Sales extends Component
     protected function applyDateRangeFilter($query)
     {
         return match($this->dateRange) {
+            'all_time' => $query,
             'today' => $query->whereDate('created_at', Carbon::today()),
             'yesterday' => $query->whereDate('created_at', Carbon::yesterday()),
             'select_day' => $query->when($this->selected_day, function($query) {

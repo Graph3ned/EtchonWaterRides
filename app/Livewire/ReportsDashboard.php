@@ -220,7 +220,8 @@ class ReportsDashboard extends Component
             return [
                 'rentals' => $group->count(),
                 'total_duration' => $group->sum('duration_minutes'),
-                'ride_type' => $firstRental->ride->classification->rideType->name ?? $firstRental->ride_type_name_at_time ?? 'Unknown'
+                'ride_type' => $firstRental->ride->classification->rideType->name ?? $firstRental->ride_type_name_at_time ?? 'Unknown',
+                'classification' => $firstRental->ride->classification->name ?? $firstRental->classification_name_at_time ?? 'Unknown',
             ];
         })->sortByDesc('rentals');
 
@@ -463,18 +464,19 @@ class ReportsDashboard extends Component
 
     public function getClassificationsList()
     {
-        $query = Rental::query();
-        
-        // Filter by selected ride type if any
-        if ($this->selectedRideType !== '') {
-            $query->where(function($q) {
-                $q->where('ride_type_name_at_time', $this->selectedRideType)
-                  ->orWhereHas('ride.classification.rideType', function($rq) {
-                      $rq->where('name', $this->selectedRideType);
-                  });
-            });
+        // Only provide classifications when a ride type is selected
+        if ($this->selectedRideType === '') {
+            return collect();
         }
-        
+
+        $query = Rental::query();
+        $query->where(function($q) {
+            $q->where('ride_type_name_at_time', $this->selectedRideType)
+              ->orWhereHas('ride.classification.rideType', function($rq) {
+                  $rq->where('name', $this->selectedRideType);
+              });
+        });
+
         return $query->distinct()
             ->pluck('classification_name_at_time')
             ->filter()
@@ -484,27 +486,26 @@ class ReportsDashboard extends Component
 
     public function getRideIdentifiersList()
     {
-        $query = Rental::query();
-        
-        // Filter by selected classification if any
-        if ($this->classification !== '') {
-            $query->where(function($q) {
-                $q->where('classification_name_at_time', $this->classification)
-                  ->orWhereHas('ride.classification', function($rq) {
-                      $rq->where('name', $this->classification);
-                  });
-            });
+        // Only provide identifiers when a classification is selected
+        if ($this->classification === '') {
+            return collect();
         }
-        
+
+        $query = Rental::query();
+        $query->where(function($q) {
+            $q->where('classification_name_at_time', $this->classification)
+              ->orWhereHas('ride.classification', function($rq) {
+                  $rq->where('name', $this->classification);
+              });
+        });
+
         return $query->distinct()
             ->pluck('ride_identifier_at_time')
             ->filter()
             ->merge(
                 \App\Models\Ride::whereNotNull('identifier')
-                    ->when($this->classification !== '', function($q) {
-                        $q->whereHas('classification', function($rq) {
-                            $rq->where('name', $this->classification);
-                        });
+                    ->whereHas('classification', function($rq) {
+                        $rq->where('name', $this->classification);
                     })
                     ->pluck('identifier')
             )

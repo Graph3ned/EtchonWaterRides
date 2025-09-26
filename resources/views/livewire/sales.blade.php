@@ -77,12 +77,15 @@
                   Classification
                 </label>
                 <select wire:model.live="classification" 
+                        @disabled($selectedRideType === '')
                         class="w-full text-sm rounded-lg border-gray-200 bg-gray-50 focus:bg-white hover:bg-gray-50/80
                                focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200">
-                  <option value="">All Classifications</option>
-                  @foreach ($classifications as $classificationOption)
-                    <option value="{{ $classificationOption }}" class="py-2">{{ str_replace('_', ' ', $classificationOption) }}</option>
-                  @endforeach
+                  <option value="">{{ $selectedRideType === '' ? 'Select ride type first' : 'All Classifications' }}</option>
+                  @if($selectedRideType !== '')
+                    @foreach ($classifications as $classificationOption)
+                      <option value="{{ $classificationOption }}" class="py-2">{{ str_replace('_', ' ', $classificationOption) }}</option>
+                    @endforeach
+                  @endif
                 </select>
               </div>
             </div>
@@ -96,12 +99,15 @@
                 Identifier
               </label>
               <select wire:model.live="selectedIdentifier" 
+                      @disabled($classification === '')
                       class="w-full text-sm rounded-lg border-gray-200 bg-gray-50 focus:bg-white hover:bg-gray-50/80
                              focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200">
-                <option value="">All Identifiers</option>
-                @foreach ($identifiers as $identifier)
-                  <option value="{{ $identifier }}" class="py-2">{{ $identifier }}</option>
-                @endforeach
+                <option value="">{{ $classification === '' ? 'Select classification first' : 'All Identifiers' }}</option>
+                @if($classification !== '')
+                  @foreach ($identifiers as $identifier)
+                    <option value="{{ $identifier }}" class="py-2">{{ $identifier }}</option>
+                  @endforeach
+                @endif
               </select>
             </div>
 
@@ -116,6 +122,7 @@
               <select wire:model.live="dateRange" 
                       class="w-full text-sm rounded-lg border-gray-200 bg-gray-50 focus:bg-white hover:bg-gray-50/80
                              focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200">
+              <option value="all_time">All Time</option>
                 <option value="today">Today</option>
                 <option value="yesterday">Yesterday</option>
                 <option value="select_day">Select Day</option>

@@ -107,7 +107,7 @@
                     </div>
                     <div>
                         <span class="font-medium text-gray-700">{{ $rideIdentifier }}</span>
-                        <p class="text-xs text-gray-500">{{ $data['ride_type'] }}</p>
+                        <p class="text-xs text-gray-500">{{ $data['classification'] }} • {{ $data['ride_type'] }}</p>
                     </div>
                 </div>
                 <div class="flex items-center">
