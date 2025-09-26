@@ -246,6 +246,20 @@ Route::get('/admin/generate-report', function (\Illuminate\Http\Request $request
 	]);
 })->middleware(['auth', 'verified', 'admin'])->name('admin.generate-report');
 
+// Report Generation Routes
+Route::post('/admin/reports/generate', [App\Http\Controllers\ReportController::class, 'generate'])
+    ->middleware(['auth', 'verified', 'admin'])
+    ->name('reports.generate');
+
+Route::get('/admin/reports/export/{type}', [App\Http\Controllers\ReportController::class, 'export'])
+    ->middleware(['auth', 'verified', 'admin'])
+    ->name('reports.export');
+
+// Reports Dashboard Route
+Route::get('/admin/reports', function () {
+    return view('reports');
+})->middleware(['auth', 'verified', 'admin'])->name('admin.reports');
+
 Route::view('profile', 'profile')
     ->middleware(['auth'])
     ->name('profile');

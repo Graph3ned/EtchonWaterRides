@@ -48,6 +48,12 @@ new class extends Component
                             {{ __('Logs') }}
                         </x-nav-link>
                     </div>
+
+                    <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                        <x-nav-link :href="route('admin.reports')" :active="request()->routeIs('admin.reports')" wire:navigate>
+                            {{ __('Reports') }}
+                        </x-nav-link>
+                    </div>
                 @endif
 
                 @if(auth()->check() && auth()->user()->userType == 0)
@@ -143,6 +149,12 @@ new class extends Component
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('logs')" :active="request()->routeIs('logs')" wire:navigate>
                 {{ __('Logs') }}
+            </x-responsive-nav-link>
+        </div>
+
+        <div class="pt-2 pb-3 space-y-1">
+            <x-responsive-nav-link :href="route('admin.reports')" :active="request()->routeIs('admin.reports')" wire:navigate>
+                {{ __('Reports') }}
             </x-responsive-nav-link>
         </div>
         @endif

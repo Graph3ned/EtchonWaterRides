@@ -229,8 +229,10 @@ class Sales extends Component
 
     public function updated($property)
     {
-        if (in_array($property, ['timeRange', 'selectedUser', 'selectedRideType', 'classification'])) {
+        if (in_array($property, ['timeRange', 'selectedUser', 'selectedRideType', 'classification', 'dateRange', 'startDate', 'endDate'])) {
             // $this->dispatch('updateChart', $this->getChartData());
+            // Sync filters with ReportGenerator when they change
+            $this->syncReportFilters();
         }
     }
     
@@ -498,4 +500,19 @@ class Sales extends Component
             return [Carbon::parse($date)->format('M d, Y') => $total];
         })->values()->toArray();
     }
+
+    // Report Generation Integration Methods
+    public function syncReportFilters()
+    {
+        // Sync current filter values with ReportGenerator component
+        $this->dispatch('sync-filters', [
+            'selectedUser' => $this->selectedUser,
+            'selectedRideType' => $this->selectedRideType,
+            'classification' => $this->classification,
+            'dateRange' => $this->dateRange,
+            'startDate' => $this->startDate,
+            'endDate' => $this->endDate
+        ]);
+    }
+
 }
