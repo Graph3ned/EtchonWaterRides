@@ -18,7 +18,20 @@ class ReportController extends Controller
 
     public function export(Request $request, $type)
     {
+        // Merge filters from request with session-backed defaults to mirror UI state
         $filters = $request->get('filters', []);
+        $filters = [
+            'dateRange' => $filters['dateRange'] ?? session('date_range', 'this_month'),
+            'startDate' => $filters['startDate'] ?? session('start_date', ''),
+            'endDate' => $filters['endDate'] ?? session('end_date', ''),
+            'selectedDay' => $filters['selectedDay'] ?? session('selected_day', ''),
+            'selectedMonth' => $filters['selectedMonth'] ?? session('selected_month', ''),
+            'selectedYear' => $filters['selectedYear'] ?? session('selected_year', ''),
+            'selectedUser' => $filters['selectedUser'] ?? session('selected_staff', ''),
+            'selectedRideType' => $filters['selectedRideType'] ?? session('selected_ride_type', ''),
+            'classification' => $filters['classification'] ?? session('selected_classification', ''),
+            'selectedRideIdentifier' => $filters['selectedRideIdentifier'] ?? session('selected_ride_identifier', ''),
+        ];
 
         // Build query based on filters
         $query = $this->buildFilteredQuery($filters);
@@ -80,12 +93,29 @@ class ReportController extends Controller
         return match($dateRange) {
             'today' => $query->whereDate('created_at', Carbon::today()),
             'yesterday' => $query->whereDate('created_at', Carbon::yesterday()),
+            'select_day' => $query->when(!empty($filters['selectedDay']), function ($query) use ($filters) {
+                return $query->whereDate('created_at', $filters['selectedDay']);
+            }),
             'this_week' => $query->whereBetween('created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]),
             'last_week' => $query->whereBetween('created_at', [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()]),
             'this_month' => $query->whereMonth('created_at', Carbon::now()->month),
             'last_month' => $query->whereMonth('created_at', Carbon::now()->subMonth()->month),
+            'select_month' => $query->when(!empty($filters['selectedMonth']), function ($query) use ($filters) {
+                $monthVal = $filters['selectedMonth'];
+                $year = Carbon::now()->year;
+                if (strlen($monthVal) > 2) {
+                    // Expecting format YYYY-MM from Flatpickr
+                    [$year, $month] = array_map('intval', explode('-', $monthVal));
+                } else {
+                    $month = (int) $monthVal; // Expecting MM from mobile select
+                }
+                return $query->whereMonth('created_at', $month)->whereYear('created_at', $year);
+            }),
             'this_year' => $query->whereYear('created_at', Carbon::now()->year),
             'last_year' => $query->whereYear('created_at', Carbon::now()->subYear()->year),
+            'select_year' => $query->when(!empty($filters['selectedYear']), function ($query) use ($filters) {
+                return $query->whereYear('created_at', (int) $filters['selectedYear']);
+            }),
             'custom' => $query->when(!empty($filters['startDate']) && !empty($filters['endDate']), function ($query) use ($filters) {
                 return $query->whereDate('created_at', '>=', $filters['startDate'])
                              ->whereDate('created_at', '<=', $filters['endDate']);
@@ -317,12 +347,18 @@ class ReportController extends Controller
         return match($dateRange) {
             'today' => 'Today (' . Carbon::today()->format('M d, Y') . ')',
             'yesterday' => 'Yesterday (' . Carbon::yesterday()->format('M d, Y') . ')',
+            'select_day' => 'Selected Day (' . (!empty($filters['selectedDay']) ? Carbon::parse($filters['selectedDay'])->format('M d, Y') : 'No date selected') . ')',
             'this_week' => 'This Week (' . Carbon::now()->startOfWeek()->format('M d') . ' - ' . Carbon::now()->endOfWeek()->format('M d, Y') . ')',
             'last_week' => 'Last Week (' . Carbon::now()->subWeek()->startOfWeek()->format('M d') . ' - ' . Carbon::now()->subWeek()->endOfWeek()->format('M d, Y') . ')',
             'this_month' => 'This Month (' . Carbon::now()->format('F Y') . ')',
             'last_month' => 'Last Month (' . Carbon::now()->subMonth()->format('F Y') . ')',
+            'select_month' => 'Selected Month (' . (!empty($filters['selectedMonth']) ? (strlen($filters['selectedMonth']) > 2
+                ? Carbon::parse($filters['selectedMonth'] . '-01')->format('F Y')
+                : Carbon::createFromDate(null, (int) $filters['selectedMonth'], 1)->format('F ' . Carbon::now()->format('Y')))
+                : 'No month selected') . ')',
             'this_year' => 'This Year (' . Carbon::now()->format('Y') . ')',
             'last_year' => 'Last Year (' . Carbon::now()->subYear()->format('Y') . ')',
+            'select_year' => 'Selected Year (' . (!empty($filters['selectedYear']) ? $filters['selectedYear'] : 'No year selected') . ')',
             'custom' => 'Custom Range (' . ($filters['startDate'] ?? '') . ' to ' . ($filters['endDate'] ?? '') . ')',
             default => 'Unknown Period'
         };
