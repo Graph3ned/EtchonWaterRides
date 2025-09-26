@@ -229,7 +229,7 @@ class Sales extends Component
 
     public function updated($property)
     {
-        if (in_array($property, ['timeRange', 'selectedUser', 'selectedRideType', 'classification', 'dateRange', 'startDate', 'endDate'])) {
+        if (in_array($property, ['timeRange', 'selectedUser', 'selectedRideType', 'classification', 'dateRange', 'start_date', 'end_date'])) {
             // $this->dispatch('updateChart', $this->getChartData());
             // Sync filters with ReportGenerator when they change
             $this->syncReportFilters();
@@ -510,8 +510,8 @@ class Sales extends Component
             'selectedRideType' => $this->selectedRideType,
             'classification' => $this->classification,
             'dateRange' => $this->dateRange,
-            'startDate' => $this->startDate,
-            'endDate' => $this->endDate
+            'start_date' => $this->start_date,
+            'end_date' => $this->end_date
         ]);
     }
 
