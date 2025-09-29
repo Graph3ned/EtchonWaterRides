@@ -46,7 +46,7 @@ Metadata
 13. Creating, editing, and finishing rentals felt fast and reliable. [1–5/N/A]
 14. The system did the math for me (duration, totals) correctly. [1–5/N/A]
 15. Reports were correct and updated right away when I changed dates. [1–5/N/A]
-16. Updated availability and quick steps will help reduce waiting time. [1–5/N/A]
+16. The real-time ride availability updates help me serve customers faster without checking multiple places. [1–5/N/A]
 17. Activity logs show enough details to know who did what. [1–5/N/A]
 
 Submission

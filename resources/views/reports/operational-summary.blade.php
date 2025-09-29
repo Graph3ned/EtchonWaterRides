@@ -93,36 +93,72 @@
 
     <!-- Ride Utilization by Identifier -->
     @if(isset($reportData['rideUtilization']) && $reportData['rideUtilization']->count() > 0)
-    <div class="bg-gray-50 rounded-lg p-6">
+    <div class="bg-gray-50 rounded-lg p-4 sm:p-6">
         <h4 class="text-lg font-semibold text-gray-800 mb-4">Ride Utilization by Identifier</h4>
         <div class="space-y-3">
             @foreach($reportData['rideUtilization']->take(8) as $rideIdentifier => $data)
-            <div class="flex items-center justify-between bg-white p-3 rounded-lg shadow-sm">
-                <div class="flex items-center">
-                    <div class="w-3 h-3 rounded-full mr-3 
-                        @if($data['rentals'] >= 10) bg-green-500
-                        @elseif($data['rentals'] >= 5) bg-yellow-500
-                        @else bg-red-500
-                        @endif">
+            <div class="bg-white p-3 rounded-lg shadow-sm">
+                <!-- Mobile: Stack vertically -->
+                <div class="block sm:hidden">
+                    <div class="flex items-center mb-2">
+                        <div class="w-3 h-3 rounded-full mr-3 
+                            @if($data['rentals'] >= 10) bg-green-500
+                            @elseif($data['rentals'] >= 5) bg-yellow-500
+                            @else bg-red-500
+                            @endif">
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <span class="font-medium text-gray-700 text-sm break-words">{{ $rideIdentifier }}</span>
+                            <p class="text-xs text-gray-500 break-words">{{ $data['classification'] }} • {{ $data['ride_type'] }}</p>
+                        </div>
                     </div>
-                    <div>
-                        <span class="font-medium text-gray-700">{{ $rideIdentifier }}</span>
-                        <p class="text-xs text-gray-500">{{ $data['classification'] }} • {{ $data['ride_type'] }}</p>
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1 mr-3">
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-cyan-600 h-2 rounded-full" style="width: {{ ($data['rentals'] / $reportData['rideUtilization']->max('rentals')) * 100 }}%"></div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="font-bold text-cyan-600 text-sm">{{ $data['rentals'] }} rentals</span>
+                            <p class="text-xs text-gray-500">
+                                @if($data['total_duration'] >= 60)
+                                    {{ intdiv($data['total_duration'], 60) }}hr{{ $data['total_duration'] % 60 > 0 ? ' ' . ($data['total_duration'] % 60) . 'min' : '' }}
+                                @else
+                                    {{ $data['total_duration'] }}min
+                                @endif
+                            </p>
+                        </div>
                     </div>
                 </div>
-                <div class="flex items-center">
-                    <div class="w-32 bg-gray-200 rounded-full h-2 mr-3">
-                        <div class="bg-cyan-600 h-2 rounded-full" style="width: {{ ($data['rentals'] / $reportData['rideUtilization']->max('rentals')) * 100 }}%"></div>
+                
+                <!-- Desktop: Horizontal layout -->
+                <div class="hidden sm:flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 rounded-full mr-3 
+                            @if($data['rentals'] >= 10) bg-green-500
+                            @elseif($data['rentals'] >= 5) bg-yellow-500
+                            @else bg-red-500
+                            @endif">
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-700">{{ $rideIdentifier }}</span>
+                            <p class="text-xs text-gray-500">{{ $data['classification'] }} • {{ $data['ride_type'] }}</p>
+                        </div>
                     </div>
-                    <div class="text-right">
-                        <span class="font-bold text-cyan-600">{{ $data['rentals'] }} rentals</span>
-                        <p class="text-xs text-gray-500">
-                            @if($data['total_duration'] >= 60)
-                                {{ intdiv($data['total_duration'], 60) }}hr{{ $data['total_duration'] % 60 > 0 ? ' ' . ($data['total_duration'] % 60) . 'min' : '' }}
-                            @else
-                                {{ $data['total_duration'] }}min
-                            @endif
-                        </p>
+                    <div class="flex items-center">
+                        <div class="w-32 bg-gray-200 rounded-full h-2 mr-3">
+                            <div class="bg-cyan-600 h-2 rounded-full" style="width: {{ ($data['rentals'] / $reportData['rideUtilization']->max('rentals')) * 100 }}%"></div>
+                        </div>
+                        <div class="text-right">
+                            <span class="font-bold text-cyan-600">{{ $data['rentals'] }} rentals</span>
+                            <p class="text-xs text-gray-500">
+                                @if($data['total_duration'] >= 60)
+                                    {{ intdiv($data['total_duration'], 60) }}hr{{ $data['total_duration'] % 60 > 0 ? ' ' . ($data['total_duration'] % 60) . 'min' : '' }}
+                                @else
+                                    {{ $data['total_duration'] }}min
+                                @endif
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
