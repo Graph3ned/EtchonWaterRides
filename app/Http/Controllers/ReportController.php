@@ -6,6 +6,7 @@ use App\Models\Rental;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ReportController extends Controller
 {
@@ -33,14 +34,25 @@ class ReportController extends Controller
             'selectedRideIdentifier' => $filters['selectedRideIdentifier'] ?? session('selected_ride_identifier', ''),
         ];
 
+        // Get format from request (default to csv for backward compatibility)
+        $format = $request->get('format', 'csv');
+
         // Build query based on filters
         $query = $this->buildFilteredQuery($filters);
         $rentals = $query->get();
 
-        if ($type === 'financial') {
-            return $this->exportFinancialCSV($rentals, $filters);
+        if ($format === 'pdf') {
+            if ($type === 'financial') {
+                return $this->exportFinancialPDF($rentals, $filters);
+            } else {
+                return $this->exportOperationalPDF($rentals, $filters);
+            }
         } else {
-            return $this->exportOperationalCSV($rentals, $filters);
+            if ($type === 'financial') {
+                return $this->exportFinancialCSV($rentals, $filters);
+            } else {
+                return $this->exportOperationalCSV($rentals, $filters);
+            }
         }
     }
 
@@ -339,6 +351,145 @@ class ReportController extends Controller
         ]);
     }
 
+    protected function exportFinancialPDF($rentals, $filters)
+    {
+        // Calculate summary data (same as CSV)
+        $totalRevenue = $rentals->sum('computed_total');
+        $totalRentals = $rentals->count();
+        $averageTransaction = $totalRentals > 0 ? $totalRevenue / $totalRentals : 0;
+
+        // Revenue by ride type
+        $revenueByRideType = $rentals->groupBy(function($rental) {
+            return $rental->ride->classification->rideType->name ?? $rental->ride_type_name_at_time ?? 'Unknown';
+        })->map(function($group) {
+            return $group->sum('computed_total');
+        });
+
+        // Revenue by staff
+        $revenueByStaff = $rentals->groupBy('user_name_at_time')->map(function($group) {
+            return $group->sum('computed_total');
+        });
+
+        // Format rentals data for PDF
+        $formattedRentals = $rentals->map(function($rental) {
+            $rideTypeName = $rental->ride->classification->rideType->name ?? $rental->ride_type_name_at_time ?? 'Unknown';
+            $classificationName = $rental->ride->classification->name ?? $rental->classification_name_at_time ?? 'Unknown';
+            $rideIdentifier = $rental->ride_identifier_at_time ?? $rental->ride->identifier ?? 'Unknown';
+            $startTime = $rental->start_at ? Carbon::parse($rental->start_at)->format('h:i A') : '';
+            $endTime = $rental->end_at ? Carbon::parse($rental->end_at)->format('h:i A') : '';
+            $dateVal = $rental->created_at ? Carbon::parse($rental->created_at)->format('M/d/Y') : '';
+            $staffName = $rental->user_name_at_time ?? 'Unknown';
+            
+            return [
+                'date' => $dateVal,
+                'staff' => $staffName,
+                'ride_type' => $rideTypeName,
+                'classification' => $classificationName,
+                'ride_identifier' => $rideIdentifier,
+                'duration' => $rental->duration_minutes ?? 0,
+                'life_jackets' => $rental->life_jacket_quantity ?? 0,
+                'total_price' => $rental->computed_total ?? 0,
+                'start_time' => $startTime,
+                'end_time' => $endTime,
+                'note' => $rental->note ?? '-'
+            ];
+        });
+
+        $data = [
+            'title' => 'Financial Report',
+            'period' => $this->getPeriodDescription($filters),
+            'generated_at' => Carbon::now()->format('M d, Y \a\t h:i A'),
+            'totalRevenue' => $totalRevenue,
+            'totalRentals' => $totalRentals,
+            'averageTransaction' => $averageTransaction,
+            'revenueByRideType' => $revenueByRideType,
+            'revenueByStaff' => $revenueByStaff,
+            'rentals' => $formattedRentals
+        ];
+
+        $pdf = Pdf::loadView('reports.financial-pdf', $data);
+        $filename = 'financial_report_' . Carbon::now()->format('Ymd_His') . '.pdf';
+        
+        return $pdf->download($filename);
+    }
+
+    protected function exportOperationalPDF($rentals, $filters)
+    {
+        // Calculate summary data (same as CSV)
+        $totalRentals = $rentals->count();
+        $totalDuration = $rentals->sum('duration_minutes');
+        $averageDuration = $totalRentals > 0 ? $totalDuration / $totalRentals : 0;
+
+        // Most popular ride types
+        $popularRideTypes = $rentals->groupBy(function($rental) {
+            return $rental->ride->classification->rideType->name ?? $rental->ride_type_name_at_time ?? 'Unknown';
+        })->map(function($group) {
+            return $group->count();
+        })->sortDesc();
+
+        // Staff performance
+        $staffPerformance = $rentals->groupBy('user_name_at_time')->map(function($group) {
+            return [
+                'rentals' => $group->count(),
+                'revenue' => $group->sum('computed_total'),
+                'avg_duration' => $group->avg('duration_minutes')
+            ];
+        });
+
+        // Peak hours analysis
+        $peakHours = $rentals->groupBy(function($rental) {
+            return Carbon::parse($rental->start_at)->format('H');
+        })->map(function($group) {
+            return $group->count();
+        })->sortDesc();
+
+        // Life jacket usage
+        $lifeJacketUsage = $rentals->sum('life_jacket_quantity');
+
+        // Format rentals data for PDF
+        $formattedRentals = $rentals->map(function($rental) {
+            $rideTypeName = $rental->ride->classification->rideType->name ?? $rental->ride_type_name_at_time ?? 'Unknown';
+            $classificationName = $rental->ride->classification->name ?? $rental->classification_name_at_time ?? 'Unknown';
+            $rideIdentifier = $rental->ride_identifier_at_time ?? $rental->ride->identifier ?? 'Unknown';
+            $startTime = $rental->start_at ? Carbon::parse($rental->start_at)->format('h:i A') : '';
+            $endTime = $rental->end_at ? Carbon::parse($rental->end_at)->format('h:i A') : '';
+            $dateVal = $rental->created_at ? Carbon::parse($rental->created_at)->format('M/d/Y') : '';
+            $staffName = $rental->user_name_at_time ?? 'Unknown';
+            
+            return [
+                'date' => $dateVal,
+                'staff' => $staffName,
+                'ride_type' => $rideTypeName,
+                'classification' => $classificationName,
+                'ride_identifier' => $rideIdentifier,
+                'duration' => $rental->duration_minutes ?? 0,
+                'life_jackets' => $rental->life_jacket_quantity ?? 0,
+                'total_price' => $rental->computed_total ?? 0,
+                'start_time' => $startTime,
+                'end_time' => $endTime,
+                'note' => $rental->note ?? '-'
+            ];
+        });
+
+        $data = [
+            'title' => 'Operational Report',
+            'period' => $this->getPeriodDescription($filters),
+            'generated_at' => Carbon::now()->format('M d, Y \a\t h:i A'),
+            'totalRentals' => $totalRentals,
+            'totalDuration' => $totalDuration,
+            'averageDuration' => $averageDuration,
+            'lifeJacketUsage' => $lifeJacketUsage,
+            'popularRideTypes' => $popularRideTypes,
+            'staffPerformance' => $staffPerformance,
+            'peakHours' => $peakHours,
+            'rentals' => $formattedRentals
+        ];
+
+        $pdf = Pdf::loadView('reports.operational-pdf', $data);
+        $filename = 'operational_report_' . Carbon::now()->format('Ymd_His') . '.pdf';
+        
+        return $pdf->download($filename);
+    }
 
     protected function getPeriodDescription($filters)
     {

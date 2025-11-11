@@ -12,7 +12,12 @@ export default defineConfig({
     },
     plugins: [
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js'],
+            input: [
+                'resources/css/app.css',
+                'resources/js/app.js',
+                'node_modules/chart.js/dist/chart.js', // Include Chart.js
+                'node_modules/chart.js/auto/auto.js' // Or auto-registering version
+            ],
             refresh: true,
         }),
     ],

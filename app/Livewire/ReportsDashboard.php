@@ -393,6 +393,27 @@ class ReportsDashboard extends Component
         ]);
     }
 
+    public function exportPdf()
+    {
+        // This will be handled by the controller
+        return redirect()->route('reports.export', [
+            'type' => $this->reportType,
+            'format' => 'pdf',
+            'filters' => [
+                'dateRange' => $this->dateRange,
+                'startDate' => $this->startDate,
+                'endDate' => $this->endDate,
+                'selectedDay' => $this->selectedDay,
+                'selectedMonth' => $this->selectedMonth,
+                'selectedYear' => $this->selectedYear,
+                'selectedUser' => $this->selectedUser,
+                'selectedRideType' => $this->selectedRideType,
+                'classification' => $this->classification,
+                'selectedRideIdentifier' => $this->selectedRideIdentifier
+            ]
+        ]);
+    }
+
 
     public function clearFilters()
     {

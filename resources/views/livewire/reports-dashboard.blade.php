@@ -183,7 +183,7 @@
             </div>
 
             <!-- Export Options -->
-            <div class="flex justify-center">
+            <div class="flex justify-center gap-3">
                 <button wire:click="exportReport" 
                         class="inline-flex items-center justify-center bg-[#00A3E0] text-white py-2 px-6 rounded-lg font-medium text-sm sm:text-base
                                transform transition-all duration-200 hover:-translate-y-1 
@@ -192,6 +192,15 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                     Export CSV
+                </button>
+                <button wire:click="exportPdf" 
+                        class="inline-flex items-center justify-center bg-red-600 text-white py-2 px-6 rounded-lg font-medium text-sm sm:text-base
+                               transform transition-all duration-200 hover:-translate-y-1 
+                               hover:shadow-lg hover:bg-red-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                    Export PDF
                 </button>
             </div>
         </div>

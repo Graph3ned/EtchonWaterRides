@@ -253,11 +253,10 @@
 
           <!-- Chart Container -->
           <div class="p-6">
-            <div class="h-[300px]">
-              <canvas id="salesChart" 
-                      data-labels='@json($this->getChartLabels())'
-                      data-values='@json($this->getChartData())'></canvas>
-            </div>
+            <div id="salesChart" 
+                 class="h-[300px]"
+                 data-labels='@json($this->getChartLabels())'
+                 data-values='@json($this->getChartData())'></div>
           </div>
         </div>
       </div>
@@ -408,186 +407,283 @@
 // Use window object to avoid redeclaration issues
 window.salesChartInstance = window.salesChartInstance || null;
 
+// Helper function to check if ApexCharts is loaded
+function isApexChartsLoaded() {
+    return typeof ApexCharts !== 'undefined';
+}
+
+// Helper function to wait for ApexCharts to be available
+function waitForApexCharts(callback, maxAttempts = 50, attempt = 0) {
+    if (isApexChartsLoaded()) {
+        callback();
+    } else if (attempt < maxAttempts) {
+        setTimeout(() => waitForApexCharts(callback, maxAttempts, attempt + 1), 100);
+    } else {
+        console.error('ApexCharts failed to load after maximum attempts');
+    }
+}
+
+// Helper function to wait for element to exist
+function waitForElement(selector, callback, maxAttempts = 50, attempt = 0) {
+    const element = document.getElementById(selector);
+    if (element) {
+        callback(element);
+    } else if (attempt < maxAttempts) {
+        setTimeout(() => waitForElement(selector, callback, maxAttempts, attempt + 1), 100);
+    } else {
+        console.error('Element with id "' + selector + '" not found after maximum attempts');
+    }
+}
+
+function initChart() {
+    // First check if ApexCharts is available
+    if (!isApexChartsLoaded()) {
+        waitForApexCharts(() => initChart());
+        return;
+    }
+
+    // Wait for chart container element to exist
+    waitForElement('salesChart', (chartContainer) => {
+        // Destroy existing chart instance if it exists
+        if (window.salesChartInstance) {
+            window.salesChartInstance.destroy();
+            window.salesChartInstance = null;
+        }
+
+        // Get chart data from data attributes
+        let chartLabels = [];
+        let chartData = [];
+
+        try {
+            const labelsAttr = chartContainer.getAttribute('data-labels');
+            const valuesAttr = chartContainer.getAttribute('data-values');
+            
+            if (labelsAttr) {
+                chartLabels = JSON.parse(labelsAttr);
+            }
+            if (valuesAttr) {
+                chartData = JSON.parse(valuesAttr);
+            }
+        } catch (e) {
+            console.error('Error parsing chart data:', e);
+            return;
+        }
+
+        // Validate data
+        if (!Array.isArray(chartLabels) || !Array.isArray(chartData)) {
+            console.error('Chart data is not in the correct format');
+            return;
+        }
+
+        // Ensure labels and data arrays have the same length
+        if (chartLabels.length !== chartData.length) {
+            const minLength = Math.min(chartLabels.length, chartData.length);
+            chartLabels = chartLabels.slice(0, minLength);
+            chartData = chartData.slice(0, minLength);
+        }
+
+        // Create the chart with ApexCharts
+        try {
+            // Calculate max value and round up to nearest 500 for Y-axis
+            const maxValue = Math.max(...chartData, 0);
+            const roundedMax = maxValue > 0 ? Math.ceil(maxValue / 500) * 500 : 500;
+            
+            // Generate Y-axis ticks in increments of 500
+            const yAxisTicks = [];
+            for (let i = 0; i <= roundedMax; i += 500) {
+                yAxisTicks.push(i);
+            }
+            
+            const options = {
+                series: [{
+                    name: 'Daily Sales',
+                    data: chartData
+                }],
+                chart: {
+                    type: 'line',
+                    height: 300,
+                    toolbar: {
+                        show: false
+                    },
+                    zoom: {
+                        enabled: false
+                    }
+                },
+                colors: ['#2563EB'],
+                dataLabels: {
+                    enabled: false
+                },
+                stroke: {
+                  curve: 'smooth',
+                  width: 3
+                },
+                fill: {
+                  type: 'gradient',
+                  gradient: {
+                    shade: 'vertical',
+                    shadeIntensity: 1,
+                    opacityFrom: 0.1,
+                    opacityTo: 0.1,
+                    stops: [0, 100],
+                    colorStops: [
+                      {
+                        offset: 0,
+                        color: '#2563EB',
+                        opacity: 0.5
+                      },
+                      {
+                        offset: 100,
+                        color: '#2563EB',
+                        opacity: 0.1
+                      }
+                    ]
+                  }
+                },
+
+                xaxis: {
+                    categories: chartLabels,
+                    labels: {
+                        style: {
+                            fontFamily: 'Inter, sans-serif',
+                            fontSize: '11px',
+                            fontWeight: 500,
+                            colors: '#6B7280'
+                        },
+                        maxRotation: 0
+                    },
+                    axisBorder: {
+                        show: false
+                    },
+                    axisTicks: {
+                        show: false
+                    }
+                },
+                yaxis: {
+                    min: 0,
+                    max: roundedMax,
+                    tickAmount: yAxisTicks.length - 1,
+                    labels: {
+                        formatter: function(value) {
+                            // Only show labels that are in our tick array (multiples of 500)
+                            if (yAxisTicks.includes(value)) {
+                                return '₱' + value.toLocaleString('en-US');
+                            }
+                            return '';
+                        },
+                        style: {
+                            fontFamily: 'Inter, sans-serif',
+                            fontSize: '11px',
+                            fontWeight: 500,
+                            colors: '#6B7280'
+                        }
+                    },
+                    axisBorder: {
+                        show: false
+                    },
+                    forceNiceScale: false,
+                    decimalsInFloat: 0
+                },
+                grid: {
+                    borderColor: 'transparent',
+                    strokeDashArray: 0,
+                    xaxis: {
+                        lines: {
+                            show: false
+                        }
+                    },
+                    yaxis: {
+                        lines: {
+                            show: true,
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    padding: {
+                        top: 0,
+                        right: 0,
+                        bottom: 0,
+                        left: 0
+                    }
+                },
+                tooltip: {
+                    theme: 'light',
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    borderColor: 'rgba(0, 0, 0, 0.1)',
+                    borderWidth: 1,
+                    style: {
+                        fontFamily: 'Inter, sans-serif',
+                        fontSize: '13px'
+                    },
+                    title: {
+                        style: {
+                            fontFamily: 'Inter, sans-serif',
+                            fontSize: '13px',
+                            fontWeight: 600,
+                            color: '#1f2937'
+                        }
+                    },
+                    y: {
+                        formatter: function(value) {
+                            return '₱' + value.toLocaleString('en-US', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+                        },
+                        title: {
+                            formatter: function() {
+                                return '';
+                            }
+                        }
+                    },
+                    marker: {
+                        show: false
+                    }
+                },
+                markers: {
+                    size: 0,
+                    hover: {
+                        size: 6,
+                        sizeOffset: 3
+                    },
+                    colors: ['#ffffff'],
+                    strokeColors: ['#2563EB'],
+                    strokeWidth: 3
+                },
+                legend: {
+                    show: false
+                }
+            };
+
+            window.salesChartInstance = new ApexCharts(chartContainer, options);
+            window.salesChartInstance.render();
+        } catch (e) {
+            console.error('Error creating chart:', e);
+        }
+    });
+}
 
 // Listen for pagination events
 document.addEventListener('livewire:pagination', function () {
-    initChart();
+    setTimeout(() => initChart(), 200);
 });
 
 // Listen for any Livewire updates
 document.addEventListener('livewire:updated', function () {
-    initChart();
+    setTimeout(() => initChart(), 200);
 });
 
 Livewire.on('updateChart', () => {
-    initChart();
+    setTimeout(() => initChart(), 200);
 });
 
-function initChart() {
-    // Add a small delay to ensure DOM is ready
-    setTimeout(() => {
-        if (window.salesChartInstance) {
-            window.salesChartInstance.destroy();
-        }
-
-        const ctx = document.getElementById('salesChart');
-        if (!ctx) return;
-
-        // Get chart data from data attributes
-        const chartLabels = JSON.parse(ctx.dataset.labels || '[]');
-        const chartData = JSON.parse(ctx.dataset.values || '[]');
-
-    window.salesChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: chartLabels,
-            datasets: [{
-                label: 'Daily Sales',
-                data: chartData,
-                borderWidth: 3,
-                borderColor: '#1A56DB',
-                backgroundColor: (context) => {
-                    const chart = context.chart;
-                    const { ctx, chartArea } = chart;
-                    if (!chartArea) return null;
-                    
-                    const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-                    gradient.addColorStop(0, 'rgba(26, 86, 219, 0.4)');
-                    gradient.addColorStop(1, 'rgba(26, 86, 219, 0)');
-                    return gradient;
-                },
-                fill: true,
-                tension: 0.4,
-                pointRadius: 0, // Hide points by default
-                pointHoverRadius: 6, // Point size on hover
-                pointHoverBackgroundColor: '#ffffff', // White center
-                pointHoverBorderColor: '#1A56DB', // Blue border
-                pointHoverBorderWidth: 3,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: {
-                intersect: false,
-                mode: 'index',
-            },
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                    titleColor: '#1f2937',
-                    bodyColor: '#1f2937',
-                    bodyFont: {
-                        size: 13,
-                        family: 'Inter, sans-serif',
-                    },
-                    titleFont: {
-                        size: 13,
-                        family: 'Inter, sans-serif',
-                        weight: '600',
-                    },
-                    padding: 12,
-                    boxPadding: 6,
-                    borderColor: 'rgba(0, 0, 0, 0.1)',
-                    borderWidth: 1,
-                    callbacks: {
-                        label: function(context) {
-                            return '₱' + context.parsed.y.toLocaleString('en-US', {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2
-                            });
-                        }
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        drawBorder: false,
-                        color: 'rgba(0, 0, 0, 0.05)',
-                        drawTicks: false,
-                    },
-                    ticks: {
-                        callback: function(value) {
-                            return '₱' + value.toLocaleString('en-US');
-                        },
-                        font: {
-                            family: "Inter, sans-serif",
-                            size: 11,
-                            weight: '500'
-                        },
-                        color: '#6B7280',
-                        padding: 10
-                    },
-                    border: {
-                        display: false
-                    }
-                },
-                x: {
-                    grid: {
-                        display: false
-                    },
-                    ticks: {
-                        font: {
-                            family: "Inter, sans-serif",
-                            size: 11,
-                            weight: '500'
-                        },
-                        color: '#6B7280',
-                        maxRotation: 0,
-                        padding: 10
-                    },
-                    border: {
-                        display: false
-                    }
-                }
-            },
-            hover: {
-                mode: 'index',
-                intersect: false
-            },
-            elements: {
-                line: {
-                    borderJoinStyle: 'round'
-                }
-            }
-        },
-        plugins: [{
-            id: 'hoverLine',
-            beforeDraw: function(chart) {
-                if (chart.tooltip._active && chart.tooltip._active.length) {
-                    const activePoint = chart.tooltip._active[0];
-                    const { ctx } = chart;
-                    const { x } = activePoint.element;
-                    const topY = chart.scales.y.top;
-                    const bottomY = chart.scales.y.bottom;
-
-                    ctx.save();
-                    ctx.beginPath();
-                    ctx.moveTo(x, topY);
-                    ctx.lineTo(x, bottomY);
-                    ctx.lineWidth = 1;
-                    ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
-                    ctx.stroke();
-                    ctx.restore();
-                }
-            }
-        }]
-    });
-    }, 100); // 100ms delay to ensure DOM is ready
-}
-
 window.addEventListener('resize', function() {
-    initChart();
+    if (window.salesChartInstance) {
+        window.salesChartInstance.update();
+    }
 });
 
 // Listen for pagination clicks specifically
 document.addEventListener('click', function(e) {
-    if (e.target.closest('[wire\\:click]') && e.target.closest('[wire\\:click]').getAttribute('wire:click').includes('gotoPage')) {
+    if (e.target.closest('[wire\\:click]') && e.target.closest('[wire\\:click]').getAttribute('wire:click')?.includes('gotoPage')) {
         setTimeout(() => {
             initChart();
         }, 200);
@@ -598,7 +694,18 @@ document.addEventListener('livewire:initialized', () => {
     Livewire.on('refreshPage', () => {
         location.reload();
     });
+    // Initialize chart when Livewire is ready
+    setTimeout(() => initChart(), 200);
 });
+
+// Initialize on page load
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => initChart(), 300);
+    });
+} else {
+    setTimeout(() => initChart(), 300);
+}
 </script>
 
 
