@@ -130,6 +130,18 @@
                                                     </span>
                                                 </button>
                                             @endif
+
+                                            <!-- Save button for existing identifiers -->
+                                            <button type="button" 
+                                                        wire:click="updateIdentifierName({{ $iIndex }})" 
+                                                        class="w-full sm:w-auto px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium transition-all duration-200 shadow hover:shadow-md transform hover:-translate-y-0.5">
+                                                    <span class="flex items-center justify-center">
+                                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                        Save Name
+                                                    </span>
+                                                </button>
                                             
                                             @if(!empty(trim($identifier)) && ($identifierInDatabase[$iIndex] ?? false))
                                                 <button type="button" 
@@ -146,6 +158,8 @@
                                                         </svg>
                                                         {{ ($identifierStatus[$iIndex] ?? true) ? 'Active' : 'Inactive' }}
                                                 </button>
+                                                
+                                                
                                             @endif
                                             
                                             @if(!empty(trim($identifier)) && ($identifierInDatabase[$iIndex] ?? false))

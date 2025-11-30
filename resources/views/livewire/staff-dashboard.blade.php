@@ -369,7 +369,6 @@
 
     function updateRemainingTimes() {
         const now = new Date();
-        now.setDate(now.getDate());
         
         document.querySelectorAll('.remaining-time').forEach(cell => {
             // Check if marked as done

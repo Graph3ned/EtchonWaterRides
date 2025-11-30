@@ -192,7 +192,11 @@ class EditRide extends Component
         // Create new end datetime
         $today = Carbon::today('Asia/Manila');
         $startDateTime = $today->copy()->setTimeFromTimeString($this->startAt);
-        $endDateTime = $today->copy()->setTimeFromTimeString($this->endAt);
+        
+        // Calculate end datetime from start + duration to handle midnight crossover correctly
+        $extensionMinutes = $this->showCustomDuration ? (int)$this->customDuration : (int)$this->extendDuration;
+        $totalDuration = $this->duration + $extensionMinutes;
+        $endDateTime = $startDateTime->copy()->addMinutes($totalDuration);
 
         // Get current data for _at_time columns
         $ride = Ride::with('classification.rideType')->find($this->rideId);

@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boat Rental Management System - User Manual</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #00A3E0;
+            border-bottom: 3px solid #00A3E0;
+            padding-bottom: 10px;
+            page-break-after: avoid;
+        }
+        
+        h2 {
+            color: #00A3E0;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            page-break-after: avoid;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 5px;
+        }
+        
+        h3 {
+            color: #0066cc;
+            margin-top: 25px;
+            margin-bottom: 12px;
+            page-break-after: avoid;
+        }
+        
+        h4 {
+            color: #0066cc;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            page-break-after: avoid;
+        }
+        
+        p {
+            margin-bottom: 12px;
+            text-align: justify;
+        }
+        
+        ul, ol {
+            margin-bottom: 15px;
+            padding-left: 30px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            page-break-inside: avoid;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #00A3E0;
+            color: white;
+            font-weight: bold;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .toc {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+            page-break-inside: avoid;
+        }
+        
+        .toc ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        
+        .toc li {
+            margin-bottom: 5px;
+        }
+        
+        .toc a {
+            color: #00A3E0;
+            text-decoration: none;
+        }
+        
+        .toc a:hover {
+            text-decoration: underline;
+        }
+        
+        .note {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px 15px;
+            margin: 15px 0;
+            page-break-inside: avoid;
+        }
+        
+        .warning {
+            background-color: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 10px 15px;
+            margin: 15px 0;
+            page-break-inside: avoid;
+        }
+        
+        .info {
+            background-color: #d1ecf1;
+            border-left: 4px solid #0c5460;
+            padding: 10px 15px;
+            margin: 15px 0;
+            page-break-inside: avoid;
+        }
+        
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        hr {
+            border: none;
+            border-top: 2px solid #e0e0e0;
+            margin: 30px 0;
+        }
+        
+        .header-info {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #666;
+        }
+        
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        @media print {
+            body {
+                padding: 0;
+            }
+            
+            h2 {
+                page-break-before: auto;
+            }
+            
+            .page-break {
+                page-break-before: always;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header-info">
+        <h1>Boat Rental Management System</h1>
+        <h2>User Manual</h2>
+        <p><strong>Version:</strong> 1.0<br>
+        <strong>Last Updated:</strong> 2025</p>
+    </div>
+
+    <div class="toc">
+        <h2>Table of Contents</h2>
+        <ul>
+            <li><a href="#introduction">1. Introduction</a></li>
+            <li><a href="#getting-started">2. Getting Started</a></li>
+            <li><a href="#system-overview">3. System Overview</a></li>
+            <li><a href="#staff-user-guide">4. Staff User Guide</a></li>
+            <li><a href="#admin-user-guide">5. Admin User Guide</a></li>
+            <li><a href="#common-tasks">6. Common Tasks & Workflows</a></li>
+            <li><a href="#troubleshooting">7. Troubleshooting</a></li>
+            <li><a href="#appendix">8. Appendix</a></li>
+        </ul>
+    </div>
+
+    <hr>
+
+    <h2 id="introduction">Introduction</h2>
+
+    <h3>About the System</h3>
+    <p>The <strong>Boat Rental Management System</strong> is a comprehensive web-based application designed to manage water ride rentals efficiently. The system automates rental transactions, tracks sales, manages staff, and provides real-time reporting capabilities.</p>
+
+    <h3>Key Features</h3>
+    <ul>
+        <li><strong>Automated Rental Management</strong>: Create, edit, and complete rental transactions with automatic time tracking and price calculations</li>
+        <li><strong>Real-time Availability</strong>: View which rides are available or currently in use</li>
+        <li><strong>Sales & Reporting</strong>: Generate detailed financial and operational reports with filtering options</li>
+        <li><strong>Staff Management</strong>: Manage staff accounts and track their activities</li>
+        <li><strong>Role-Based Security</strong>: Separate access levels for Admin and Staff users</li>
+        <li><strong>Activity Logging</strong>: Complete audit trail of staff activities</li>
+    </ul>
+
+    <h3>System Requirements</h3>
+    <ul>
+        <li><strong>Web Browser</strong>: Chrome, Firefox, Safari, or Edge (latest versions)</li>
+        <li><strong>Internet Connection</strong>: Required for accessing the system</li>
+        <li><strong>Device</strong>: Desktop, laptop, tablet, or mobile phone</li>
+    </ul>
+
+    <hr>
+
+    <h2 id="getting-started">Getting Started</h2>
+
+    <h3>Accessing the System</h3>
+    <ol>
+        <li>Open your web browser</li>
+        <li>Navigate to the system URL provided by your administrator</li>
+        <li>You will be redirected to the login page</li>
+    </ol>
+
+    <h3>User Roles</h3>
+    <p>The system has two user roles:</p>
+    <ul>
+        <li><strong>Staff</strong>: Can create and manage rental transactions</li>
+        <li><strong>Admin</strong>: Full system access including staff management, reports, and system configuration</li>
+    </ul>
+
+    <h3>Logging In</h3>
+    <ol>
+        <li>On the login page, enter your <strong>username</strong> and <strong>password</strong></li>
+        <li>Click the <strong>"Dive In"</strong> button (or "Log in" button)</li>
+        <li>You will be redirected to your dashboard based on your role:
+            <ul>
+                <li>Staff users → Staff Dashboard</li>
+                <li>Admin users → Admin Dashboard</li>
+            </ul>
+        </li>
+    </ol>
+    <div class="note">
+        <strong>Note:</strong> If you don't have an account, contact your administrator to create one.
+    </div>
+
+    <h3>Password Reset</h3>
+    <p>If you've forgotten your password:</p>
+    <ol>
+        <li>Click <strong>"Forgot your password?"</strong> on the login page</li>
+        <li>Enter your <strong>email address</strong></li>
+        <li>Click <strong>"Email Password Reset Link"</strong> or <strong>"Send Reset Link"</strong></li>
+        <li>Check your email for the password reset link</li>
+        <li>Click the link in the email</li>
+        <li>Enter your new password and confirm it</li>
+        <li>Click <strong>"Reset Password"</strong></li>
+    </ol>
+
+    <hr>
+
+    <h2 id="system-overview">System Overview</h2>
+
+    <h3>Navigation</h3>
+    <p>The system uses a navigation menu that appears at the top of each page. Available menu items depend on your user role:</p>
+    
+    <p><strong>Staff Navigation:</strong></p>
+    <ul>
+        <li>Dashboard</li>
+        <li>Ride Availability</li>
+        <li>Profile</li>
+    </ul>
+
+    <p><strong>Admin Navigation:</strong></p>
+    <ul>
+        <li>Dashboard</li>
+        <li>Sales</li>
+        <li>Reports</li>
+        <li>Rides Rate</li>
+        <li>Ride Availability</li>
+        <li>Staffs</li>
+        <li>Logs</li>
+        <li>Profile</li>
+    </ul>
+
+    <h3>Dashboard Overview</h3>
+    <p>Both Staff and Admin users have access to dashboards that provide:</p>
+    <ul>
+        <li>Quick overview of current rentals</li>
+        <li>Income information (Staff: daily total, Admin: overall total)</li>
+        <li>Filtering options</li>
+        <li>Action buttons for common tasks</li>
+    </ul>
+
+    <hr>
+
+    <h2 id="staff-user-guide">Staff User Guide</h2>
+
+    <h3>Staff Dashboard</h3>
+    <p>The Staff Dashboard is your main workspace for managing rental transactions.</p>
+
+    <h4>Features</h4>
+    <ul>
+        <li><strong>View All Rides</strong>: See all rental transactions for today (ongoing and completed)</li>
+        <li><strong>Filter Rides</strong>: Filter by "All Rides", "Ongoing Rides", or "Ended Rides"</li>
+        <li><strong>Total Income Display</strong>: View total income for today's rentals</li>
+        <li><strong>Add Rental Button</strong>: Quick access to create new rentals</li>
+    </ul>
+
+    <h4>Viewing Rentals</h4>
+    <p>The dashboard displays today's rentals in a table format showing:</p>
+    <ul>
+        <li>Ride Type & Classification</li>
+        <li>Identification (ride identifier)</li>
+        <li>Duration</li>
+        <li>Life Jackets used</li>
+        <li>Total price</li>
+        <li>Start time</li>
+        <li>End time</li>
+        <li>Remaining time (for ongoing rentals)</li>
+        <li>Notes</li>
+        <li>Action buttons (Edit/End Rental)</li>
+    </ul>
+    <div class="info">
+        <strong>Mobile View:</strong> On smaller screens, some columns are hidden but information is displayed in a condensed format below the ride type.
+    </div>
+
+    <h3>Creating a New Rental</h3>
+    <ol>
+        <li>Click the <strong>"Add Rental"</strong> button on the Staff Dashboard</li>
+        <li>Fill in the rental form:
+            <ul>
+                <li><strong>Step 1: Select Ride Type</strong> - Choose a Ride Type from the dropdown (e.g., Water Rides). The system will automatically load available classifications.</li>
+                <li><strong>Step 2: Select Classification</strong> - Choose a Classification from the dropdown (e.g., Kayak, Boat). The system will show available rides for that classification.</li>
+                <li><strong>Step 3: Select Specific Ride</strong> - Choose the specific Ride (identifier) you want to rent. Only available rides will be shown.</li>
+                <li><strong>Step 4: Set Duration</strong> - Choose a predefined duration (30 min, 1 hour, 2 hours, 3 hours, 4 hours) OR toggle "Use Custom Duration" to enter a specific number of minutes (1-500 minutes).</li>
+                <li><strong>Step 5: Enter Life Jackets</strong> - Enter the number of life jackets needed (0 or more).</li>
+                <li><strong>Step 6: Add Notes (Optional)</strong> - Add any additional notes about the rental.</li>
+            </ul>
+        </li>
+        <li>Review the <strong>Total Price</strong> (automatically calculated)</li>
+        <li>Click <strong>"Start Rental"</strong> button
+            <ul>
+                <li>The start time is automatically set to the current time</li>
+                <li>The end time is calculated based on the duration</li>
+                <li>The ride status changes to "In Use"</li>
+            </ul>
+        </li>
+    </ol>
+    <div class="warning">
+        <strong>Important Notes:</strong>
+        <ul>
+            <li>The system automatically calculates the total price based on duration and price per hour</li>
+            <li>Once a rental is started, the ride becomes unavailable for other rentals</li>
+            <li>All fields marked with * are required</li>
+        </ul>
+    </div>
+
+    <h3>Editing a Rental</h3>
+    <p>You can edit rental information for both active and completed rentals:</p>
+    <ol>
+        <li>On the Staff Dashboard, find the rental you want to edit</li>
+        <li>Click the <strong>"Edit"</strong> button for that rental</li>
+        <li>Modify any of the following:
+            <ul>
+                <li>Duration (will recalculate end time and total price)</li>
+                <li>Life jacket quantity</li>
+                <li>Notes</li>
+                <li>Ride selection</li>
+            </ul>
+        </li>
+        <li>Click <strong>"Update Rental"</strong> to save changes</li>
+    </ol>
+    <div class="note">
+        <strong>Note:</strong> Both active and completed rentals can be edited. When you change the duration, the system will recalculate the end time and total price based on the new duration.
+    </div>
+
+    <h3>Ending a Rental</h3>
+    <p>When a rental is complete:</p>
+    <ol>
+        <li>On the Staff Dashboard, find the rental you want to end</li>
+        <li>Click the <strong>"Edit"</strong> button for that rental</li>
+        <li>Click the <strong>"End Rental"</strong> button</li>
+        <li>The system will:
+            <ul>
+                <li>Mark the rental as completed (status changes to completed)</li>
+                <li>Make the ride available again for new rentals</li>
+            </ul>
+        </li>
+    </ol>
+    <div class="warning">
+        <strong>Important Notes:</strong>
+        <ul>
+            <li>If you need to update the end time or recalculate the price based on actual duration, you must edit the rental manually before or after ending it</li>
+        </ul>
+    </div>
+
+    <h3>Viewing Rental Details</h3>
+    <ul>
+        <li>All rental information is displayed in the dashboard table</li>
+        <li>For ongoing rentals, you can see the <strong>remaining time</strong> countdown</li>
+        <li>Click "Edit" to view and modify full details</li>
+    </ul>
+
+    <h3>Ride Availability</h3>
+    <p>Staff users can view real-time availability of all rides in the system.</p>
+
+    <h4>Features</h4>
+    <ul>
+        <li><strong>Real-time Status</strong>: See which rides are available or currently in use</li>
+        <li><strong>Filter by Ride Type</strong>: Filter to see availability for specific ride types</li>
+        <li><strong>Visual Indicators</strong>:
+            <ul>
+                <li>Available rides are clearly marked</li>
+                <li>Rides in use show rental information</li>
+            </ul>
+        </li>
+    </ul>
+
+    <h4>Accessing Ride Availability</h4>
+    <ol>
+        <li>Navigate to <strong>"Ride Availability"</strong> from the navigation menu</li>
+        <li>View all rides and their current status</li>
+        <li>Use filters to narrow down by ride type if needed</li>
+    </ol>
+    <div class="note">
+        <strong>Note:</strong> This feature helps staff quickly identify which rides are available when creating new rentals.
+    </div>
+
+    <hr>
+
+    <h2 id="admin-user-guide">Admin User Guide</h2>
+
+    <h3>Admin Dashboard</h3>
+    <p>The Admin Dashboard provides an overview of ride pricing and management options.</p>
+
+    <h4>Features</h4>
+    <ul>
+        <li><strong>View All Ride Prices</strong>: See all ride types, classifications, and their prices</li>
+        <li><strong>Add Ride Price</strong>: Create new ride types and set pricing</li>
+        <li><strong>Edit/Delete Prices</strong>: Modify existing ride pricing</li>
+    </ul>
+
+    <h3>Sales Management</h3>
+    <p>Access the Sales page from the Admin navigation menu.</p>
+
+    <h4>Sales Dashboard Features</h4>
+    <p><strong>Filter Options:</strong></p>
+    <ul>
+        <li><strong>Staff Filter</strong>: Filter sales by specific staff member or view all staff</li>
+        <li><strong>Ride Type Filter</strong>: Filter by specific ride type (e.g., Water Rides)</li>
+        <li><strong>Classification Filter</strong>: Filter by classification (requires ride type selection first)</li>
+        <li><strong>Identifier Filter</strong>: Filter by specific ride identifier (requires classification selection first)</li>
+        <li><strong>Date Range Filter</strong>: Multiple options:
+            <ul>
+                <li>All Time</li>
+                <li>Today</li>
+                <li>Yesterday</li>
+                <li>Select Day (choose specific date)</li>
+                <li>This Week</li>
+                <li>Last Week</li>
+                <li>This Month (default)</li>
+                <li>Last Month</li>
+                <li>Select Month (choose specific month)</li>
+                <li>This Year</li>
+                <li>Last Year</li>
+                <li>Select Year (choose specific year)</li>
+                <li>Custom Range (select start and end dates)</li>
+            </ul>
+        </li>
+    </ul>
+
+    <p><strong>Sales Information:</strong></p>
+    <ul>
+        <li><strong>Total Sales</strong>: Displays total sales amount in Philippine Peso (₱) based on current filters</li>
+        <li><strong>Sales Chart</strong>: Visual line chart showing daily sales trends</li>
+    </ul>
+
+    <p><strong>Sales Table:</strong></p>
+    <ul>
+        <li>Displays all rental transactions matching the filters</li>
+        <li>Shows: Staff name, Ride Type, Classification, Identifier, Duration, Jackets, Total, Start time, End time, Date, Notes</li>
+        <li><strong>Pagination</strong>: Control how many entries to show (10, 15, 20, 50, 100, 150, 200)</li>
+    </ul>
+
+    <p><strong>Editing Sales Records:</strong></p>
+    <ul>
+        <li>Click on a sales record to edit details (Admin only)</li>
+        <li>Can modify rental information if needed</li>
+    </ul>
+
+    <h3>Reports</h3>
+    <p>Access comprehensive reporting from the Reports page.</p>
+
+    <h4>Report Types</h4>
+    <ol>
+        <li><strong>Financial Reports</strong>
+            <ul>
+                <li>Total revenue</li>
+                <li>Sales by date range</li>
+                <li>Growth calculations</li>
+                <li>Export to PDF or CSV</li>
+            </ul>
+        </li>
+        <li><strong>Operational Reports</strong>
+            <ul>
+                <li>Rental statistics</li>
+                <li>Ride utilization</li>
+                <li>Staff performance</li>
+                <li>Export to PDF or CSV</li>
+            </ul>
+        </li>
+    </ol>
+
+    <h4>Generating Reports</h4>
+    <ol>
+        <li>Navigate to <strong>Reports</strong> from the Admin menu</li>
+        <li>Select report type (Financial or Operational)</li>
+        <li>Choose date range and filters</li>
+        <li>Click <strong>"Generate Report"</strong></li>
+        <li>Review the report</li>
+        <li>Export if needed (PDF or CSV)</li>
+    </ol>
+
+    <h3>Ride Management</h3>
+
+    <h4>Adding a New Ride Type</h4>
+    <ol>
+        <li>Navigate to <strong>"Rides Rate"</strong> from Admin menu</li>
+        <li>Click <strong>"Add Ride Price"</strong> button</li>
+        <li><strong>Step 1 - Create Ride Type:</strong>
+            <ul>
+                <li>Enter <strong>Ride Type Name</strong> (e.g., "Water Rides", "Land Rides")</li>
+                <li>Upload an <strong>image</strong> for the ride type (optional)</li>
+                <li>Click <strong>"Next"</strong></li>
+            </ul>
+        </li>
+        <li><strong>Step 2 - Add Classifications:</strong>
+            <ul>
+                <li>For each classification:
+                    <ul>
+                        <li>Enter <strong>Classification Name</strong> (e.g., "Kayak", "Boat")</li>
+                        <li>Enter <strong>Price Per Hour</strong> (in Philippine Peso)</li>
+                        <li>Upload <strong>Classification Image</strong> (optional)</li>
+                        <li>Add <strong>Identifiers</strong> (specific ride IDs):
+                            <ul>
+                                <li>Click <strong>"Add Identifier"</strong> for each ride</li>
+                                <li>Enter identifier name (e.g., "KAY-001", "BOAT-001")</li>
+                                <li>Upload identifier image (optional)</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+                <li>Click <strong>"Add Another Classification"</strong> to add more</li>
+                <li>Click <strong>"Save All"</strong> when done</li>
+            </ul>
+        </li>
+    </ol>
+
+    <h4>Editing Ride Types</h4>
+    <ol>
+        <li>Navigate to <strong>"Rides Rate"</strong> from Admin menu</li>
+        <li>Find the ride type you want to edit</li>
+        <li>Click <strong>"View Details"</strong> (or "View Rides") for that ride type</li>
+        <li>On the View Details page, click the <strong>"Edit"</strong> button</li>
+        <li>Modify:
+            <ul>
+                <li>Ride Type name</li>
+                <li>Image</li>
+            </ul>
+        </li>
+        <li>Click <strong>"Update"</strong></li>
+    </ol>
+
+    <h4>Editing Classifications</h4>
+    <ol>
+        <li>Navigate to <strong>"Rides Rate"</strong> from Admin menu</li>
+        <li>Click <strong>"View Details"</strong> for the ride type</li>
+        <li>Find the classification you want to edit</li>
+        <li>Click <strong>"Edit"</strong> button</li>
+        <li>Modify:
+            <ul>
+                <li>Classification name</li>
+                <li>Price per hour</li>
+                <li>Image</li>
+                <li>Add/remove identifiers</li>
+            </ul>
+        </li>
+        <li>Click <strong>"Update"</strong></li>
+    </ol>
+
+    <h4>Editing Prices</h4>
+    <ol>
+        <li>Navigate to <strong>"Rides Rate"</strong> from Admin menu</li>
+        <li>Find the price entry you want to edit</li>
+        <li>Click <strong>"Edit"</strong> button</li>
+        <li>Modify the <strong>Price Per Hour</strong></li>
+        <li>Click <strong>"Update"</strong></li>
+    </ol>
+
+    <h4>Deleting Rides/Prices</h4>
+    <ol>
+        <li>Navigate to <strong>"Rides Rate"</strong> from Admin menu</li>
+        <li>Find the entry you want to delete</li>
+        <li>Click <strong>"Delete"</strong> button</li>
+        <li>Confirm deletion in the popup</li>
+    </ol>
+
+    <h3>Ride Availability</h3>
+    <p>View real-time availability of all rides in the system.</p>
+
+    <h4>Features</h4>
+    <ul>
+        <li><strong>Real-time Status</strong>: See which rides are available or currently in use</li>
+        <li><strong>Filter by Ride Type</strong>: Filter to see availability for specific ride types</li>
+        <li><strong>Visual Indicators</strong>:
+            <ul>
+                <li>Available rides are clearly marked</li>
+                <li>Rides in use show rental information</li>
+            </ul>
+        </li>
+    </ul>
+
+    <h3>Staff Management</h3>
+    <p>Manage staff accounts and permissions.</p>
+
+    <h4>Viewing Staff List</h4>
+    <ol>
+        <li>Navigate to <strong>"Staffs"</strong> from Admin menu</li>
+        <li>View all staff members in a table showing:
+            <ul>
+                <li>Name</li>
+                <li>Username</li>
+                <li>Email</li>
+                <li>Actions</li>
+            </ul>
+        </li>
+    </ol>
+
+    <h4>Adding New Staff</h4>
+    <ol>
+        <li>Navigate to <strong>"Staffs"</strong> from Admin menu</li>
+        <li>Click <strong>"Register New Staff"</strong> or <strong>"Add Staff"</strong> button</li>
+        <li>Fill in the registration form:
+            <ul>
+                <li><strong>Name</strong>: Full name of the staff member</li>
+                <li><strong>Username</strong>: Unique username (used for login)</li>
+                <li><strong>Email</strong>: Unique email address</li>
+                <li><strong>Password</strong>: Create a secure password</li>
+                <li><strong>Confirm Password</strong>: Re-enter password</li>
+            </ul>
+        </li>
+        <li>Click <strong>"Register"</strong></li>
+    </ol>
+    <div class="note">
+        <strong>Note:</strong> Both username and email addresses must be unique. The system will prevent duplicate accounts.
+    </div>
+
+    <h4>Editing Staff Information</h4>
+    <ol>
+        <li>Navigate to <strong>"Staffs"</strong> from Admin menu</li>
+        <li>Find the staff member you want to edit</li>
+        <li>Click <strong>"Edit"</strong> button</li>
+        <li>Modify:
+            <ul>
+                <li>Name</li>
+                <li>Username</li>
+                <li>Email</li>
+                <li>Password (optional - only if you want to change it)</li>
+                <li>Confirm Password (required if changing password)</li>
+            </ul>
+        </li>
+        <li>Click <strong>"Save Changes"</strong></li>
+    </ol>
+    <div class="note">
+        <strong>Note:</strong> Staff members can also edit their own profile information from the Profile page.
+    </div>
+
+    <h4>Deleting Staff</h4>
+    <ol>
+        <li>Navigate to <strong>"Staffs"</strong> from Admin menu</li>
+        <li>Find the staff member you want to delete</li>
+        <li>Click <strong>"Delete"</strong> button</li>
+        <li>Confirm deletion</li>
+    </ol>
+
+    <h3>Activity Logs</h3>
+    <p>View a complete audit trail of staff activities.</p>
+
+    <h4>Features</h4>
+    <ul>
+        <li><strong>Complete Activity History</strong>: See all actions performed by staff members</li>
+        <li><strong>Filter by Action</strong>: Filter logs by specific action types</li>
+        <li><strong>Filter by User</strong>: Filter logs by specific staff members</li>
+        <li><strong>Date/Time Stamps</strong>: See when each action occurred</li>
+        <li><strong>Detailed Information</strong>: View full details of each logged action</li>
+    </ul>
+
+    <h4>Viewing Logs</h4>
+    <ol>
+        <li>Navigate to <strong>"Logs"</strong> from Admin menu</li>
+        <li>Use filters to narrow down the log entries:
+            <ul>
+                <li>Select action type from dropdown</li>
+                <li>Select user from dropdown</li>
+            </ul>
+        </li>
+        <li>Review the log entries in the table</li>
+        <li>Use pagination to navigate through logs</li>
+    </ol>
+
+    <hr>
+
+    <h2 id="common-tasks">Common Tasks & Workflows</h2>
+
+    <h3>Complete Rental Workflow (Staff)</h3>
+    <ol>
+        <li><strong>Customer arrives</strong> and requests a ride</li>
+        <li><strong>Check availability</strong> on the dashboard</li>
+        <li><strong>Create new rental</strong>:
+            <ul>
+                <li>Click "Add Rental"</li>
+                <li>Select ride type, classification, and specific ride</li>
+                <li>Set duration</li>
+                <li>Enter life jacket quantity</li>
+                <li>Add any notes</li>
+                <li>Click "Start Rental"</li>
+            </ul>
+        </li>
+        <li><strong>Monitor rental</strong> on dashboard (see remaining time)</li>
+        <li><strong>When rental ends</strong>:
+            <ul>
+                <li>Click "Edit" button, then "End Rental" button</li>
+                <li>System marks rental as completed</li>
+                <li>Ride becomes available again</li>
+                <li><strong>Note</strong>: If you need to update the end time or recalculate price, edit the rental before or after ending it</li>
+            </ul>
+        </li>
+    </ol>
+
+    <h3>Daily Sales Review (Admin)</h3>
+    <ol>
+        <li>Navigate to <strong>"Sales"</strong> page</li>
+        <li>Set date filter to <strong>"Today"</strong></li>
+        <li>Review total sales amount</li>
+        <li>Check sales chart for trends</li>
+        <li>Review individual transactions in the table</li>
+    </ol>
+
+    <h3>Monthly Report Generation (Admin)</h3>
+    <ol>
+        <li>Navigate to <strong>"Reports"</strong> page</li>
+        <li>Select <strong>"Financial Report"</strong> or <strong>"Operational Report"</strong></li>
+        <li>Set date range to <strong>"This Month"</strong> or <strong>"Select Month"</strong></li>
+        <li>Apply any additional filters (staff, ride type, etc.)</li>
+        <li>Click <strong>"Generate Report"</strong></li>
+        <li>Review the report</li>
+        <li>Export to PDF or CSV for distribution</li>
+    </ol>
+
+    <h3>Adding a New Ride to Inventory (Admin)</h3>
+    <ol>
+        <li>Navigate to <strong>"Rides Rate"</strong> page</li>
+        <li>Click <strong>"Add Ride Price"</strong></li>
+        <li>If creating new ride type:
+            <ul>
+                <li>Enter ride type name and upload image</li>
+                <li>Click "Next"</li>
+            </ul>
+        </li>
+        <li>Add classification:
+            <ul>
+                <li>Enter classification name</li>
+                <li>Set price per hour</li>
+                <li>Upload classification image</li>
+            </ul>
+        </li>
+        <li>Add identifiers:
+            <ul>
+                <li>For each physical ride, add an identifier (e.g., "KAY-001")</li>
+                <li>Upload identifier image if available</li>
+            </ul>
+        </li>
+        <li>Click <strong>"Save All"</strong></li>
+        <li>Verify the new ride appears in the list</li>
+    </ol>
+
+    <h3>Staff Account Setup (Admin)</h3>
+    <ol>
+        <li>Navigate to <strong>"Staffs"</strong> page</li>
+        <li>Click <strong>"Register New Staff"</strong></li>
+        <li>Enter staff information:
+            <ul>
+                <li>Full name</li>
+                <li>Username (must be unique, used for login)</li>
+                <li>Email (must be unique)</li>
+                <li>Password</li>
+            </ul>
+        </li>
+        <li>Click <strong>"Register"</strong></li>
+        <li>Inform the staff member of their login credentials (username and password)</li>
+        <li>Staff member can change password after first login</li>
+    </ol>
+
+    <hr>
+
+    <h2 id="troubleshooting">Troubleshooting</h2>
+
+    <h3>Login Issues</h3>
+    <p><strong>Problem:</strong> Cannot log in with correct credentials</p>
+    <p><strong>Solution:</strong></p>
+    <ul>
+        <li>Verify you're using the correct username (not email)</li>
+        <li>Check if Caps Lock is on</li>
+        <li>Try password reset if password is forgotten</li>
+        <li>Contact administrator if account is locked</li>
+    </ul>
+
+    <p><strong>Problem:</strong> Forgot password</p>
+    <p><strong>Solution:</strong></p>
+    <ul>
+        <li>Click "Forgot your password?" on login page</li>
+        <li>Follow email instructions to reset</li>
+    </ul>
+
+    <h3>Rental Issues</h3>
+    <p><strong>Problem:</strong> Cannot find a specific ride when creating rental</p>
+    <p><strong>Solution:</strong></p>
+    <ul>
+        <li>Check if the ride is currently in use (check Ride Availability page)</li>
+        <li>Verify the ride type and classification are selected correctly</li>
+        <li>Contact admin if ride should be available but isn't showing</li>
+    </ul>
+
+    <p><strong>Problem:</strong> Price calculation seems incorrect</p>
+    <p><strong>Solution:</strong></p>
+    <ul>
+        <li>Verify the duration is set correctly</li>
+        <li>Check the price per hour for that classification</li>
+        <li>System calculates: (Duration in hours) × (Price per hour)</li>
+        <li>Contact admin if price per hour needs to be updated</li>
+    </ul>
+
+    <p><strong>Problem:</strong> Cannot edit a rental</p>
+    <p><strong>Solution:</strong></p>
+    <ul>
+        <li>Both active and completed rentals can be edited</li>
+        <li>If you cannot edit a rental, refresh the page</li>
+        <li>Make sure you're clicking the "Edit" button for the correct rental</li>
+    </ul>
+
+    <h3>Display Issues</h3>
+    <p><strong>Problem:</strong> Page looks broken or elements are missing</p>
+    <p><strong>Solution:</strong></p>
+    <ul>
+        <li>Refresh the page (F5 or Ctrl+R)</li>
+        <li>Clear browser cache</li>
+        <li>Try a different browser</li>
+        <li>Check internet connection</li>
+    </ul>
+
+    <p><strong>Problem:</strong> Table columns are hidden on mobile</p>
+    <p><strong>Solution:</strong></p>
+    <ul>
+        <li>This is normal behavior for mobile devices</li>
+        <li>All information is still available, just displayed differently</li>
+        <li>Rotate device to landscape for more columns</li>
+        <li>Scroll down to see additional details below ride type</li>
+    </ul>
+
+    <h3>Performance Issues</h3>
+    <p><strong>Problem:</strong> Page loads slowly</p>
+    <p><strong>Solution:</strong></p>
+    <ul>
+        <li>Check internet connection</li>
+        <li>Reduce the number of entries shown per page</li>
+        <li>Use filters to narrow down results</li>
+        <li>Contact administrator if issue persists</li>
+    </ul>
+
+    <p><strong>Problem:</strong> Chart not displaying</p>
+    <p><strong>Solution:</strong></p>
+    <ul>
+        <li>Refresh the page</li>
+        <li>Check if JavaScript is enabled in browser</li>
+        <li>Try a different browser</li>
+        <li>Clear browser cache</li>
+    </ul>
+
+    <h3>Data Issues</h3>
+    <p><strong>Problem:</strong> Sales data doesn't match expectations</p>
+    <p><strong>Solution:</strong></p>
+    <ul>
+        <li>Check date range filter</li>
+        <li>Verify staff filter settings</li>
+        <li>Check ride type/classification filters</li>
+        <li>Click "Reset" to clear all filters</li>
+        <li>Contact admin to verify data integrity</li>
+    </ul>
+
+    <p><strong>Problem:</strong> Cannot delete a ride/price</p>
+    <p><strong>Solution:</strong></p>
+    <ul>
+        <li>Some items may be protected if they have associated rentals</li>
+        <li>Contact administrator for assistance</li>
+        <li>Consider editing instead of deleting</li>
+    </ul>
+
+    <hr>
+
+    <h2 id="appendix">Appendix</h2>
+
+    <h3>Keyboard Shortcuts</h3>
+    <ul>
+        <li><strong>F5</strong> or <strong>Ctrl+R</strong>: Refresh page</li>
+        <li><strong>Ctrl+F</strong>: Search/find on page</li>
+        <li><strong>Tab</strong>: Navigate between form fields</li>
+        <li><strong>Enter</strong>: Submit forms</li>
+    </ul>
+
+    <h3>Browser Compatibility</h3>
+    <p>The system is tested and works best with:</p>
+    <ul>
+        <li><strong>Chrome</strong> (recommended)</li>
+        <li><strong>Firefox</strong></li>
+        <li><strong>Safari</strong></li>
+        <li><strong>Edge</strong></li>
+    </ul>
+
+    <h3>Mobile Usage Tips</h3>
+    <ul>
+        <li>The system is fully responsive and works on mobile devices</li>
+        <li>Use landscape orientation for better table viewing</li>
+        <li>Some features may be optimized for touch interaction</li>
+        <li>All core functions are available on mobile</li>
+    </ul>
+
+    <h3>Data Export Formats</h3>
+    <ul>
+        <li><strong>CSV</strong>: Comma-separated values, opens in Excel or any spreadsheet application</li>
+        <li><strong>PDF</strong>: Portable Document Format, requires PDF reader</li>
+    </ul>
+
+    <h3>Currency</h3>
+    <p>All prices are displayed in <strong>Philippine Peso (₱)</strong>.</p>
+
+    <h3>Time Format</h3>
+    <ul>
+        <li>Times are displayed in 12-hour format with AM/PM</li>
+        <li>Dates are displayed as: Month Day, Year (e.g., "Jan 15, 2025")</li>
+        <li>System uses Asia/Manila timezone</li>
+    </ul>
+
+    <h3>Contact & Support</h3>
+    <p>For technical issues or questions:</p>
+    <ul>
+        <li>Contact your system administrator</li>
+        <li>Provide details about the issue</li>
+        <li>Include screenshots if possible</li>
+        <li>Note your user role and the page where the issue occurred</li>
+    </ul>
+
+    <h3>System Updates</h3>
+    <p>The system may be updated periodically. New features and improvements will be communicated by your administrator.</p>
+
+    <hr>
+
+    <h2>Quick Reference Guide</h2>
+
+    <h3>Staff Quick Actions</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Task</th>
+                <th>Steps</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Create Rental</td>
+                <td>Dashboard → Add Rental → Fill form → Start Rental</td>
+            </tr>
+            <tr>
+                <td>Edit Rental</td>
+                <td>Dashboard → Find rental → Click Edit → Update fields → Save</td>
+            </tr>
+            <tr>
+                <td>End Rental</td>
+                <td>Dashboard → Find rental → Click End Rental</td>
+            </tr>
+            <tr>
+                <td>View Income</td>
+                <td>Dashboard → Check "Total Income" display (shows today's total)</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Admin Quick Actions</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Task</th>
+                <th>Steps</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>View Sales</td>
+                <td>Sales → Apply filters → Review data</td>
+            </tr>
+            <tr>
+                <td>Generate Report</td>
+                <td>Reports → Select type → Set filters → Generate → Export</td>
+            </tr>
+            <tr>
+                <td>Add Staff</td>
+                <td>Staffs → Register New Staff → Fill form → Register</td>
+            </tr>
+            <tr>
+                <td>Add Ride</td>
+                <td>Rides Rate → Add Ride Price → Follow steps → Save</td>
+            </tr>
+            <tr>
+                <td>View Logs</td>
+                <td>Logs → Apply filters → Review entries</td>
+            </tr>
+            <tr>
+                <td>Check Availability</td>
+                <td>Ride Availability → View status</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p><strong>End of User Manual</strong></p>
+        <p>For the most up-to-date information, please refer to your system administrator.</p>
+    </div>
+
+</body>
+</html>
+

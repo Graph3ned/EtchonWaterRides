@@ -23,6 +23,7 @@ class EditClassification extends Component
     public $identifierImages = []; // Track identifier images
     public $identifierStatus = []; // Track individual identifier status
     public $identifierInDatabase = []; // Track which identifiers are in database
+    public $originalIdentifiers = []; // Track original identifier names to detect changes
     public $showDeleteModal = false;
     public $identifierToDelete;
     public $showIdentifierImageModal = false;
@@ -115,12 +116,14 @@ class EditClassification extends Component
         $this->identifierStatus = [];
         $this->identifierImages = [];
         $this->identifierInDatabase = [];
+        $this->originalIdentifiers = [];
         foreach ($activeRides as $ride) {
             $index = array_search($ride->identifier, $this->identifiers);
             if ($index !== false) {
                 $this->identifierStatus[$index] = $ride->is_active;
                 $this->identifierImages[$index] = $ride->image_path;
                 $this->identifierInDatabase[$index] = true;
+                $this->originalIdentifiers[$index] = $ride->identifier; // Store original name
             }
         }
     }
@@ -145,6 +148,7 @@ class EditClassification extends Component
         $this->identifierImages[] = null; // Default to no image for new identifiers
         $this->identifierStatus[] = true; // Default to active for new identifiers
         $this->identifierInDatabase[] = false; // Mark as not in database
+        $this->originalIdentifiers[] = ''; // No original name for new identifiers
     }
 
     private function reloadFormData()
@@ -164,12 +168,14 @@ class EditClassification extends Component
         $this->identifierStatus = [];
         $this->identifierImages = [];
         $this->identifierInDatabase = [];
+        $this->originalIdentifiers = [];
         foreach ($activeRides as $ride) {
             $index = array_search($ride->identifier, $this->identifiers);
             if ($index !== false) {
                 $this->identifierStatus[$index] = $ride->is_active;
                 $this->identifierImages[$index] = $ride->image_path;
                 $this->identifierInDatabase[$index] = true;
+                $this->originalIdentifiers[$index] = $ride->identifier; // Store original name
             }
         }
     }
@@ -212,8 +218,10 @@ class EditClassification extends Component
                 // Remove the identifier from the form array since it's now in the database
                 unset($this->identifiers[$index]);
                 unset($this->identifierStatus[$index]);
+                unset($this->originalIdentifiers[$index]);
                 $this->identifiers = array_values($this->identifiers);
                 $this->identifierStatus = array_values($this->identifierStatus);
+                $this->originalIdentifiers = array_values($this->originalIdentifiers);
                 
                 // Reload the classification data to show the newly added identifier
                 $this->classification = Classification::with(['rideType', 'rides' => function($query) {
@@ -229,8 +237,10 @@ class EditClassification extends Component
                 // Remove the problematic identifier from the form array
                 unset($this->identifiers[$index]);
                 unset($this->identifierStatus[$index]);
+                unset($this->originalIdentifiers[$index]);
                 $this->identifiers = array_values($this->identifiers);
                 $this->identifierStatus = array_values($this->identifierStatus);
+                $this->originalIdentifiers = array_values($this->originalIdentifiers);
                 
                 return;
             }
@@ -256,8 +266,10 @@ class EditClassification extends Component
                 // Remove the identifier from the form array since it's now in the database
                 unset($this->identifiers[$index]);
                 unset($this->identifierStatus[$index]);
+                unset($this->originalIdentifiers[$index]);
                 $this->identifiers = array_values($this->identifiers);
                 $this->identifierStatus = array_values($this->identifierStatus);
+                $this->originalIdentifiers = array_values($this->originalIdentifiers);
                 
                 // Reload the classification data to show the newly added identifier
                 $this->classification = Classification::with(['rideType', 'rides' => function($query) {
@@ -272,8 +284,10 @@ class EditClassification extends Component
                 // Remove the problematic identifier from the form array
                 unset($this->identifiers[$index]);
                 unset($this->identifierStatus[$index]);
+                unset($this->originalIdentifiers[$index]);
                 $this->identifiers = array_values($this->identifiers);
                 $this->identifierStatus = array_values($this->identifierStatus);
+                $this->originalIdentifiers = array_values($this->originalIdentifiers);
                 
                 return;
             }
@@ -285,9 +299,11 @@ class EditClassification extends Component
         unset($this->identifiers[$index]);
         unset($this->identifierImages[$index]);
         unset($this->identifierStatus[$index]);
+        unset($this->originalIdentifiers[$index]);
         $this->identifiers = array_values($this->identifiers);
         $this->identifierImages = array_values($this->identifierImages);
         $this->identifierStatus = array_values($this->identifierStatus);
+        $this->originalIdentifiers = array_values($this->originalIdentifiers);
     }
 
     public function updatedName()
@@ -363,14 +379,17 @@ class EditClassification extends Component
             unset($this->identifiers[$this->identifierToDelete]);
             unset($this->identifierImages[$this->identifierToDelete]);
             unset($this->identifierStatus[$this->identifierToDelete]);
+            unset($this->originalIdentifiers[$this->identifierToDelete]);
             $this->identifiers = array_values($this->identifiers);
             $this->identifierImages = array_values($this->identifierImages);
             $this->identifierStatus = array_values($this->identifierStatus);
+            $this->originalIdentifiers = array_values($this->originalIdentifiers);
             
             // If no identifiers left, add an empty one
             if (empty($this->identifiers)) {
                 $this->identifiers[] = '';
                 $this->identifierStatus[] = true;
+                $this->originalIdentifiers[] = '';
             }
         }
         
@@ -436,6 +455,94 @@ class EditClassification extends Component
         } catch (\Exception $e) {
             session()->flash('error', 'Error saving image: ' . $e->getMessage());
         }
+    }
+
+    public function updateIdentifierName($index)
+    {
+        $newIdentifier = trim($this->identifiers[$index]);
+        $originalIdentifier = $this->originalIdentifiers[$index] ?? null;
+        
+        // Check if identifier is empty
+        if (empty($newIdentifier)) {
+            session()->flash('error', 'Identifier name cannot be empty.');
+            // Restore original name
+            $this->identifiers[$index] = $originalIdentifier;
+            return;
+        }
+        
+        // Check if name actually changed
+        if ($newIdentifier === $originalIdentifier) {
+            session()->flash('info', 'No changes detected.');
+            return;
+        }
+        
+        // Check if this identifier is in the database
+        if (!isset($this->identifierInDatabase[$index]) || !$this->identifierInDatabase[$index]) {
+            session()->flash('error', 'This identifier is not yet saved. Please add it first.');
+            return;
+        }
+        
+        // Find the ride record using the original identifier
+        $ride = Ride::where('classification_id', $this->classificationId)
+                   ->where('identifier', $originalIdentifier)
+                   ->first();
+        
+        if (!$ride) {
+            session()->flash('error', 'Identifier not found.');
+            // Restore original name
+            $this->identifiers[$index] = $originalIdentifier;
+            return;
+        }
+        
+        // Prevent renaming if currently USED (2)
+        if ($ride->is_active === Ride::STATUS_USED) {
+            session()->flash('error', "Cannot rename identifier '{$originalIdentifier}' while it is currently in use.");
+            // Restore original name
+            $this->identifiers[$index] = $originalIdentifier;
+            return;
+        }
+        
+        // Check for duplicate identifier names (excluding the current one)
+        $existingRide = Ride::where('classification_id', $this->classificationId)
+                           ->where('identifier', $newIdentifier)
+                           ->where('id', '!=', $ride->id)
+                           ->first();
+        
+        if ($existingRide) {
+            session()->flash('error', "Identifier '{$newIdentifier}' already exists. Please choose a different name.");
+            // Restore original name
+            $this->identifiers[$index] = $originalIdentifier;
+            return;
+        }
+        
+        try {
+            // Update the identifier name
+            $ride->update(['identifier' => $newIdentifier]);
+            
+            // Update the original identifier tracking
+            $this->originalIdentifiers[$index] = $newIdentifier;
+            
+            session()->flash('success', "Identifier name updated from '{$originalIdentifier}' to '{$newIdentifier}' successfully.");
+            
+            // Reload form data to reflect changes
+            $this->reloadFormData();
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error updating identifier name: ' . $e->getMessage());
+            // Restore original name
+            $this->identifiers[$index] = $originalIdentifier;
+        }
+    }
+
+    public function hasIdentifierNameChanged($index)
+    {
+        if (!isset($this->identifierInDatabase[$index]) || !$this->identifierInDatabase[$index]) {
+            return false;
+        }
+        
+        $currentIdentifier = trim($this->identifiers[$index] ?? '');
+        $originalIdentifier = trim($this->originalIdentifiers[$index] ?? '');
+        
+        return $currentIdentifier !== $originalIdentifier && !empty($currentIdentifier);
     }
 
     public function toggleIdentifierStatus($index)

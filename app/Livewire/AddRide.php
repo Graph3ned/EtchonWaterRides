@@ -169,7 +169,10 @@ class AddRide extends Component
         // Create start and end datetime objects
         $today = Carbon::today('Asia/Manila');
         $startDateTime = $today->copy()->setTimeFromTimeString($this->startAt);
-        $endDateTime = $today->copy()->setTimeFromTimeString($this->endAt);
+        
+        // Calculate end datetime from start + duration to handle midnight crossover correctly
+        $durationInMinutes = $this->showCustomDuration ? (int) $this->customDuration : (int) $this->duration;
+        $endDateTime = $startDateTime->copy()->addMinutes($durationInMinutes);
 
         // Save the rental record to the database
         $rental = Rental::create([
