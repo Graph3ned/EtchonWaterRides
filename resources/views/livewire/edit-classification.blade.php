@@ -130,20 +130,20 @@
                                                     </span>
                                                 </button>
                                             @endif
-
-                                            <!-- Save button for existing identifiers -->
-                                            <button type="button" 
-                                                        wire:click="updateIdentifierName({{ $iIndex }})" 
-                                                        class="w-full sm:w-auto px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium transition-all duration-200 shadow hover:shadow-md transform hover:-translate-y-0.5">
-                                                    <span class="flex items-center justify-center">
-                                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                                        </svg>
-                                                        Save Name
-                                                    </span>
-                                                </button>
                                             
                                             @if(!empty(trim($identifier)) && ($identifierInDatabase[$iIndex] ?? false))
+                                                <!-- Save button for existing identifiers -->
+                                                <button type="button" 
+                                                            wire:click="updateIdentifierName({{ $iIndex }})" 
+                                                            class="w-full sm:w-auto px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium transition-all duration-200 shadow hover:shadow-md transform hover:-translate-y-0.5">
+                                                        <span class="flex items-center justify-center">
+                                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                                            </svg>
+                                                            Save Name
+                                                        </span>
+                                                    </button>
+                                                
                                                 <button type="button" 
                                                         wire:click="toggleIdentifierStatus({{ $iIndex }})"
                                                         class="w-full sm:w-auto inline-flex items-center justify-center px-3 py-2 {{ ($identifierStatus[$iIndex] ?? true) ? 'bg-blue-500 hover:bg-blue-600' : 'bg-gray-500 hover:bg-gray-600' }} 
