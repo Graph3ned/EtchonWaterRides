@@ -55,16 +55,39 @@
                                 <td class="px-4 py-3 text-gray-700">
                                     {{ $filteredRides->count() - $loop->iteration + 1 }}
                                 </td>
-                                <td class="px-4 py-3 lg:w-[200px] lg:min-w-[200px]">
-                                    <!-- Combined Ride Type & Classification -->
-                                    <div class="text-gray-700 font-bold text-lg">{{ $ride->ride_type_name_at_time ?? ($ride->ride->classification->rideType->name ?? 'Unknown') }}</div>
-                                    <div class="text-sm text-blue-600 font-medium">{{ $ride->classification_name_at_time ?? ($ride->ride->classification->name ?? 'Unknown') }}</div>
+                                <td class="px-4 py-3 lg:w-[240px] lg:min-w-[240px]">
+                                    <!-- Combined Ride Image + Ride Type & Classification -->
+                                    <div class="flex items-start gap-3">
+                                        <div class="shrink-0">
+                                            @if (!empty($ride->ride?->image_path))
+                                                <img
+                                                    src="{{ asset('storage/'.$ride->ride->image_path) }}"
+                                                    alt="{{ $ride->ride_identifier_at_time ?? ($ride->ride->identifier ?? 'Ride') }}"
+                                                    class="w-12 h-12 sm:w-14 sm:h-14 rounded-lg object-cover border border-blue-100 bg-white"
+                                                    loading="lazy"
+                                                />
+                                            @else
+                                                <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-lg border border-dashed border-gray-300 bg-white flex items-center justify-center text-[10px] text-gray-400">
+                                                    No image
+                                                </div>
+                                            @endif
+                                        </div>
+
+                                        <div class="min-w-0">
+                                            <div class="text-gray-700 font-bold text-lg leading-tight">
+                                                {{ $ride->ride_type_name_at_time ?? ($ride->ride->classification->rideType->name ?? 'Unknown') }}
+                                            </div>
+                                            <div class="text-sm text-blue-600 font-medium leading-tight">
+                                                {{ $ride->classification_name_at_time ?? ($ride->ride->classification->name ?? 'Unknown') }}
+                                            </div>
+                                        </div>
+                                    </div>
                                     <!-- Mobile view details -->
                                     <div class="lg:hidden space-y-1.5 mt-2">
                                         <!-- Identification -->
-                                        <div class="text-xs min-w-[150px]">
-                                            <span class="text-green-600 font-medium">ID:</span>
-                                            <span class="text-gray-600 font-semibold">{{ $ride->ride_identifier_at_time ?? ($ride->ride->identifier ?? 'Unknown') }}</span>
+                                        <div class="text-sm min-w-[150px]">
+                                            <span class="text-green-600 font-semibold">ID:</span>
+                                            <span class="text-gray-700 font-bold">{{ $ride->ride_identifier_at_time ?? ($ride->ride->identifier ?? 'Unknown') }}</span>
                                         </div>
                                         <!-- Time info with added top margin to separate from classification -->
                                         <div class="md:hidden text-xs space-y-1 mt-2">
