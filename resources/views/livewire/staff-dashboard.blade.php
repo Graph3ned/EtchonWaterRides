@@ -293,8 +293,8 @@
     let alarmAudio = null;
 
     function testTimeOut() {
-        const modalDetails = `<span class="font-bold text-red-500">Test Ride</span> - <span class="font-bold text-red-500">Test Classification</span> (Test ID) has ended.`;
-        document.getElementById('modalRideDetails').innerHTML = modalDetails;
+        const modalDetails = 'Test Ride - Test Classification (Test ID) has ended.';
+        document.getElementById('modalRideDetails').textContent = modalDetails;
         playAlarmSound();
         openModal('modalConfirmAlarm');
     }
@@ -343,9 +343,9 @@
                 const rideType = rideRow.querySelector('td:nth-child(2) > div:first-child').textContent.trim();
                 const classification = rideRow.querySelector('td:nth-child(2) > div:nth-child(2)').textContent.trim();
                 const identification = rideRow.querySelector('td:nth-child(3) > div').textContent.trim();
-
-                const modalDetails = `<span class="font-bold text-red-500">${rideType}</span> - <span class="font-bold text-red-500">${classification}</span> (${identification}) has ended.`;
-                document.getElementById('modalRideDetails').innerHTML = modalDetails;
+                // Use textContent to prevent XSS: never interpret ride data as HTML
+                const modalDetails = rideType + ' - ' + classification + ' (' + identification + ') has ended.';
+                document.getElementById('modalRideDetails').textContent = modalDetails;
 
                 playAlarmSound();
                 openModal('modalConfirmAlarm');

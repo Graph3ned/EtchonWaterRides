@@ -10,6 +10,7 @@ use Livewire\Component;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class EditRide extends Component
 {
@@ -185,6 +186,7 @@ class EditRide extends Component
         $this->validate($this->rules());
 
         $rental = Rental::findOrFail($this->rentalId);
+        $previousRideId = $rental->ride_id;
 
         $extensionMinutes = $this->showCustomDuration ? (int)$this->customDuration : (int)$this->extendDuration;
         $newDuration = $this->duration + $extensionMinutes;
@@ -198,25 +200,45 @@ class EditRide extends Component
         $totalDuration = $this->duration + $extensionMinutes;
         $endDateTime = $startDateTime->copy()->addMinutes($totalDuration);
 
-        // Get current data for _at_time columns
-        $ride = Ride::with('classification.rideType')->find($this->rideId);
-        $user = Auth::user();
+        DB::transaction(function () use ($rental, $previousRideId, $newDuration, $startDateTime, $endDateTime) {
+            // Get current data for _at_time columns based on the newly selected ride
+            $ride = Ride::with('classification.rideType')->findOrFail($this->rideId);
+            $user = Auth::user();
 
-        $rental->update([
-            'ride_id' => $this->rideId,
-            'life_jacket_quantity' => $this->life_jacket_quantity,
-            'duration_minutes' => $newDuration,
-            'start_at' => $startDateTime,
-            'end_at' => $endDateTime,
-            'computed_total' => $this->computedTotal,
-            'note' => $this->note,
-            // Update _at_time columns with current data
-            'user_name_at_time' => $user->name,
-            'ride_identifier_at_time' => $ride->identifier ?? 'Unknown',
-            'classification_name_at_time' => $ride->classification->name ?? 'Unknown',
-            'ride_type_name_at_time' => optional($ride->classification->rideType)->name ?? 'Unknown',
-            'price_per_hour_at_time' => $this->pricePerHour,
-        ]);
+            $rental->update([
+                'ride_id' => $this->rideId,
+                'life_jacket_quantity' => $this->life_jacket_quantity,
+                'duration_minutes' => $newDuration,
+                'start_at' => $startDateTime,
+                'end_at' => $endDateTime,
+                'computed_total' => $this->computedTotal,
+                'note' => $this->note,
+                // Update _at_time columns with current data
+                'user_name_at_time' => $user->name,
+                'ride_identifier_at_time' => $ride->identifier ?? 'Unknown',
+                'classification_name_at_time' => $ride->classification->name ?? 'Unknown',
+                'ride_type_name_at_time' => optional($ride->classification->rideType)->name ?? 'Unknown',
+                'price_per_hour_at_time' => $this->pricePerHour,
+            ]);
+
+            // If the ride changed, release the old ride and mark the new one as used.
+            if (!empty($previousRideId) && (string) $previousRideId !== (string) $this->rideId) {
+                $previousRide = Ride::find($previousRideId);
+                if ($previousRide) {
+                    $stillUsedByAnotherActiveRental = Rental::where('ride_id', $previousRideId)
+                        ->where('status', Rental::STATUS_ACTIVE)
+                        ->where('id', '!=', $this->rentalId)
+                        ->exists();
+
+                    if (!$stillUsedByAnotherActiveRental) {
+                        $previousRide->update(['is_active' => Ride::STATUS_AVAILABLE]);
+                    }
+                }
+            }
+
+            // Ensure the newly selected ride is marked as USED while this rental is active.
+            $ride->update(['is_active' => Ride::STATUS_USED]);
+        });
 
         session()->flash('message', 'Rental updated successfully!');
         $this->dispatch('rideUpdated');
