@@ -133,7 +133,9 @@
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 text-gray-700 hidden sm:table-cell">
-                                    <div class="font-semibold text-gray-800">{{ $ride->ride_identifier_at_time ?? ($ride->ride->identifier ?? 'Unknown') }}</div>
+                                    <div class="text-base font-bold text-gray-800">
+                                        {{ $ride->ride_identifier_at_time ?? ($ride->ride->identifier ?? 'Unknown') }}
+                                    </div>
                                 </td>
                                 <td class="px-4 py-3 text-gray-700 hidden sm:table-cell">
                                     @if ($ride->duration_minutes >= 60)

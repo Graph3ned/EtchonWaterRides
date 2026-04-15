@@ -48,12 +48,91 @@
             <!-- Specific Ride Dropdown -->
             <div class="mb-4">
                 <label for="rideId" class="block text-sm font-medium text-gray-700">Available Ride</label>
-                <select wire:model.live="rideId" id="rideId" class="block w-full mt-1 rounded-lg border-gray-300 shadow-sm">
-                    <option value="" disabled>Select Available Ride</option>
-                    @foreach($rides as $ride)
-                        <option value="{{ $ride->id }}">{{ $ride->identifier }} ({{ $ride->classification->name }})</option>
-                    @endforeach
-                </select>
+                <div class="relative" x-data="{ open: false }" @click.outside="open = false">
+                    <button
+                        type="button"
+                        @click="open = !open"
+                        class="w-full mt-1 rounded-lg border border-gray-300 shadow-sm bg-white px-3 py-2 text-left focus:border-[#00A3E0] focus:ring focus:ring-[#00A3E0] focus:ring-opacity-50"
+                    >
+                        <div class="flex items-center gap-3 min-w-0">
+                            @php
+                                $selectedRide = !empty($rideId) ? $rides->firstWhere('id', (int) $rideId) : null;
+                            @endphp
+                            <div class="shrink-0">
+                                @if (!empty($selectedRide?->image_path))
+                                    <img
+                                        src="{{ asset('storage/'.$selectedRide->image_path) }}"
+                                        alt="{{ $selectedRide->identifier }}"
+                                        class="w-10 h-10 rounded-md object-cover border border-blue-100 bg-white"
+                                        loading="lazy"
+                                    />
+                                @else
+                                    <div class="w-10 h-10 rounded-md border border-dashed border-gray-300 bg-white flex items-center justify-center text-[10px] text-gray-400">
+                                        No image
+                                    </div>
+                                @endif
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <div class="text-sm font-semibold text-gray-800 truncate">
+                                    {{ $selectedRide?->identifier ?? 'Select Available Ride' }}
+                                </div>
+                                <div class="text-xs text-gray-500 truncate">
+                                    {{ $selectedRide?->classification?->name ?? '' }}
+                                </div>
+                            </div>
+                            <div class="shrink-0 text-gray-400">
+                                <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                        </div>
+                    </button>
+
+                    <div
+                        x-show="open"
+                        x-transition
+                        class="absolute z-20 mt-2 w-full rounded-lg border border-gray-200 bg-white shadow-lg max-h-64 overflow-auto"
+                        style="display: none;"
+                    >
+                        @forelse($rides as $ride)
+                            <button
+                                type="button"
+                                @click="open = false"
+                                wire:click="$set('rideId', {{ $ride->id }})"
+                                class="w-full px-3 py-2 text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
+                            >
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div class="shrink-0">
+                                        @if (!empty($ride->image_path))
+                                            <img
+                                                src="{{ asset('storage/'.$ride->image_path) }}"
+                                                alt="{{ $ride->identifier }}"
+                                                class="w-10 h-10 rounded-md object-cover border border-blue-100 bg-white"
+                                                loading="lazy"
+                                            />
+                                        @else
+                                            <div class="w-10 h-10 rounded-md border border-dashed border-gray-300 bg-white flex items-center justify-center text-[10px] text-gray-400">
+                                                No image
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <div class="text-sm font-semibold text-gray-800 truncate">
+                                            {{ $ride->identifier }}
+                                        </div>
+                                        <div class="text-xs text-gray-500 truncate">
+                                            {{ $ride->classification->name ?? '' }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </button>
+                        @empty
+                            <div class="px-3 py-2 text-sm text-gray-500">
+                                No available rides.
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
                 @error('rideId')
                     <div class="text-red-500">{{$message}}</div>
                 @enderror
